@@ -1,5 +1,33 @@
 {% extends 'image_base.html' %}
 
+ {% block cssExtras %}
+ {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dropzone/css/dropzone.min.css"></link>
+ {% endblock cssExtras %}
+
+
+{% block scripts %}
+{{block.super}}
+	{% block myscripts %}
+	<script type="text/javascript" src='{{STATIC_URL}}dropzone/js/dropzone.min.js'></script>
+    {% endblock myscripts %}
+{% endblock %}
+
+
 {% block content %}
-xgds_image IMAGE UPLOAD PAGE
+
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+
+<title>Dropzone simple example</title>
+
+<p>
+  This is the most minimal example of Dropzone. The upload in this example
+  doesn't work, because there is no actual server to handle the file upload.
+</p>
+
+<!-- Change /upload-target to your upload address -->
+<form action="/upload-target" class="dropzone"></form>
+
 {% endblock content %}
