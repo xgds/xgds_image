@@ -35,4 +35,6 @@ Don't try to get the value of FOO from django.conf.settings.  That
 settings object will not know about the default value!
 """
 
-xgds_image_BOWER_INSTALLED_APPS = ()
+XGDS_IMAGE_BOWER_INSTALLED_APPS = ()
+
+XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"

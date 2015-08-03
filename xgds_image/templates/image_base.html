@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+
+{% block cssExtras %}
+<link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}jquery-ui/themes/base/jquery-ui.min.css" ></link>
+<link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}jquery.tagsinput/dist/jquery.tagsinput.min.css"></link>
+{% endblock cssExtras %}
+
+{% block sitemenu-content-secondary %}
+	{% include "image_subnav.html" %}
+{% endblock %}
+	
+{% block scripts %}
+{{ block.super }}
+<script language="javascript" type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/xgds_image.js"></script>
+{% endblock scripts %}
+

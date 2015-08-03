@@ -14,11 +14,12 @@
 # specific language governing permissions and limitations under the License.
 # __END_LICENSE__
 
-from django.conf.urls import patterns, include
-
+from django.conf.urls import *
 from django.views.generic.base import TemplateView
-
+from xgds_image import views
 
 urlpatterns = patterns('',
-                       (r'^$', TemplateView.as_view(template_name='xgds_image/index.html'), {}, 'index'),
+#                        (r'^$', TemplateView.as_view(template_name='xgds_image/index.html'), {}, 'index'),
+                       (r'^imageUpload/', views.getImageUploadPage, {}, 'xgds_image_upload'),
+                       (r'^imageSearch/', views.getImageSearchPage, {}, 'xgds_image_search',)
                        )

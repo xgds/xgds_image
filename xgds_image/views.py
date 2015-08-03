@@ -18,3 +18,12 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
+
+
+def getImageUploadPage(request):
+    return render_to_response("xgds_image/imageUpload.html", {},
+                              context_instance=RequestContext(request))
+    
+def getImageSearchPage(request):
+    return render_to_response("xgds_image/imageSearch.html", {},
+                              context_instance=RequestContext(request))
