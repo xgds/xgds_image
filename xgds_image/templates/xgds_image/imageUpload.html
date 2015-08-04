@@ -2,32 +2,49 @@
 
  {% block cssExtras %}
  {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dropzone/css/dropzone.min.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
  {% endblock cssExtras %}
 
 
 {% block scripts %}
 {{block.super}}
 	{% block myscripts %}
-	<script type="text/javascript" src='{{STATIC_URL}}dropzone/js/dropzone.min.js'></script>
+<!-- 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.js'></script> -->
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/dropzone.js'></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
     {% endblock myscripts %}
+{% endblock %}
+
+{% block jsInit %}
 {% endblock %}
 
 
 {% block content %}
 
-<!DOCTYPE html>
+<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_dropzone_image' %}" method="post" enctype="multipart/form-data">
+</form>
+<button id="submit-all">
+	Submit all files
+</button>
 
-<meta charset="utf-8">
 
-<title>Dropzone simple example</title>
-
-<p>
-  This is the most minimal example of Dropzone. The upload in this example
-  doesn't work, because there is no actual server to handle the file upload.
-</p>
-
-<!-- Change /upload-target to your upload address -->
-<form action="/upload-target" class="dropzone"></form>
+<div id="image_table"> 
+<table cellpadding="0" cellspacing="0" border="0"  id="imageTable">
+<thead class="table_header">
+	<tr>
+		<th>Name</th>
+	    <th>Timestamp</th>
+	    <th>Source</th>
+	    <th>Latitude</th>
+	    <th>Longitude</th>
+	    <th>Altitude</th>
+    </tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+</div>
 
 {% endblock content %}

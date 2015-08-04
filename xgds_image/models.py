@@ -86,6 +86,10 @@ class LocatedImageSet(AbstractImageSet):
     asset_position = models.ForeignKey(PAST_POSITION_MODEL, null=True, blank=True )
 
 
+class UploadFile(models.Model):
+    file = models.FileField(upload_to='')
+
+
 class AbstractSingleImage(models.Model):
     """ 
     An abstract image which may not necessarily have a location on a map
@@ -98,7 +102,7 @@ class AbstractSingleImage(models.Model):
     image = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     raw = models.BooleanField(default=True)
-    imageSet = models.ForeignKey(ImageSet)
+    imageSet = models.ForeignKey(ImageSet, null=True)
     
     class Meta:
         abstract = True

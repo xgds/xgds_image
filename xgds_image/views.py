@@ -18,7 +18,11 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
+from django.core.urlresolvers import reverse
+import pydevd
 
+from forms import UploadFileForm
+from models import UploadFile
 
 def getImageUploadPage(request):
     return render_to_response("xgds_image/imageUpload.html", {},
@@ -27,3 +31,20 @@ def getImageUploadPage(request):
 def getImageSearchPage(request):
     return render_to_response("xgds_image/imageSearch.html", {},
                               context_instance=RequestContext(request))
+    
+def dropzoneImage(request):
+    pydevd.settrace('128.102.236.43')
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_file = UploadFile(file = request.FILES['file'])
+            new_file.save()
+            return HttpResponseRedirect(reverse('xgds_dropzone_image'))
+        else: 
+            print "FORM ERRORS"
+            print form.errors
+    else:
+        form = UploadFileForm()
+ 
+    data = {'form': form}
+    return render_to_response('xgds_image/imageUpload.html', data, context_instance=RequestContext(request))
