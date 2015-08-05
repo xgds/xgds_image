@@ -15,10 +15,16 @@
 # __END_LICENSE__
 
 from django import forms
-from models import UploadFile
+from models import SingleImage
  
+
+# class UploadFileForm(forms.ModelForm):
+#     class Meta: 
+#         model =  SingleImage
+#         fields = ['image']
+
  
 class UploadFileForm(forms.ModelForm):
     class Meta:
-        model = UploadFile
+        model = SingleImage
         fields = ['file']

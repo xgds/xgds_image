@@ -21,6 +21,7 @@ from geocamUtil.defaultSettings import HOSTNAME
 from django.contrib.auth.models import User
 from geocamUtil.models import AbstractEnumModel
 from geocamTrack import settings as trackSettings
+from xgds_image import settings as imageSettings
 
 PAST_POSITION_MODEL = trackSettings.GEOCAM_TRACK_PAST_POSITION_MODEL
 
@@ -35,7 +36,7 @@ PAST_POSITION_MODEL = trackSettings.GEOCAM_TRACK_PAST_POSITION_MODEL
 
 
 def getNewImageFileName(instance, filename):
-    return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
+    return imageSettings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
 class Camera(AbstractEnumModel):
@@ -86,10 +87,6 @@ class LocatedImageSet(AbstractImageSet):
     asset_position = models.ForeignKey(PAST_POSITION_MODEL, null=True, blank=True )
 
 
-class UploadFile(models.Model):
-    file = models.FileField(upload_to='')
-
-
 class AbstractSingleImage(models.Model):
     """ 
     An abstract image which may not necessarily have a location on a map
@@ -99,11 +96,11 @@ class AbstractSingleImage(models.Model):
                           unique=True, blank=False,
                           editable=False, primary_key=True)
 
-    image = models.ImageField(upload_to=getNewImageFileName, max_length=255)
+    file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     raw = models.BooleanField(default=True)
     imageSet = models.ForeignKey(ImageSet, null=True)
-    
+       
     class Meta:
         abstract = True
     
