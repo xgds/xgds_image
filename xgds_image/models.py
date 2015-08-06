@@ -20,9 +20,9 @@ from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from django.contrib.auth.models import User
 from geocamUtil.models import AbstractEnumModel
-from geocamTrack import settings as trackSettings
+from django.conf import settings
 
-PAST_POSITION_MODEL = trackSettings.GEOCAM_TRACK_PAST_POSITION_MODEL
+PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
 
 
 # Image (author, 
