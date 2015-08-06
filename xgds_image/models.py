@@ -95,11 +95,11 @@ class AbstractSingleImage(models.Model):
                           unique=True, blank=False,
                           editable=False, primary_key=True)
 
-    image = models.ImageField(upload_to=getNewImageFileName, max_length=255)
+    file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     raw = models.BooleanField(default=True)
-    imageSet = models.ForeignKey(ImageSet)
-    
+    imageSet = models.ForeignKey(ImageSet, null=True)
+       
     class Meta:
         abstract = True
     
