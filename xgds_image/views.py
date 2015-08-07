@@ -47,7 +47,8 @@ def dropzoneImage(request):
             new_file = SingleImage(file = request.FILES['file'])
             new_file.save()
             # RETURN THE UPLOADED IMAGE AS JSON (toMapDict())
-            return HttpResponse(json.dumps({'success': 'true'}), 
+            new_file_json = new_file.toMapDict() 
+            return HttpResponse(json.dumps({'success': 'true', 'json': new_file_json}), 
                                 content_type='application/json')
         else: 
             print "FORM ERRORS"
