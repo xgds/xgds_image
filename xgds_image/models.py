@@ -20,6 +20,7 @@ from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from django.contrib.auth.models import User
 from geocamUtil.models import AbstractEnumModel
+from geocamUtil.modelJson import modelToDict
 from django.conf import settings
 
 PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
@@ -67,6 +68,13 @@ class AbstractImageSet(models.Model):
     def __unicode__(self):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
                 % (self.id, self.name, self.shortName))
+        
+    def toMapDict(self):
+        """
+        Return a reduced dictionary that will be turned to JSON for rendering in a map
+        """
+        result = modelToDict(self)
+        return result
 
     def getRawImage(self):
         return SingleImage.objects.get(imageSet=self, raw=True)
@@ -103,6 +111,16 @@ class AbstractSingleImage(models.Model):
     class Meta:
         abstract = True
     
+    def toMapDict(self):
+        """
+        Return a reduced dictionary that will be turned to JSON for rendering in a map
+        """
+        result = modelToDict(self)
+        del(result['file']) 
+        result['imageUrl'] = settings.DATA_URL + self.file.name
+        result['creation_time'] = str(self.creation_time)
+        return result
+
     def fillId(self):
         index = self.__class__.objects.count() + 1
         self.pk = HOSTNAME + "_" + str(index)
