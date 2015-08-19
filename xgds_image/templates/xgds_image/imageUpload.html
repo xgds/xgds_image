@@ -17,8 +17,6 @@
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
     <script type="text/javascript">
-    // set dropzoneUrl
-    var dropzoneUrl = "{{ dropzoneImageUrl }}";
     // parse json
     var uploadedImages = {{ uploadedImages|safe }};
     var images = []; // stores JSON objects
@@ -32,8 +30,8 @@
 
 
 {% block content %}
-
-<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_dropzone_image' %}" method="post" 
+<!-- Dropzone image upload -->
+<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' 'dropzone' %}" method="post" 
 enctype="multipart/form-data">
 {% csrf_token %}
 </form>
@@ -41,6 +39,13 @@ enctype="multipart/form-data">
 	Submit all files
 </button>
 
+<!-- File system image upload -->
+<form method="post" action="{% url 'xgds_save_image' 'filesystem' %}" enctype="multipart/form-data">
+  <input type="file" name="file" accept="image/*" multiple>
+  <input type="submit">
+</form>
+
+<!-- Image list table -->
 <div id="image_table_div"> 
 <table cellpadding="0" cellspacing="0" border="0"  id="image_table">
 <thead class="table_header">

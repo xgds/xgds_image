@@ -1,6 +1,6 @@
 // images table
 defaultOptions["columnDefs"] = [{ "width": "150", "targets": 0 }];
-var imageTable = $(image_table).DataTable(defaultOptions);
+var imageTable = $('#image_table').DataTable(defaultOptions);
 
 // give path, construct an html link
 function createLink(path) {
@@ -13,7 +13,6 @@ $(images).each(function(){
 	imageTable.row.add([imageUrl, this['creation_time'], 'dummy source', 
 	                    'dummy lat', 'dummy lon', 'dummy alt']).draw();
 });
-
 
 // image dropzone
 Dropzone.options.imageDropZone = {
@@ -43,5 +42,3 @@ Dropzone.options.imageDropZone = {
 		});
 	}
 };
-
-

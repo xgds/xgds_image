@@ -16,12 +16,6 @@
 
 from django import forms
 from models import SingleImage
- 
-
-# class UploadFileForm(forms.ModelForm):
-#     class Meta: 
-#         model =  SingleImage
-#         fields = ['image']
 
  
 class UploadFileForm(forms.ModelForm):

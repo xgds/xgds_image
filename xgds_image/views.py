@@ -23,12 +23,10 @@ from django.core.urlresolvers import reverse
 from models import SingleImage
 from forms import UploadFileForm
 
-
 def getImageUploadPage(request):
     images = SingleImage.objects.all()  # @UndefinedVariable
     uploadedImages = [json.dumps(image.toMapDict()) for image in images]
-    data = {'dropzoneImageUrl': reverse('xgds_dropzone_image'),
-            'uploadedImages': uploadedImages}
+    data = {'uploadedImages': uploadedImages}
     return render_to_response("xgds_image/imageUpload.html", data,
                               context_instance=RequestContext(request))
     
@@ -36,20 +34,26 @@ def getImageSearchPage(request):
     return render_to_response("xgds_image/imageSearch.html", {},
                               context_instance=RequestContext(request))
     
-def dropzoneImage(request):
+    
+def saveImageToDB(request, uploadType):
     """
-    Image drag and drop, save to database.
-    TODO make sure this method handles multiple files uploaded at once
+    Image(s) drag and drop, save to database.
     """
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             new_file = SingleImage(file = request.FILES['file'])
             new_file.save()
-            # RETURN THE UPLOADED IMAGE AS JSON (toMapDict())
+            # pass the uploaded image to front end as json.
             new_file_json = new_file.toMapDict() 
-            return HttpResponse(json.dumps({'success': 'true', 'json': new_file_json}), 
-                                content_type='application/json')
+            if uploadType == 'dropzone': # if uploded via dropzone
+                return HttpResponse(json.dumps({'success': 'true', 'json': new_file_json}), 
+                                    content_type='application/json')
+            # do this for file system upload     
+            elif uploadType == 'filesystem':
+                return HttpResponseRedirect(reverse('xgds_image_upload_page'))
+            else: 
+                return HttpResponse(json.dumps({'error': 'Wrong type of image upload'}), content_type='application/json')
         else: 
             print "FORM ERRORS"
             print form.errors
@@ -58,5 +62,4 @@ def dropzoneImage(request):
         form = UploadFileForm()
         data = {'form': form}
         return render_to_response('xgds_image/imageUpload.html', 
-                                  data, context_instance=RequestContext(request))
-        
+                                  data, context_instance=RequestContext(request))        

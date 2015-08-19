@@ -20,7 +20,7 @@ from xgds_image import views
 
 urlpatterns = patterns('',
 #                        (r'^$', TemplateView.as_view(template_name='xgds_image/index.html'), {}, 'index'),
-                       (r'^imageUpload/', views.getImageUploadPage, {}, 'xgds_image_upload'),
-                       (r'^imageSearch/', views.getImageSearchPage, {}, 'xgds_image_search'),
-                       (r'^dropzoneImage/$', views.dropzoneImage, {}, 'xgds_dropzone_image'),
+                       (r'^imageUpload/', views.getImageUploadPage, {}, 'xgds_image_upload_page'),
+                       (r'^imageSearch/', views.getImageSearchPage, {}, 'xgds_image_search_page'),
+                       (r'^saveImageToDB/(?P<uploadType>[\w-]+)$', views.saveImageToDB, {}, 'xgds_save_image')
                        )
