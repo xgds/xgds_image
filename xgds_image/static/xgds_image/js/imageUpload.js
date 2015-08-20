@@ -18,10 +18,15 @@ function imageView(imagePath) {
 	var elem = document.createElement('div');
 	elem.className='item w_image lockAspect';
 	elem.id='item_image_view';
-	$('<img src="'+ imagePath +'">').width(450).height(450).appendTo(elem);
+	$('<img src="'+ imagePath +'">').width(450).height('auto').appendTo(elem);
 	//append to container
 	$container.append( elem );
 	$container.packery('appended', elem);
+	
+	// layout Packery after all images have loaded
+	$container.imagesLoaded( function() {
+	  $container.packery();
+	});
 }
 
 // add rows to the table on page load.
