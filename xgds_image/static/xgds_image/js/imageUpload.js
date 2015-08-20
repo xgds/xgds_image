@@ -1,10 +1,27 @@
+var $container = $('#container'); 
+
 // images table
 defaultOptions["columnDefs"] = [{ "width": "150", "targets": 0 }];
 var imageTable = $('#image_table').DataTable(defaultOptions);
 
 // give path, construct an html link
 function createLink(path) {
-	return "<a href='" + path + "'>" + path + "</a>"
+	return "<a href='javascript:imageView(\"" + path + "\");'>" + path + "</a>";
+}
+
+// call back for onclick that creates a new div with image view
+function imageView(imagePath) {
+	/**
+	 * If the view doesn't exist, create one. 
+	 */
+	//create a div that displays this imageView
+	var elem = document.createElement('div');
+	elem.className='item w_image lockAspect';
+	elem.id='item_image_view';
+	$('<img src="'+ imagePath +'">').width(450).height(450).appendTo(elem);
+	//append to container
+	$container.append( elem );
+	$container.packery('appended', elem);
 }
 
 // add rows to the table on page load.
@@ -19,7 +36,7 @@ Dropzone.options.imageDropZone = {
 	// Prevents Dropzone from uploading dropped files immediately
 	autoProcessQueue : false,
 
-//	acceptedFiles: 'application/image',
+	//	acceptedFiles: 'application/image',
 	init : function() {
 		var submitButton = document.querySelector("#submit-all")
 		imageDropZone = this;

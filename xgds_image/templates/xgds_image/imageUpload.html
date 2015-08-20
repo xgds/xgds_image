@@ -3,10 +3,12 @@
  {% block cssExtras %}
  {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
  {% endblock cssExtras %}
 
 
 {% block jsInit %}
+	initializePackery();
 {% endblock %}
 
 
@@ -16,6 +18,8 @@
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/dropzone.js'></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}packery/dist/packery.pkgd.min.js" ></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/packem.js"></script>
     <script type="text/javascript">
     // parse json
     var uploadedImages = {{ uploadedImages|safe }};
@@ -30,37 +34,44 @@
 
 
 {% block content %}
-<!-- Dropzone image upload -->
-<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' 'dropzone' %}" method="post" 
-enctype="multipart/form-data">
-{% csrf_token %}
-</form>
-<button id="submit-all">
-	Submit all files
-</button>
+	{% block packery %}
+	<div id="container"> 
+		<div class='item w2 lockAspect' id='item_image_upload'>
+			<!-- Dropzone image upload -->
+			<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' 'dropzone' %}" method="post" 
+			enctype="multipart/form-data">
+			{% csrf_token %}
+			</form>
+			<button id="submit-all">
+				Submit all files
+			</button>
 
-<!-- File system image upload -->
-<form method="post" action="{% url 'xgds_save_image' 'filesystem' %}" enctype="multipart/form-data">
-  <input type="file" name="file" accept="image/*" multiple>
-  <input type="submit">
-</form>
-
-<!-- Image list table -->
-<div id="image_table_div"> 
-<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
-<thead class="table_header">
-	<tr>
-		<th>Name</th>
-	    <th>Timestamp</th>
-	    <th>Source</th>
-	    <th>Latitude</th>
-	    <th>Longitude</th>
-	    <th>Altitude</th>
-    </tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
-
+			<!-- File system image upload -->
+			<form method="post" action="{% url 'xgds_save_image' 'filesystem' %}" enctype="multipart/form-data">
+			  <input type="file" name="file" accept="image/*" multiple>
+			  <input type="submit">
+			</form>
+		</div>
+		
+		<!-- Image list table -->
+		<div class='item w2 lockAspect' id='item_image_table'>
+			<div id="image_table_div"> 
+				<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
+					<thead class="table_header">
+						<tr>
+							<th>Name</th>
+						    <th>Timestamp</th>
+						    <th>Source</th>
+						    <th>Latitude</th>
+						    <th>Longitude</th>
+						    <th>Altitude</th>
+					    </tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div> <!--  js packery container -->
+	{% endblock packery %}
 {% endblock content %}
