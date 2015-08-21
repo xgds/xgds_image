@@ -36,6 +36,7 @@ settings object will not know about the default value!
 """
 
 XGDS_IMAGE_BOWER_INSTALLED_APPS = ('dropzone',
-                                   'packery')
+                                   'packery', 
+                                   "fontawesome")
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"

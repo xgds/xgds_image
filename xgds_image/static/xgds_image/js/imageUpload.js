@@ -60,12 +60,25 @@ function createInput(id, form) {
 	form.appendChild(br);
 }
 
+// creates text area and appends to form
 function createTextarea(id, form) {
 	var textArea = document.createElement("textarea");
 	textArea.id = id
 	form.appendChild(textArea);
 	var br = document.createElement('br');
 	form.appendChild(br);
+}
+
+function createCloseBtn(form) {
+	var i = document.createElement('i');
+	i.className = "fa fa-lg fa-times-circle";
+	i.addEventListener("click", function(event){
+		// remove clicked element
+		$container.packery( 'remove', event.target.parentElement );
+		// layout remaining item elements
+		$container.packery();
+	});
+	form.appendChild(i);
 }
 
 
@@ -89,6 +102,9 @@ function imageView(imageName, imagePath) {
 	a.href =  "javascript:moreInfoView(\""+ imageName +"\");"; 
 	a.innerHTML = 'More info'
 	elem.appendChild(a);
+	
+	// close btn
+	createCloseBtn(elem);
 	
 	//append to container
 	appendItem(elem);
@@ -128,9 +144,12 @@ function moreInfoView(imageName) {
     var submitBtn = document.createElement("INPUT");
     submitBtn.setAttribute("type", "submit");
 	formLayout.appendChild(submitBtn);
-    
-    
+
 	elem.appendChild(formLayout);
+	
+	// close btn
+	createCloseBtn(elem);
+	
 	appendItem(elem);
 }
 
@@ -154,6 +173,7 @@ $(images).each(function(){
 	imageTable.row.add([imageUrl, this['creation_time'], 'dummy source', 
 	                    'dummy lat', 'dummy lon', 'dummy alt']).draw();
 });
+
 
 /*
  * Image drag and drop upload
