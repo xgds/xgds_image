@@ -6,11 +6,13 @@ var imageTable = $('#image_table').DataTable(defaultOptions);
 
 // give path, construct an html link
 function createLink(path) {
-	return "<a href='javascript:imageView(\"" + path + "\");'>" + path + "</a>";
+	var imgName = path.split('/');
+	imgName = imgName[imgName.length-1];
+	return "<a href='javascript:imageView(\"" + imgName + "\",\"" + path + "\");'>" + imgName + "</a>";
 }
 
 // call back for onclick that creates a new div with image view
-function imageView(imagePath) {
+function imageView(imageName, imagePath) {
 	/**
 	 * If the view doesn't exist, create one. 
 	 */
@@ -18,15 +20,31 @@ function imageView(imagePath) {
 	var elem = document.createElement('div');
 	elem.className='item w_image lockAspect';
 	elem.id='item_image_view';
-	$('<img src="'+ imagePath +'">').width(450).height('auto').appendTo(elem);
+	elem.innerHTML = "<strong>"+imageName+"</strong>";
+	$('<img src="'+ imagePath +'">').width(450).height(300).appendTo(elem);
+	
+	//image description
+	var descriptionDiv = document.createElement('div');
+	descriptionDiv.innerHTML = "Source: dummy source, Author: Jane Doe, Altitude: 5800ft";
+	elem.appendChild(descriptionDiv);
+	
+	//more info html link
+	var a = document.createElement('a');
+	a.href =  'javascript:moreInfo();'; // Insted of calling setAttribute 
+	a.innerHTML = 'More info' // <a>INNER_TEXT</a>
+	elem.appendChild(a);
+	
 	//append to container
 	$container.append( elem );
 	$container.packery('appended', elem);
-	
-	// layout Packery after all images have loaded
-	$container.imagesLoaded( function() {
-	  $container.packery();
-	});
+
+	// call make resizeable again
+	makeResizable($container);
+}
+
+// callback for creating a more info view 
+function moreInfo() {
+	alert("more info view");
 }
 
 // add rows to the table on page load.
