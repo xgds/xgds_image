@@ -14,7 +14,9 @@
 # specific language governing permissions and limitations under the License.
 # __END_LICENSE__
 
+import glob
 import json
+import os
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.template import RequestContext
@@ -22,22 +24,42 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from models import SingleImage
 from forms import UploadFileForm
+from xgds_image import settings
+
+
+def get_handlebars_templates(source):
+    global _template_cache
+    if settings.XGDS_IMAGE_TEMPLATE_DEBUG or not _template_cache:
+        templates = {}
+        for thePath in source:
+            inp = os.path.join(settings.PROJ_ROOT, 'apps', thePath)
+            for template_file in glob.glob(os.path.join(inp, '*.handlebars')):
+                with open(template_file, 'r') as infile:
+                    template_name = os.path.splitext(os.path.basename(template_file))[0]
+                    templates[template_name] = infile.read()
+        _template_cache = templates
+    return _template_cache
+
 
 def getImageUploadPage(request):
+    #TODO: filter the SingleImage so that it lists users's uploaded images.
     images = SingleImage.objects.all()  # @UndefinedVariable
     uploadedImages = [json.dumps(image.toMapDict()) for image in images]
-    data = {'uploadedImages': uploadedImages}
+    templates = get_handlebars_templates(settings.XGDS_IMAGE_HANDLEBARS_DIR)
+    data = {'uploadedImages': uploadedImages,
+            'templates': templates}
     return render_to_response("xgds_image/imageUpload.html", data,
                               context_instance=RequestContext(request))
+
     
 def getImageSearchPage(request):
     return render_to_response("xgds_image/imageSearch.html", {},
                               context_instance=RequestContext(request))
     
-    
-def saveImageToDB(request, uploadType):
+
+def saveImage(request):
     """
-    Image(s) drag and drop, save to database.
+    Image drag and drop, saves the files and to the database.
     """
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
@@ -46,20 +68,8 @@ def saveImageToDB(request, uploadType):
             new_file.save()
             # pass the uploaded image to front end as json.
             new_file_json = new_file.toMapDict() 
-            if uploadType == 'dropzone': # if uploded via dropzone
-                return HttpResponse(json.dumps({'success': 'true', 'json': new_file_json}), 
-                                    content_type='application/json')
-            # do this for file system upload     
-            elif uploadType == 'filesystem':
-                return HttpResponseRedirect(reverse('xgds_image_upload_page'))
-            else: 
-                return HttpResponse(json.dumps({'error': 'Wrong type of image upload'}), content_type='application/json')
+            return HttpResponse(json.dumps({'success': 'true', 'json': new_file_json}), 
+                                content_type='application/json')
+
         else: 
-            print "FORM ERRORS"
-            print form.errors
-            return HttpResponse(json.dumps({'error': 'Uploaded image is not valid'}), content_type='application/json')
-    else:
-        form = UploadFileForm()
-        data = {'form': form}
-        return render_to_response('xgds_image/imageUpload.html', 
-                                  data, context_instance=RequestContext(request))        
+            return HttpResponse(json.dumps({'error': 'Uploaded image is not valid'}), content_type='application/json')     

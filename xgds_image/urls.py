@@ -22,5 +22,5 @@ urlpatterns = patterns('',
 #                        (r'^$', TemplateView.as_view(template_name='xgds_image/index.html'), {}, 'index'),
                        (r'^imageUpload/', views.getImageUploadPage, {}, 'xgds_image_upload_page'),
                        (r'^imageSearch/', views.getImageSearchPage, {}, 'xgds_image_search_page'),
-                       (r'^saveImageToDB/(?P<uploadType>[\w-]+)$', views.saveImageToDB, {}, 'xgds_save_image')
+                       (r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
                        )

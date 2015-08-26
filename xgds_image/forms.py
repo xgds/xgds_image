@@ -22,3 +22,4 @@ class UploadFileForm(forms.ModelForm):
     class Meta:
         model = SingleImage
         fields = ['file']
+        

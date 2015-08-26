@@ -34,9 +34,13 @@ Other modules can access the value of FOO like this:
 Don't try to get the value of FOO from django.conf.settings.  That
 settings object will not know about the default value!
 """
+import os
 
 XGDS_IMAGE_BOWER_INSTALLED_APPS = ('dropzone',
                                    'packery', 
                                    "fontawesome")
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
+
+XGDS_IMAGE_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
+XGDS_IMAGE_HANDLEBARS_DIR = [os.path.join('xgds_image', 'templates', 'handlebars')]

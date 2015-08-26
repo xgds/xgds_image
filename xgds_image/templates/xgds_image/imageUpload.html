@@ -3,7 +3,6 @@
  {% block cssExtras %}
  {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
-    <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}fontawesome/css/font-awesome.min.css"></link>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
  {% endblock cssExtras %}
 
@@ -16,13 +15,15 @@
 {% block scripts %}
 {{block.super}}
 <!-- 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.js'></script> -->
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/dropzone.js'></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}packery/dist/packery.pkgd.min.js" ></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/packem.js"></script>
+    
+    <!--  parse image json -->
     <script type="text/javascript">
-    // parse json
     var uploadedImages = {{ uploadedImages|safe }};
     var images = []; // stores JSON objects
     $(uploadedImages).each(function() {
@@ -30,7 +31,14 @@
     });
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
-
+	
+	<!--  load handlebars -->
+	<script type="text/javascript" src="/static/geocamUtil/js/datatable_helpers.js"></script>
+	{% for template_name, template in templates.items %}
+		<script type="text/handlebars" id="template-{{template_name}}">
+			{{template|safe}}
+		</script>
+	{% endfor %}
 {% endblock %}
 
 
@@ -39,19 +47,13 @@
 	<div id="container"> 
 		<div class='item w2 lockAspect' id='item_image_upload'>
 			<!-- Dropzone image upload -->
-			<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' 'dropzone' %}" method="post" 
+			<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
 			enctype="multipart/form-data">
 			{% csrf_token %}
 			</form>
 			<button id="submit-all">
-				Submit all files
+				Upload Images
 			</button>
-
-			<!-- File system image upload -->
-<!-- 			<form method="post" action="{% url 'xgds_save_image' 'filesystem' %}" enctype="multipart/form-data">
-			  <input type="file" name="file" accept="image/*" multiple>
-			  <input type="submit">
-			</form> -->
 		</div>
 		
 		<!-- Image list table -->
