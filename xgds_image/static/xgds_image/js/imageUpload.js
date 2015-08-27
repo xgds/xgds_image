@@ -19,13 +19,13 @@ function deleteButton() {
 function imageView(imageName, imagePath) {	
 	var raw_template = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(raw_template);
-	var html = compiledTemplate({ imageName : imageName, 
-								  imagePath: imagePath}); // (step 3)
-	$container.append(html);
-	makeResizable($container);
-	// trigger layout
-	$container.packery();
-	// bind delete
+	var htmlString = compiledTemplate({ imageName : imageName, 
+								  imagePath: imagePath});
+
+	newDiv = $(htmlString);
+	$container.append(newDiv);
+	$container.packery( 'appended', newDiv);
+	makeChildrenResizable($container, newDiv);
 	deleteButton();
 }
 

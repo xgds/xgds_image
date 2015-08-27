@@ -25,20 +25,7 @@ from django.core.urlresolvers import reverse
 from models import SingleImage
 from forms import UploadFileForm
 from xgds_image import settings
-
-
-def get_handlebars_templates(source):
-    global _template_cache
-    if settings.XGDS_IMAGE_TEMPLATE_DEBUG or not _template_cache:
-        templates = {}
-        for thePath in source:
-            inp = os.path.join(settings.PROJ_ROOT, 'apps', thePath)
-            for template_file in glob.glob(os.path.join(inp, '*.handlebars')):
-                with open(template_file, 'r') as infile:
-                    template_name = os.path.splitext(os.path.basename(template_file))[0]
-                    templates[template_name] = infile.read()
-        _template_cache = templates
-    return _template_cache
+from xgds_map_server.views import get_handlebars_templates
 
 
 def getImageUploadPage(request):
