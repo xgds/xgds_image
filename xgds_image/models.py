@@ -110,16 +110,6 @@ class AbstractSingleImage(models.Model):
        
     class Meta:
         abstract = True
-    
-    def toMapDict(self):
-        """
-        Return a reduced dictionary that will be turned to JSON for rendering in a map
-        """
-        result = modelToDict(self)
-        del(result['file']) 
-        result['imageUrl'] = settings.DATA_URL + self.file.name
-        result['creation_time'] = str(self.creation_time)
-        return result
 
     def fillId(self):
         index = self.__class__.objects.count() + 1
@@ -138,4 +128,19 @@ class AbstractSingleImage(models.Model):
 class SingleImage(AbstractSingleImage):
     """ This can be used for screenshots or non geolocated images 
     """
-    pass  
+    def toMapDict(self):
+        """
+        Return a reduced dictionary that will be turned to JSON for rendering in a map
+        """
+        result = modelToDict(self)
+        del(result['file']) 
+        result['imageUrl'] = settings.DATA_URL + self.file.name
+        result['creation_time'] = str(self.creation_time)
+        if self.imageSet:
+            result['source'] = self.imageSet.camera.displayName
+        else: 
+            result['source'] = 'Not available'
+        result['latitude'] = 'Not available'
+        result['longitude'] = 'Not available'
+        result['altitude'] = 'Not available'
+        return result

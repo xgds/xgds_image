@@ -70,6 +70,5 @@ def saveImage(request):
             new_file_json = new_file.toMapDict() 
             return HttpResponse(json.dumps({'success': 'true', 'json': new_file_json}), 
                                 content_type='application/json')
-
         else: 
             return HttpResponse(json.dumps({'error': 'Uploaded image is not valid'}), content_type='application/json')     

@@ -3,24 +3,30 @@ var $container = $('#container');
 /**
  * Helpers
  */
-$('i').bind("click", function() {
-	// remove clicked element
-	$container.packery( 'remove', event.target.parentElement );
-	// layout remaining item elements
-	$container.packery();
-});
+
+function deleteButton() {
+	$('.icon-cancel-circled').bind("click", function() {
+		// remove clicked element
+		$container.packery( 'remove', event.target.parentElement );
+		// layout remaining item elements
+		$container.packery();
+	});	
+}
 
 /*
  * Image View
  */
 function imageView(imageName, imagePath) {	
 	var raw_template = $('#template-image-view').html();
-	var template = Handlebars.compile(raw_template);
-	$container.append(template);
+	var compiledTemplate = Handlebars.compile(raw_template);
+	var html = compiledTemplate({ imageName : imageName, 
+								  imagePath: imagePath}); // (step 3)
+	$container.append(html);
 	makeResizable($container);
 	// trigger layout
 	$container.packery();
-	
+	// bind delete
+	deleteButton();
 }
 
 /*
@@ -28,8 +34,9 @@ function imageView(imageName, imagePath) {
  */
 function moreInfoView(imageName) {	
 	var raw_template = $('#template-moreinfo-view').html();
-	var template = Handlebars.compile(raw_template);
-	$container.append(template);
+	var compiledTemplate = Handlebars.compile(raw_template);
+	var html = compiledTemplate({imageName: imageName});
+	$container.append(html);
 	$container.packery();
 	makeResizable($container);
 }
@@ -51,8 +58,8 @@ function createLink(path) {
 // add rows to the table on page load.
 $(images).each(function(){
 	var imageUrl = createLink(this['imageUrl']);
-	imageTable.row.add([imageUrl, this['creation_time'], 'dummy source', 
-	                    'dummy lat', 'dummy lon', 'dummy alt']).draw();
+	imageTable.row.add([imageUrl, this['creation_time'], this['source'], 
+	                    this['latitude'], this['longitude'], this['altitude']]).draw();
 });
 
 
@@ -82,8 +89,8 @@ Dropzone.options.imageDropZone = {
 			imageJson = responseText['json'];
 			var imageUrl = createLink(imageJson['imageUrl']);
 			// TODO: get rid of dummies and pull from backend
-			imageTable.row.add([imageUrl, imageJson['creation_time'], 'dummy source', 
-			                    'dummy lat', 'dummy lon', 'dummy alt']).draw();
+			imageTable.row.add([imageUrl, imageJson['creation_time'], imageJson['source'], 
+			                    imageJson['latitude'], imageJson['longitude'], imageJson['altitude']]).draw();
 		});
 	}
 };
