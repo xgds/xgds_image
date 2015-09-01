@@ -1,19 +1,47 @@
 {% extends 'image_base.html' %}
+{% load pipeline %}
 
  {% block cssExtras %}
  {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
+    
+    <!--  map stuff -->
+	<link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}openlayers3/ol.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.css"></link>
+    <style scoped>
+    #map {
+	  	 margin-top: 25px;
+	 	 height: 200px;
+	  }
+    </style>
+    <!--  end map stuff -->
+    <!--  map layers stuff -->
+    <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css"></link>
+    <!--  end layers stuff -->
+        
  {% endblock cssExtras %}
 
 
 {% block jsInit %}
+	appOptions = {
+		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
+		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
+		dataUrl: "{{ settings.DATA_URL }}"
+	}
+	$(function(){
+    	app.start(appOptions);
+	});
 	initializePackery();
 {% endblock %}
 
 
 {% block scripts %}
 {{block.super}}
+	{% include "MapJS.html" %}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/dropzone.js'></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
@@ -24,10 +52,11 @@
     <!--  parse image json -->
     <script type="text/javascript">
     var uploadedImages = {{ uploadedImages|safe }};
-    var images = []; // stores JSON objects
+    var imageJson = []; // stores JSON objects
     $(uploadedImages).each(function() {
-    	images.push(JSON.parse(this)); // parse json string
+    	imageJson.push(JSON.parse(this)); // parse json string
     });
+    
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
 	
@@ -38,7 +67,9 @@
 			{{template|safe}}
 		</script>
 	{% endfor %}
-{% endblock %}
+	
+	{% javascript 'custom_map' %}
+{% endblock scripts %}
 
 
 {% block content %}
@@ -74,6 +105,10 @@
 				</table>
 			</div>
 		</div>
+		
+		<div id="map" class="item w2 freeAspect"></div>
+		<div id="layers" hidden></div>
+        <!-- <div id="layers" class="item w2 lockAspect"></div>  -->
 	</div> <!--  js packery container -->
 	{% endblock packery %}
 {% endblock content %}

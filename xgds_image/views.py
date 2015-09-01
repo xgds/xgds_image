@@ -32,9 +32,14 @@ def getImageUploadPage(request):
     #TODO: filter the SingleImage so that it lists users's uploaded images.
     images = SingleImage.objects.all()  # @UndefinedVariable
     uploadedImages = [json.dumps(image.toMapDict()) for image in images]
-    templates = get_handlebars_templates(settings.XGDS_IMAGE_HANDLEBARS_DIR)
+    
+    # map plus image templates for now
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
+    templates = get_handlebars_templates(fullTemplateList)
     data = {'uploadedImages': uploadedImages,
-            'templates': templates}
+            'templates': templates,
+            'app': 'xgds_map_server/js/simpleMapApp.js'}
     return render_to_response("xgds_image/imageUpload.html", data,
                               context_instance=RequestContext(request))
 

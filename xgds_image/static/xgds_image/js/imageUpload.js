@@ -3,7 +3,6 @@ var $container = $('#container');
 /**
  * Helpers
  */
-
 function deleteButton() {
 	$('.icon-cancel-circled').bind("click", function() {
 		// remove clicked element
@@ -16,7 +15,9 @@ function deleteButton() {
 /*
  * Image View
  */
-function imageView(imageName, imagePath) {	
+function imageView(json) {
+	var imagePath = json['imageUrl'];
+	var imageName = imagePath.split('/').slice(-1)[0];
 	var raw_template = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(raw_template);
 	var htmlString = compiledTemplate({ imageName : imageName, 
@@ -29,10 +30,11 @@ function imageView(imageName, imagePath) {
 	deleteButton();
 }
 
+
 /*
  * More Info View
  */
-function moreInfoView(imageName) {	
+function moreInfoView(json, imageName) {	
 	var raw_template = $('#template-moreinfo-view').html();
 	var compiledTemplate = Handlebars.compile(raw_template);
 	var html = compiledTemplate({imageName: imageName});
@@ -41,26 +43,30 @@ function moreInfoView(imageName) {
 	makeResizable($container);
 }
 
+
 /* 
  * Table View
  */
-//images table
-defaultOptions["columnDefs"] = [{ "width": "150", "targets": 0 }];
-var imageTable = $('#image_table').DataTable(defaultOptions);
+// initialize the image table with json of existing images.
+var imageTable = $('#image_table'); 
+defaultOptions["aaData"] = imageJson;
+defaultOptions["aoColumns"] = [
+                               {"mRender":function(data, type, full){
+                            	   var imageName = full['imageUrl'].split('/').slice(-1)[0];
+                            	   var jsonString = JSON.stringify(full);
+                                   return "<a onclick='imageView(" + jsonString + ")'>"+ imageName +"</a>";
+                               }},
+                               {"mData": "creation_time"},
+                               {"mData": "source"},
+                               {"mData": "latitude"},
+                               {"mData": "longitude"},
+                               {"mData": "altitude"}
+];
 
-// give path, construct an html link
-function createLink(path) {
-	var imgName = path.split('/');
-	imgName = imgName[imgName.length-1];
-	return "<a href='javascript:imageView(\"" + imgName + "\",\"" + path + "\");'>" + imgName + "</a>";
+if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
+	  $('#image_table').DataTable(defaultOptions);
 }
 
-// add rows to the table on page load.
-$(images).each(function(){
-	var imageUrl = createLink(this['imageUrl']);
-	imageTable.row.add([imageUrl, this['creation_time'], this['source'], 
-	                    this['latitude'], this['longitude'], this['altitude']]).draw();
-});
 
 
 /*
@@ -69,7 +75,6 @@ $(images).each(function(){
 Dropzone.options.imageDropZone = {
 	// Prevents Dropzone from uploading dropped files immediately
 	autoProcessQueue : false,
-
 	//	acceptedFiles: 'application/image',
 	init : function() {
 		var submitButton = document.querySelector("#submit-all")
@@ -86,11 +91,8 @@ Dropzone.options.imageDropZone = {
 		});
 		
 		this.on("success", function(file, responseText, e) {
-			imageJson = responseText['json'];
-			var imageUrl = createLink(imageJson['imageUrl']);
-			// TODO: get rid of dummies and pull from backend
-			imageTable.row.add([imageUrl, imageJson['creation_time'], imageJson['source'], 
-			                    imageJson['latitude'], imageJson['longitude'], imageJson['altitude']]).draw();
+			var json = responseText['json'];
+			imageTable.dataTable().fnAddData(json);
 		});
 	}
 };
