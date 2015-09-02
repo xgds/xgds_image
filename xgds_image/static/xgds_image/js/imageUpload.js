@@ -29,14 +29,19 @@ function imageView(json) {
 								  	altitude: json['altitude']
 									});
 
-	newDiv = $(htmlString);
+	var newDiv = $(htmlString);
 	$container.append(newDiv);
 	$container.packery( 'appended', newDiv);
 	makeChildrenResizable($container, newDiv);
-	deleteButton();
+	
 	$( "#moreInfoButton" ).click(function() {
 		  $( "#more_info_view" ).slideToggle( "slow" );
-		});
+	});
+
+	$container.on( 'layoutComplete', function( event, laidOutItems ) {
+		console.log("event: ", event);
+		console.log("laidOutItems: ",laidOutItems);
+	} )
 }
 
 
