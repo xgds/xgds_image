@@ -1,7 +1,91 @@
 <div class="item w2 lockAspect" id="item_{{ imageName }}"> 
-	<i class="icon-cancel-circled"></i>
-	<div><strong> {{ imageName }} </strong></div>
-	<img src="{{ imagePath }}"></img>
-	<div> Source: dummy source, Author: Jane Doe, Altitude: 6000ft </div>
-	<a href="javascript:moreInfoView('IMG_2457_jzgbwZI.JPG');"> More Info </a>
+	<div id="image_view">
+		<i class="icon-cancel-circled"></i>
+		<div><strong> {{ imageName }} </strong></div>
+		<img src="{{ imagePath }}"></img>
+		<ul>
+			<form id="moreInfoForm" enctype="multipart/form-data" method="post">
+				<li>
+					<label>Source</label>
+					<select class="source">
+						<option value="dummy1"> dummy1 </option>
+						<option value="dummy2"> dummy2 </option>
+						<option value="dummy3"> dummy3 </option>
+					</select>
+				</li>
+				<li>
+					<label>Author</label>
+					<select class="author">
+						<option value="dummy1"> dummy1 </option>
+						<option value="dummy2"> dummy2 </option>
+						<option value="dummy3"> dummy3 </option>
+					</select>
+				</li>
+				<li>
+					<label class="description">Description</label>
+					<textarea id="description"></textarea>
+				</li>
+				<li>
+					<label>Altitude</label>
+					<input class="altitude" value="{{altitude}}"></input>
+				</li>
+				<li>
+					<input type="submit" id="more_info_save_button" value="Save">
+				</li>
+			</form>
+		</ul>
+		<button id="moreInfoButton">Toggle more info</button>
+	</div> 
+	
+	<div id="more_info_view">
+		<form id="moreInfoForm" enctype="multipart/form-data" method="post">
+			<fieldset>
+				<legend> More info: </legend>
+				<ul>
+				<li>
+					<label>Source</label>
+					<select class="source">
+						<option value="dummy1"> dummy1 </option>
+						<option value="dummy2"> dummy2 </option>
+						<option value="dummy3"> dummy3 </option>
+					</select>
+				</li>
+				<li>
+					<label>Location</label>
+					<select class="location">
+						<option value="dummy1"> dummy1 </option>
+						<option value="dummy2"> dummy2 </option>
+						<option value="dummy3"> dummy3 </option>
+					</select>
+				</li>
+				<li>
+					<label>Latitude</label>
+					<input class="latitude" value="{{latitude}}"></input>
+				</li>
+				<li>
+					<label>Longitude</label>
+					<input class="longitude" value="{{longitude}}"></input>
+				</li>
+				<li>
+					<label>Altitude</label>
+					<input class="altitude" value="{{altitude}}"></input>
+				</li>
+				<li>
+					<label>Author</label>
+					<select class="author">
+						<option value="dummy1"> dummy1 </option>
+						<option value="dummy2"> dummy2 </option>
+						<option value="dummy3"> dummy3 </option>
+					</select>
+				</li>
+				<li>
+					<label class="description">Description</label>
+					<textarea id="description"></textarea>
+				</li>
+				<input type="submit" id="more_info_save_button" value="Save">
+				</ul>
+			</fieldset>
+		</form>
+	</div>
+
 </div>

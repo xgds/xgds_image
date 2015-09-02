@@ -22,34 +22,6 @@ img {
     max-height: 100%;
 }
 
-.formLayout
-    {
-        padding: 10px;
-        width: 300px;
-    }
-    
-.formLayout label, .formLayout input, .formLayout textarea
-{
-    display: block;
-    width: 120px;
-    float: left;
-    margin-bottom: 10px;
-}
-
-.formLayout input[type=submit]
-{
-	display: block;
-	float: right;
-}
-
-
-
-.formLayout label
-{
-    text-align: right;
-    padding-right: 20px;
-}
-
 br
 {
     clear: left;
@@ -61,4 +33,21 @@ i {
     float: right;
     top:10px;
     right:0px;
+}
+
+#image_view {
+	float: left;	
+}
+
+#more_info_view {
+	margin-top: 10px;
+	display:none;
+}
+
+ul li {
+	display: inline-block;
+}
+
+ul li label {
+	display: block;
 }

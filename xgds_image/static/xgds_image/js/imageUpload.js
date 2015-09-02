@@ -21,13 +21,22 @@ function imageView(json) {
 	var raw_template = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(raw_template);
 	var htmlString = compiledTemplate({ imageName : imageName, 
-								  imagePath: imagePath});
+								  	imagePath: imagePath, 
+								  	source: json['source'],
+								  	time: json['creation_time'],
+								  	latitude: json['latitude'],
+								  	longitude: json['longitude'],
+								  	altitude: json['altitude']
+									});
 
 	newDiv = $(htmlString);
 	$container.append(newDiv);
 	$container.packery( 'appended', newDiv);
 	makeChildrenResizable($container, newDiv);
 	deleteButton();
+	$( "#moreInfoButton" ).click(function() {
+		  $( "#more_info_view" ).slideToggle( "slow" );
+		});
 }
 
 
@@ -66,7 +75,6 @@ defaultOptions["aoColumns"] = [
 if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
 	  $('#image_table').DataTable(defaultOptions);
 }
-
 
 
 /*
