@@ -26,17 +26,8 @@ from django.conf import settings
 PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
 
 
-# Image (author, 
-# reference to position, 
-# reference to image file, camera, 
-# description, timestamp, width, height, 
-# GeocamTrack Position (GPS)
-# Camera (AbstractEnumModel)
-
-
 def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
-
 
 class Camera(AbstractEnumModel):
     """
@@ -55,7 +46,6 @@ class AbstractImageSet(models.Model):
     id = models.CharField(max_length=128,
                           unique=True, blank=False,
                           editable=False, primary_key=True)
-
     name = models.CharField(max_length=128, blank=True, null=True, help_text="human-readable image set name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
     camera = models.ForeignKey(Camera)
@@ -64,7 +54,6 @@ class AbstractImageSet(models.Model):
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
     asset_position = models.ForeignKey(PAST_POSITION_MODEL, null=True, blank=True )
-
     
     def __unicode__(self):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
@@ -113,6 +102,7 @@ class AbstractSingleImage(models.Model):
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     raw = models.BooleanField(default=True)
     imageSet = models.ForeignKey(ImageSet, null=True)
+    thumbnail = models.BooleanField(default=False)
        
     class Meta:
         abstract = True

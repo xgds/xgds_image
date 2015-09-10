@@ -30,7 +30,7 @@ from forms import UploadFileForm
 from xgds_image import settings
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
-from xgds_image.utils import getLatLon, getExifData, getGPSDatetime
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnail
 from geocamUtil.loader import getModelByName
 # import pydevd
 
@@ -39,7 +39,6 @@ def getImageUploadPage(request):
     #TODO: filter the SingleImage so that it lists users's uploaded images.
     images = SingleImage.objects.all()  # @UndefinedVariable
     uploadedImages = [json.dumps(image.toMapDict()) for image in images]
-    
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
@@ -66,7 +65,7 @@ def getImageSearchPage(request):
                               context_instance=RequestContext(request))
 
 
-def createNewImageSet(exifData, author):
+def createNewImageSet(exifData, author, origImg):
     """
     creates new imageSet instance
     """
@@ -91,9 +90,15 @@ def createNewImageSet(exifData, author):
     newImageSet.creation_time = time.strftime("%Y-%m-%d %H:%M:%S", exifTime)
     # set camera 
     cameraName = exifData['Model']
-    newImageSet.camera = Camera.objects.create(display_name = cameraName)
-    # save and return
+    newImageSet.camera = Camera.objects.create(display_name = cameraName)    
+    # save image set
     newImageSet.save()
+    # create a thumbnail
+    thumbnailFile = createThumbnail(origImg)
+    SingleImage.objects.create(file = thumbnailFile, 
+                               raw = False, 
+                               thumbnail = True,
+                               imageSet = newImageSet)
     return newImageSet
 
 
@@ -105,17 +110,18 @@ def saveImage(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             # create and save a single image obj
-            newFile = SingleImage(file = request.FILES['file'])
+            uploadedFile = request.FILES['file']
+            newImage = SingleImage(file = uploadedFile)
             
             # create a new image set instance           
-            exifData = getExifData(newFile)
+            exifData = getExifData(newImage)
             author = request.user  # set user as image author
-            newSet = createNewImageSet(exifData, author)
-            newFile.imageSet = newSet
-            newFile.save()
+            newSet = createNewImageSet(exifData, author, uploadedFile.name)
+            newImage.imageSet = newSet
+            newImage.save()
             
             # pass the uploaded image to front end as json.
-            newFileJson = newFile.toMapDict() 
+            newFileJson = newImage.toMapDict() 
             return HttpResponse(json.dumps({'success': 'true', 'json': newFileJson}), 
                                 content_type='application/json')
         else: 

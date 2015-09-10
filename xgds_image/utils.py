@@ -17,6 +17,21 @@
 import PIL
 import PIL.ExifTags
 import datetime
+from PIL import Image
+import glob, os
+# from django.conf import settings
+from xgds_image import settings 
+
+
+def createThumbnail(src):
+    size = 128, 128
+    imgDir = settings.DATA_ROOT + settings.XGDS_IMAGE_DATA_SUBDIRECTORY
+    im = Image.open(imgDir + src)
+    im.thumbnail(size, Image.ANTIALIAS)
+    dstFileName = 'thumbnail_' + src
+    dst = imgDir + dstFileName
+    im.save(dst)
+    return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + dstFileName
 
 """
 Exif utility Functions
