@@ -30,9 +30,9 @@
 				<li>
 					<label>Source</label>
 					<select class="source">
-						<option value="dummy1"> dummy1 </option>
-						<option value="dummy2"> dummy2 </option>
-						<option value="dummy3"> dummy3 </option>
+					{#allSources}
+ 						<option value="{{ source }}">{{ source }}</option>
+					{/allSources}
 					</select>
 				</li>
 				<li>
@@ -58,9 +58,9 @@
 				<li>
 					<label>Author</label>
 					<select class="author">
-						<option value="dummy1"> dummy1 </option>
-						<option value="dummy2"> dummy2 </option>
-						<option value="dummy3"> dummy3 </option>
+					{#allAuthors}
+ 						<option value="{{ author }}">{{ author }}</option>
+					{/allAuthors}
 					</select>
 				</li>
 				<li>

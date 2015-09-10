@@ -18,16 +18,30 @@ function deleteButton() {
 function imageView(json) {
 	var imagePath = json['imageUrl'];
 	var imageName = imagePath.split('/').slice(-1)[0];
-	var raw_template = $('#template-image-view').html();
-	var compiledTemplate = Handlebars.compile(raw_template);
+	var rawTemplate = $('#template-image-view').html();
+	var compiledTemplate = Handlebars.compile(rawTemplate);
+	var jsonList = { imageName : imageName, 
+			imagePath: imagePath, 
+			source: json['source'],
+			time: json['creation_time'],
+			latitude: json['latitude'],
+			longitude: json['longitude'],
+			altitude: json['altitude'],
+			author: json['author'],
+			allAuthors: allAuthors,
+			allSources: allSources
+			};
 	var htmlString = compiledTemplate({ imageName : imageName, 
-								  	imagePath: imagePath, 
-								  	source: json['source'],
-								  	time: json['creation_time'],
-								  	latitude: json['latitude'],
-								  	longitude: json['longitude'],
-								  	altitude: json['altitude']
-									});
+										imagePath: imagePath, 
+										source: json['source'],
+										time: json['creation_time'],
+										latitude: json['latitude'],
+										longitude: json['longitude'],
+										altitude: json['altitude'],
+										author: json['author'],
+										allAuthors: allAuthors,
+										allSources: allSources
+	});
 
 	var newDiv = $(htmlString);
 	$container.append(newDiv);
@@ -37,26 +51,7 @@ function imageView(json) {
 	$( "#moreInfoButton" ).click(function() {
 		  $( "#more_info_view" ).slideToggle( "slow" );
 	});
-
-	$container.on( 'layoutComplete', function( event, laidOutItems ) {
-		console.log("event: ", event);
-		console.log("laidOutItems: ",laidOutItems);
-	} )
 }
-
-
-/*
- * More Info View
- */
-function moreInfoView(json, imageName) {	
-	var raw_template = $('#template-moreinfo-view').html();
-	var compiledTemplate = Handlebars.compile(raw_template);
-	var html = compiledTemplate({imageName: imageName});
-	$container.append(html);
-	$container.packery();
-	makeResizable($container);
-}
-
 
 /* 
  * Table View

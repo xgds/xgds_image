@@ -32,18 +32,22 @@ from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnail
 from geocamUtil.loader import getModelByName
-# import pydevd
 
 
 def getImageUploadPage(request):
     #TODO: filter the SingleImage so that it lists users's uploaded images.
     images = SingleImage.objects.all()  # @UndefinedVariable
     uploadedImages = [json.dumps(image.toMapDict()) for image in images]
+    # options for select boxes in the more info template.
+    allAuthors = [{'author': str(user.username)} for user in User.objects.all()]
+    allSources = [{'source': str(camera.display_name)} for camera in Camera.objects.all()]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     templates = get_handlebars_templates(fullTemplateList)
     data = {'uploadedImages': uploadedImages,
+            'allAuthors': allAuthors,
+            'allSources': allSources,
             'templates': templates,
             'app': 'xgds_map_server/js/simpleMapApp.js'}
     return render_to_response("xgds_image/imageUpload.html", data,
@@ -69,7 +73,6 @@ def createNewImageSet(exifData, author, origImg):
     """
     creates new imageSet instance
     """
-#     pydevd.settrace('128.102.236.48')
     # set location
     gpsLatLon = getLatLon(exifData)
     newImageSet = ImageSet()
@@ -94,11 +97,12 @@ def createNewImageSet(exifData, author, origImg):
     # save image set
     newImageSet.save()
     # create a thumbnail
-    thumbnailFile = createThumbnail(origImg)
-    SingleImage.objects.create(file = thumbnailFile, 
-                               raw = False, 
-                               thumbnail = True,
-                               imageSet = newImageSet)
+#     thumbnailFile = createThumbnail(origImg)
+#     thumbnail = SingleImage(file = thumbnailFile, 
+#                 raw = False, 
+#                 thumbnail = True,
+#                 imageSet = newImageSet)
+#     thumbnail.save()
     return newImageSet
 
 

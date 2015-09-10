@@ -29,6 +29,7 @@ PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
 def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
+
 class Camera(AbstractEnumModel):
     """
     Camera class
@@ -77,10 +78,10 @@ class AbstractImageSet(models.Model):
         
     def fillId(self):
         index = self.__class__.objects.count() + 1
-        self.pk = HOSTNAME + "_" + str(index)
+        self.id = HOSTNAME + "_" + str(index)
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.id:
             self.fillId()
         super(AbstractImageSet, self).save(*args, **kwargs)
 
