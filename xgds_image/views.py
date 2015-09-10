@@ -17,19 +17,22 @@
 import glob
 import json
 import os
+import time
 
-import PIL
-import PIL.ExifTags
-
+from django.forms.formsets import formset_factory
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
-from models import SingleImage
+from models import *
 from forms import UploadFileForm
 from xgds_image import settings
 from xgds_map_server.views import get_handlebars_templates
+from xgds_data.forms import SearchForm, SpecializedForm
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime
+from geocamUtil.loader import getModelByName
+# import pydevd
 
 
 def getImageUploadPage(request):
@@ -49,8 +52,50 @@ def getImageUploadPage(request):
 
     
 def getImageSearchPage(request):
-    return render_to_response("xgds_image/imageSearch.html", {},
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
+    templates = get_handlebars_templates(fullTemplateList)
+    # search stuff
+    theForm = SpecializedForm(SearchForm, ImageSet)
+    theFormSetMaker = formset_factory(theForm, extra=0)
+    theFormSet = theFormSetMaker(initial=[{'modelClass': AbstractImageSet}])
+    return render_to_response("xgds_image/imageSearch.html", 
+                              {'templates': templates,
+                               'formset': theFormSet,
+                               'app': 'xgds_map_server/js/simpleMapApp.js'},
                               context_instance=RequestContext(request))
+
+
+def createNewImageSet(exifData, author):
+    """
+    creates new imageSet instance
+    """
+#     pydevd.settrace('128.102.236.48')
+    # set location
+    gpsLatLon = getLatLon(exifData)
+    newImageSet = ImageSet()
+    if gpsLatLon: 
+        positionModel = getModelByName(PAST_POSITION_MODEL)
+        dummyResource = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL).objects.create(name="dummy resource")
+        dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.create(name="dummy track", resource = dummyResource)
+        gpsTimeStamp = getGPSDatetime(exifData)
+        position = positionModel.objects.create(track = dummyTrack, 
+                                                timestamp= gpsTimeStamp,
+                                                latitude = gpsLatLon[0], 
+                                                longitude= gpsLatLon[1])
+        newImageSet.asset_position = position
+    # set author
+    newImageSet.author = author
+    # set time stamp
+    exifTime = time.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
+    newImageSet.creation_time = time.strftime("%Y-%m-%d %H:%M:%S", exifTime)
+    # set camera 
+    cameraName = exifData['Model']
+    newImageSet.camera = Camera.objects.create(display_name = cameraName)
+    # save and return
+    newImageSet.save()
+    return newImageSet
+
 
 def saveImage(request):
     """
@@ -59,80 +104,19 @@ def saveImage(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
+            # create and save a single image obj
             newFile = SingleImage(file = request.FILES['file'])
-            newFile.save()
+            
+            # create a new image set instance           
             exifData = getExifData(newFile)
-            gpsLatLon = getLatLon(exifData)
+            author = request.user  # set user as image author
+            newSet = createNewImageSet(exifData, author)
+            newFile.imageSet = newSet
+            newFile.save()
+            
             # pass the uploaded image to front end as json.
             newFileJson = newFile.toMapDict() 
             return HttpResponse(json.dumps({'success': 'true', 'json': newFileJson}), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Uploaded image is not valid'}), content_type='application/json')  
-        
-"""
-Exif utility Functions
-referenced: https://gist.github.com/erans/983821
-"""
-def getExifData(imageModelInstance):
-    pilImageObj = PIL.Image.open(imageModelInstance.file)
-    exifData = {}
-    for tag,value in pilImageObj._getexif().items():
-        decoded = PIL.ExifTags.TAGS.get(tag, tag)
-        if tag in PIL.ExifTags.TAGS:
-            if decoded == "GPSInfo":
-                gpsData = {}
-                for t in value:
-                    gpsDecoded = PIL.ExifTags.GPSTAGS.get(t, t)
-                    gpsData[gpsDecoded] = value[t]
-                exifData[decoded] = gpsData
-            else: 
-                exifData[PIL.ExifTags.TAGS[tag]] = value
-    return exifData
-
-def getIfExists(data, key):
-    if key in data:
-        return data[key]
-        
-    return None
-    
-def convertToDegrees(value):
-    """Helper function to convert the GPS coordinates stored in the EXIF to degress in float format"""
-    d0 = value[0][0]
-    d1 = value[0][1]
-    d = float(d0) / float(d1)
-
-    m0 = value[1][0]
-    m1 = value[1][1]
-    m = float(m0) / float(m1)
-
-    s0 = value[2][0]
-    s1 = value[2][1]
-    s = float(s0) / float(s1)
-
-    return d + (m / 60.0) + (s / 3600.0)
-
-def getLatLon(exifData):
-    """Returns the latitude and longitude, if available, from the provided exif_data (obtained through get_exif_data above)"""
-    lat = None
-    lon = None
-
-    if "GPSInfo" in exifData:        
-        gpsInfo = exifData["GPSInfo"]
-
-        latitude = getIfExists(gpsInfo, "GPSLatitude")
-        latitudeRef = getIfExists(gpsInfo, 'GPSLatitudeRef')
-        longitude = getIfExists(gpsInfo, 'GPSLongitude')
-        longitudeRef = getIfExists(gpsInfo, 'GPSLongitudeRef')
-
-        if latitude and latitudeRef and longitude and longitudeRef:
-            lat = convertToDegrees(latitude)
-            if latitudeRef != "N":                     
-                lat = 0 - lat
-
-            lon = convertToDegrees(longitude)
-            if longitudeRef != "E":
-                lon = 0 - lon
-
-    return lat, lon
-   

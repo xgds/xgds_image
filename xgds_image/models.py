@@ -30,7 +30,6 @@ PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
 # reference to position, 
 # reference to image file, camera, 
 # description, timestamp, width, height, 
-#primary key (chars) and needs to be constructed as same way as notes--> look at models.py in xgds_notes (NotesBase), deleted), heading (ask matt)
 # GeocamTrack Position (GPS)
 # Camera (AbstractEnumModel)
 
@@ -64,6 +63,8 @@ class AbstractImageSet(models.Model):
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
+    asset_position = models.ForeignKey(PAST_POSITION_MODEL, null=True, blank=True )
+
     
     def __unicode__(self):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
@@ -85,13 +86,18 @@ class AbstractImageSet(models.Model):
     def getThumbnail(self):
         return SingleImage.objects.filter(imageSet=self, thumbnail=True)
         
+    def fillId(self):
+        index = self.__class__.objects.count() + 1
+        self.pk = HOSTNAME + "_" + str(index)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.fillId()
+        super(AbstractImageSet, self).save(*args, **kwargs)
+
 
 class ImageSet(AbstractImageSet):
     pass
-
-
-class LocatedImageSet(AbstractImageSet):
-    asset_position = models.ForeignKey(PAST_POSITION_MODEL, null=True, blank=True )
 
 
 class AbstractSingleImage(models.Model):
@@ -136,11 +142,25 @@ class SingleImage(AbstractSingleImage):
         del(result['file']) 
         result['imageUrl'] = settings.DATA_URL + self.file.name
         result['creation_time'] = str(self.creation_time)
-        if self.imageSet:
-            result['source'] = self.imageSet.camera.displayName
-        else: 
+        try: 
+            result['source'] = self.imageSet.camera.display_name
+        except: 
             result['source'] = 'Not available'
-        result['latitude'] = 'Not available'
-        result['longitude'] = 'Not available'
-        result['altitude'] = 'Not available'
+        try: 
+            result['author'] = self.imageSet.author.username
+        except: 
+            result['author'] = 'Not available'
+        try:
+            result['latitude'] = self.imageSet.asset_position.latitude
+        except: 
+            result['latitude'] = 'Not available'
+        try:  
+            result['longitude'] = self.imageSet.asset_position.longitude
+        except: 
+            result['longitude'] = 'Not available'
+        try:     
+            result['altitude'] = self.imageSet.asset_position.altitude
+        except: 
+            result['altitude'] = 'Not available'
+        
         return result

@@ -7,34 +7,19 @@
 			<form id="moreInfoForm" enctype="multipart/form-data" method="post">
 				<li>
 					<label>Source</label>
-					<select class="source">
-						<option value="dummy1"> dummy1 </option>
-						<option value="dummy2"> dummy2 </option>
-						<option value="dummy3"> dummy3 </option>
-					</select>
+					{{ source }}
 				</li>
 				<li>
 					<label>Author</label>
-					<select class="author">
-						<option value="dummy1"> dummy1 </option>
-						<option value="dummy2"> dummy2 </option>
-						<option value="dummy3"> dummy3 </option>
-					</select>
-				</li>
-				<li>
-					<label class="description">Description</label>
-					<textarea id="description"></textarea>
+					{{ author }}
 				</li>
 				<li>
 					<label>Altitude</label>
-					<input class="altitude" value="{{altitude}}"></input>
-				</li>
-				<li>
-					<input type="submit" id="more_info_save_button" value="Save">
+					{{ altitude }}
 				</li>
 			</form>
 		</ul>
-		<button id="moreInfoButton">Toggle more info</button>
+		<button id="moreInfoButton"> More info </button>
 	</div> 
 	
 	<div id="more_info_view">
