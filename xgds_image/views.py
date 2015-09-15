@@ -93,7 +93,6 @@ def updateImageInfo(request):
             imageSet.author = User.objects.get(username = author)
             imageSet.description = description
             imageSet.save()
-        image.save()
         
         response_data={}
         response_data['success'] = 'true'

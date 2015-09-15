@@ -22,20 +22,13 @@ function imageView(json) {
 	var imageName = imagePath.split('/').slice(-1)[0];
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
-	var jsonList = {imageName : imageName, 
-					imagePath: imagePath, 
-					imageId: json['imageId'],
-					source: json['source'],
-					time: json['creation_time'],
-					latitude: json['latitude'],
-					longitude: json['longitude'],
-					altitude: json['altitude'],
-					author: json['author'],
-					allAuthors: allAuthors,
-					allSources: allSources, 
-					imageViewIndex: _imageViewIndex
-					};
-	var htmlString = compiledTemplate(jsonList);
+	// append additional fields to json object to pass to handlebar
+	json.imageName = imageName;
+	json.imagePath = imagePath;
+	json.allAuthors = allAuthors;
+	json.allSources = allSources;
+	json.imageViewIndex = _imageViewIndex;
+	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
 	$container.append(newDiv);
 	$container.packery( 'appended', newDiv);

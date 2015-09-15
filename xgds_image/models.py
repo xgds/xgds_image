@@ -154,5 +154,9 @@ class SingleImage(AbstractSingleImage):
             result['altitude'] = self.imageSet.asset_position.altitude
         except: 
             result['altitude'] = 'Not available'
+        try: 
+            result['description'] = self.imageSet.description
+        except: 
+            result['description'] = 'Not available'
         
         return result
