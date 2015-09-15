@@ -37,8 +37,7 @@ settings object will not know about the default value!
 import os
 
 XGDS_IMAGE_BOWER_INSTALLED_APPS = ('dropzone',
-                                   'packery', 
-                                   "fontawesome")
+                                   'packery')
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
 

@@ -68,6 +68,42 @@ def getImageSearchPage(request):
                                'app': 'xgds_map_server/js/simpleMapApp.js'},
                               context_instance=RequestContext(request))
 
+def updateImageInfo(request):
+    """
+    Saves update image info entered by the user in the image view.
+    """
+    if request.method == 'POST':
+        data = request.POST
+        #TODO: use django forms!
+        imageId = data['imageId']
+        description = data['description']
+        author = data['author']
+        altitude = data['altitude']
+        longitude = data['longitude']
+        latitude = data['latitude']
+        source = data['source']
+        
+        image = SingleImage.objects.filter(id = imageId)[0]
+        if image:
+            imageSet = image.imageSet
+            imageSet.camera = Camera.objects.get(display_name = source)
+            imageSet.asset_position.latitude = latitude
+            imageSet.asset_position.longitude = longitude
+            imageSet.asset_position.altitude = altitude
+            imageSet.author = User.objects.get(username = author)
+            imageSet.description = description
+            imageSet.save()
+        image.save()
+        
+        response_data={}
+        response_data['success'] = 'true'
+        return HttpResponse(json.dumps(response_data),
+            content_type="application/json"
+        )
+    else: 
+        return HttpResponse(json.dumps({'error':{'message': 'could not update image info'}}),
+                            content_type='application/json')
+
 
 def createNewImageSet(exifData, author, origImg):
     """
@@ -93,7 +129,11 @@ def createNewImageSet(exifData, author, origImg):
     newImageSet.creation_time = time.strftime("%Y-%m-%d %H:%M:%S", exifTime)
     # set camera 
     cameraName = exifData['Model']
-    newImageSet.camera = Camera.objects.create(display_name = cameraName)    
+    cameraSet = Camera.objects.filter(display_name = cameraName)
+    if cameraSet.exists():
+        newImageSet.camera = cameraSet[0] 
+    else: 
+        newImageSet.camera = Camera.objects.create(display_name = cameraName)    
     # save image set
     newImageSet.save()
     # create a thumbnail

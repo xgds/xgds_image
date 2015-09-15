@@ -1,4 +1,5 @@
 var $container = $('#container'); 
+var _imageViewIndex = 0;
 
 /**
  * Helpers
@@ -12,6 +13,7 @@ function deleteButton() {
 	});	
 }
 
+
 /*
  * Image View
  */
@@ -20,37 +22,50 @@ function imageView(json) {
 	var imageName = imagePath.split('/').slice(-1)[0];
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
-	var jsonList = { imageName : imageName, 
-			imagePath: imagePath, 
-			source: json['source'],
-			time: json['creation_time'],
-			latitude: json['latitude'],
-			longitude: json['longitude'],
-			altitude: json['altitude'],
-			author: json['author'],
-			allAuthors: allAuthors,
-			allSources: allSources
-			};
-	var htmlString = compiledTemplate({ imageName : imageName, 
-										imagePath: imagePath, 
-										source: json['source'],
-										time: json['creation_time'],
-										latitude: json['latitude'],
-										longitude: json['longitude'],
-										altitude: json['altitude'],
-										author: json['author'],
-										allAuthors: allAuthors,
-										allSources: allSources
-	});
-
+	var jsonList = {imageName : imageName, 
+					imagePath: imagePath, 
+					imageId: json['imageId'],
+					source: json['source'],
+					time: json['creation_time'],
+					latitude: json['latitude'],
+					longitude: json['longitude'],
+					altitude: json['altitude'],
+					author: json['author'],
+					allAuthors: allAuthors,
+					allSources: allSources, 
+					imageViewIndex: _imageViewIndex
+					};
+	var htmlString = compiledTemplate(jsonList);
 	var newDiv = $(htmlString);
 	$container.append(newDiv);
 	$container.packery( 'appended', newDiv);
 	makeChildrenResizable($container, newDiv);
-	
-	$( "#moreInfoButton" ).click(function() {
-		  $( "#more_info_view" ).slideToggle( "slow" );
+	// bind the button to callback
+	$( "#more_info_button_" + _imageViewIndex ).click(function() {
+		  $( "#more_info_view_" + _imageViewIndex ).slideToggle( "slow" );
 	});
+	_imageViewIndex = _imageViewIndex + 1;
+}
+
+
+//update image data
+function updateImageInfo(){
+	var url = "/xgds_image/updateImageInfo/"; // the script where you handle the form input.
+	var postData = $("#more_info_form").serializeArray();
+	$.ajax({
+		url: url,
+		type: "POST",
+		dataType: 'json',
+		data: postData, // serializes the form's elements.
+		success: function(data)
+		{
+			console.log("image successfully updated");
+		},
+		error: function() {
+			alert("failed!");
+		}
+	});
+	return false; // avoid to execute the actual submit of the form.
 }
 
 /* 

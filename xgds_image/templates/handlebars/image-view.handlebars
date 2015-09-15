@@ -1,73 +1,71 @@
 <div class="item w2 lockAspect" id="item_{{ imageName }}"> 
+
 	<div id="image_view">
 		<i class="icon-cancel-circled"></i>
-		<div><strong> {{ imageName }} </strong></div>
-		<img src="{{ imagePath }}"></img>
+		
+		<button class="small info btn prev-button"><i class="icon-left-dir"></i></button>
+		<div class="image-name" ><strong> {{ imageName }} </strong></div>
+		<button class="small info btn next-button"><i class="icon-right-dir"></i></button>
+		<br>
+		<div class="image-wrapper"> 
+			<img src="{{ imagePath }}"></img>
+		</div>
+		
 		<ul>
-			<form id="moreInfoForm" enctype="multipart/form-data" method="post">
-				<li>
-					<label>Source</label>
-					{{ source }}
-				</li>
-				<li>
-					<label>Author</label>
-					{{ author }}
-				</li>
-				<li>
-					<label>Altitude</label>
-					{{ altitude }}
-				</li>
-			</form>
+			<li>
+				<label>Source</label>
+				{{ source }}
+			</li>
+			<li>
+				<label>Author</label>
+				{{ author }}
+			</li>
+			<li>
+				<label>Altitude</label>
+				{{ altitude }}
+			</li>
 		</ul>
-		<button id="moreInfoButton"> More info </button>
+		<button id="more-info-button_{{imageViewIndex}}"> More info </button>
 	</div> 
 	
-	<div id="more_info_view">
-		<form id="moreInfoForm" enctype="multipart/form-data" method="post">
+	<div id="more_info_view_{{imageViewIndex}}">
+		<form action="/xgds_image/updateImageInfo/" id="more_info_form" method="post">
 			<fieldset>
-				<legend> More info: </legend>
 				<ul>
-				<li>
-					<label>Source</label>
-					<select class="source">
-					{#allSources}
- 						<option value="{{ source }}">{{ source }}</option>
-					{/allSources}
-					</select>
-				</li>
-				<li>
-					<label>Location</label>
-					<select class="location">
-						<option value="dummy1"> dummy1 </option>
-						<option value="dummy2"> dummy2 </option>
-						<option value="dummy3"> dummy3 </option>
-					</select>
-				</li>
-				<li>
-					<label>Latitude</label>
-					<input class="latitude" value="{{latitude}}"></input>
-				</li>
-				<li>
-					<label>Longitude</label>
-					<input class="longitude" value="{{longitude}}"></input>
-				</li>
-				<li>
-					<label>Altitude</label>
-					<input class="altitude" value="{{altitude}}"></input>
-				</li>
-				<li>
-					<label>Author</label>
-					<select class="author">
-					{#allAuthors}
- 						<option value="{{ author }}">{{ author }}</option>
-					{/allAuthors}
-					</select>
-				</li>
-				<li>
-					<label class="description">Description</label>
-					<textarea id="description"></textarea>
-				</li>
-				<input type="submit" id="more_info_save_button" value="Save">
+					<input name="imageId" value="{{imageId}}" hidden></input>
+					<li>
+						<label>Source</label>
+						<select name="source">
+						{{#each allSources}}
+	 						<option value="{{source}}">{{source}}</option>
+						{{/each}}
+						</select>
+					</li>
+					<li>
+						<label>Latitude</label>
+						<input name="latitude" value="{{latitude}}"></input>
+					</li>
+					<li>
+						<label>Longitude</label>
+						<input name="longitude" value="{{longitude}}"></input>
+					</li>
+					<li>
+						<label>Altitude</label>
+						<input name="altitude" value="{{altitude}}"></input>
+					</li>
+					<li>
+						<label>Author</label>
+						<select name="author">
+						{{#each allAuthors}}
+	 						<option value="{{author}}">{{author}}</option>
+						{{/each}}
+						</select>
+					</li>
+					<li>
+						<label>Description</label>
+						<textarea name="description"></textarea>
+					</li>
+					<input type="submit" value="Save" onclick="updateImageInfo();" />
 				</ul>
 			</fieldset>
 		</form>

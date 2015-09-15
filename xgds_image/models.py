@@ -132,6 +132,7 @@ class SingleImage(AbstractSingleImage):
         result = modelToDict(self)
         del(result['file']) 
         result['imageUrl'] = settings.DATA_URL + self.file.name
+        result['imageId'] = self.id
         result['creation_time'] = str(self.creation_time)
         try: 
             result['source'] = self.imageSet.camera.display_name
