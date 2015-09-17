@@ -131,6 +131,7 @@ class SingleImage(AbstractSingleImage):
         """
         result = modelToDict(self)
         del(result['file']) 
+        result['imageName'] = self.file.name.split('/')[-1]
         result['imageUrl'] = settings.DATA_URL + self.file.name
         result['imageId'] = self.id
         result['creation_time'] = str(self.creation_time)

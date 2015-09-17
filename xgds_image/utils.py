@@ -24,7 +24,7 @@ from xgds_image import settings
 
 
 def createThumbnail(src):
-    size = 128, 128
+    size = 128, 128 #TODO: change this to fit the aspect ratio from image size.
     imgDir = settings.DATA_ROOT + settings.XGDS_IMAGE_DATA_SUBDIRECTORY
     im = Image.open(imgDir + src)
     im.thumbnail(size, Image.ANTIALIAS)

@@ -18,25 +18,32 @@ function deleteButton() {
  * Image View
  */
 function imageView(json) {
-	var imagePath = json['imageUrl'];
-	var imageName = imagePath.split('/').slice(-1)[0];
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
 	// append additional fields to json object to pass to handlebar
-	json.imageName = imageName;
-	json.imagePath = imagePath;
+	json.imageName = json['imageName'];
+	json.imagePath = json['imageUrl'];
 	json.allAuthors = allAuthors;
 	json.allSources = allSources;
-	json.imageViewIndex = _imageViewIndex;
+	// inject new fields into the precompiled template
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
-	$container.append(newDiv);
+	// on more info button click, toggle the more info view
+	var toggleView = newDiv.find("#more_info_view");
+	newDiv.find("#image_view").find("#more_info_button").click({view: toggleView}, function(event) {
+		event.data.view.slideToggle();
+	});
+    
+	// suppress submit on form.
+	newDiv.find("#more_info_view").find("#more_info_form").submit(function(event) {
+		event.preventDefault();
+		updateImageInfo();
+		// show message that save was successful
+	});
+	// append the div to the container.
+	var result = $container.append(newDiv);
 	$container.packery( 'appended', newDiv);
 	makeChildrenResizable($container, newDiv);
-	// bind the button to callback
-	$( "#more_info_button_" + _imageViewIndex ).click(function() {
-		  $( "#more_info_view_" + _imageViewIndex ).slideToggle( "slow" );
-	});
 	_imageViewIndex = _imageViewIndex + 1;
 }
 
@@ -52,7 +59,9 @@ function updateImageInfo(){
 		data: postData, // serializes the form's elements.
 		success: function(data)
 		{
-			console.log("image successfully updated");
+			var rawTemplate = $('#template-image-view').html();
+			var compiledTemplate = Handlebars.compile(rawTemplate);
+			$("item_" + data['imageName']).html(compiledTemplate);		
 		},
 		error: function() {
 			alert("failed!");
@@ -69,7 +78,7 @@ var imageTable = $('#image_table');
 defaultOptions["aaData"] = imageJson;
 defaultOptions["aoColumns"] = [
                                {"mRender":function(data, type, full){
-                            	   var imageName = full['imageUrl'].split('/').slice(-1)[0];
+                            	   var imageName = full['imageName'];
                             	   var jsonString = JSON.stringify(full);
                                    return "<a onclick='imageView(" + jsonString + ")'>"+ imageName +"</a>";
                                }},

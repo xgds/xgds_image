@@ -35,8 +35,7 @@ from geocamUtil.loader import getModelByName
 
 
 def getImageUploadPage(request):
-    #TODO: filter the SingleImage so that it lists users's uploaded images.
-    images = SingleImage.objects.all()  # @UndefinedVariable
+    images = SingleImage.objects.filter(imageSet__author = request.user)
     uploadedImages = [json.dumps(image.toMapDict()) for image in images]
     # options for select boxes in the more info template.
     allAuthors = [{'author': str(user.username)} for user in User.objects.all()]
@@ -68,6 +67,7 @@ def getImageSearchPage(request):
                                'app': 'xgds_map_server/js/simpleMapApp.js'},
                               context_instance=RequestContext(request))
 
+
 def updateImageInfo(request):
     """
     Saves update image info entered by the user in the image view.
@@ -84,6 +84,7 @@ def updateImageInfo(request):
         source = data['source']
         
         image = SingleImage.objects.filter(id = imageId)[0]
+        imageName = None
         if image:
             imageSet = image.imageSet
             imageSet.camera = Camera.objects.get(display_name = source)
@@ -93,9 +94,10 @@ def updateImageInfo(request):
             imageSet.author = User.objects.get(username = author)
             imageSet.description = description
             imageSet.save()
-        
+            imageName = image.file.name.split('/')[-1]
         response_data={}
         response_data['success'] = 'true'
+        response_data['imageName'] = imageName
         return HttpResponse(json.dumps(response_data),
             content_type="application/json"
         )
@@ -113,9 +115,10 @@ def createNewImageSet(exifData, author, origImg):
     newImageSet = ImageSet()
     if gpsLatLon: 
         positionModel = getModelByName(PAST_POSITION_MODEL)
+        #TODO: in a fixture create a dummy resouce and track and link them here. Call them "Unknown" and fixture in geocamTrack.
         dummyResource = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL).objects.create(name="dummy resource")
         dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.create(name="dummy track", resource = dummyResource)
-        gpsTimeStamp = getGPSDatetime(exifData)
+        gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
         position = positionModel.objects.create(track = dummyTrack, 
                                                 timestamp= gpsTimeStamp,
                                                 latitude = gpsLatLon[0], 
@@ -127,21 +130,22 @@ def createNewImageSet(exifData, author, origImg):
     exifTime = time.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
     newImageSet.creation_time = time.strftime("%Y-%m-%d %H:%M:%S", exifTime)
     # set camera 
-    cameraName = exifData['Model']
-    cameraSet = Camera.objects.filter(display_name = cameraName)
-    if cameraSet.exists():
-        newImageSet.camera = cameraSet[0] 
+    cameraName = exifData['Model'] #TODO: Get a unique name like a serial number. Maybe camera name + username
+    #TODO: what are we storing in the camera model? 
+    cameras = Camera.objects.filter(display_name = cameraName)
+    if cameras.exists():
+        newImageSet.camera = cameras[0] 
     else: 
         newImageSet.camera = Camera.objects.create(display_name = cameraName)    
     # save image set
     newImageSet.save()
-    # create a thumbnail
-#     thumbnailFile = createThumbnail(origImg)
-#     thumbnail = SingleImage(file = thumbnailFile, 
-#                 raw = False, 
-#                 thumbnail = True,
-#                 imageSet = newImageSet)
-#     thumbnail.save()
+    # create a thumbnail #TODO: ask Dave
+    thumbnailFile = createThumbnail(origImg)
+    thumbnail = SingleImage(file = thumbnailFile, 
+                raw = False, 
+                thumbnail = True,
+                imageSet = newImageSet)
+    thumbnail.save()
     return newImageSet
 
 

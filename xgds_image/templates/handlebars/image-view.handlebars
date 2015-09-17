@@ -25,10 +25,10 @@
 				{{ altitude }}
 			</li>
 		</ul>
-		<button id="more-info-button_{{imageViewIndex}}"> More info </button>
+		<button id="more_info_button"> More info </button>
 	</div> 
 	
-	<div id="more_info_view_{{imageViewIndex}}">
+	<div id="more_info_view">
 		<form action="/xgds_image/updateImageInfo/" id="more_info_form" method="post">
 			<fieldset>
 				<ul>
@@ -65,7 +65,7 @@
 						<label>Description</label>
 						<textarea name="description">{{description}}</textarea>
 					</li>
-					<input type="submit" value="Save" onclick="updateImageInfo();" />
+					<input type="submit" value="Save" />
 				</ul>
 			</fieldset>
 		</form>
