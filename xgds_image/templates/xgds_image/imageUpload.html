@@ -79,7 +79,8 @@
 {% block content %}
 	{% block packery %}
 	<div id="container"> 
-		<div class='item w2 lockAspect' id='item_image_upload'>
+		<div class='item w2 lockAspect' id='item_image_upload' data-isStamped="false">
+			<i class="icon-key"></i>
 			<!-- Dropzone image upload -->
 			<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
 			enctype="multipart/form-data">
@@ -91,7 +92,8 @@
 		</div>
 		
 		<!-- Image list table -->
-		<div class='item w2 lockAspect' id='item_image_table'>
+		<div class='item w2 lockAspect' id='item_image_table' data-isStamped="false">
+			<i class="icon-key"></i>
 			<div id="image_table_div"> 
 				<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
 					<thead class="table_header">
@@ -110,7 +112,9 @@
 			</div>
 		</div>
 		
-		<div id="map" class="item w2 freeAspect"></div>
+		<div id="map" class="item w2 freeAspect" data-isStamped="false">
+			<i class="icon-key"></i>
+		</div>
 		<div id="layers" hidden></div>
         <!-- <div id="layers" class="item w2 lockAspect"></div>  -->
 	</div> <!--  js packery container -->

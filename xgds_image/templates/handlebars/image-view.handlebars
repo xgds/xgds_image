@@ -1,7 +1,7 @@
-<div class="item w2 lockAspect" id="item_{{ imageName }}"> 
-
+<div class="item w2 lockAspect" id="item_{{ imageName }}" data-isStamped="false">  
 	<div id="image_view">
 		<i class="icon-cancel-circled"></i>
+		<i class="icon-key"></i>
 		
 		<button class="small info btn prev-button"><i class="icon-left-dir"></i></button>
 		<div class="image-name" ><strong> {{ imageName }} </strong></div>
@@ -66,6 +66,9 @@
 						<textarea name="description">{{description}}</textarea>
 					</li>
 					<input type="submit" value="Save" />
+					<li>
+						<div id="message"/>
+					</li>
 				</ul>
 			</fieldset>
 		</form>

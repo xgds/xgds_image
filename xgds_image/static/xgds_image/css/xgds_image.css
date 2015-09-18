@@ -28,7 +28,20 @@ br
     clear: left;
 }
 
-.icon-cancel-circled{
+#map {
+	padding-bottom: 50px;
+}
+
+.icon-key {
+    display:block;
+    position:absolute;
+    float: right;
+    top:10px;
+    right:0px;	
+	color: silver;
+}
+
+.icon-cancel-circled {
     display:block;
     position:absolute;
     float: right;
@@ -68,4 +81,12 @@ ul li label {
 
 .image-name {
 	display: inline-block;
+}
+
+.error-message {
+	color: red;
+}
+
+.success-message {
+	color: green;
 }

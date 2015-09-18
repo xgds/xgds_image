@@ -1,18 +1,65 @@
 var $container = $('#container'); 
 var _imageViewIndex = 0;
+bindLockItemBtnCallback($container);
+
 
 /**
  * Helpers
  */
-function deleteButton() {
-	$('.icon-cancel-circled').bind("click", function() {
+
+function stringContains(string, substring) {
+	// checks that string contains substring
+	return string.indexOf(substring) > -1;
+}
+
+function bindDeleteBtnCallback(htmlSnippet) {
+	htmlSnippet.find(".icon-cancel-circled").bind("click", function() {
 		// remove clicked element
-		$container.packery( 'remove', event.target.parentElement );
+		$container.packery( 'remove', event.target.parentElement.parentElement );
 		// layout remaining item elements
 		$container.packery();
 	});	
 }
 
+function bindToggleBtnCallback(htmlSnippet) {
+	var toggleView = htmlSnippet.find("#more_info_view");
+	htmlSnippet.find("#image_view").find("#more_info_button").click({view: toggleView}, function(event) {
+		event.data.view.slideToggle();
+	});
+}
+
+function updateImageInfo(htmlSnippet) {
+	// avoid to execute the actual submit of the form.
+	htmlSnippet.find("#more_info_view").find("#more_info_form").submit(function(event) {
+		event.preventDefault();
+		// call back on submit
+		updateImageInfoInDb();
+		// show message that save was successful
+	});
+}
+
+function bindLockItemBtnCallback(htmlSnippet) {
+	htmlSnippet.find(".icon-key").bind("click", function() {
+		var key = event.target;
+		if (stringContains(key.parentElement.className, "item")) {
+			$stamp = key.parentElement;
+		} else {
+			$stamp = key.parentElement.parentElement;
+		}
+		
+		var isStamped = $stamp.getAttribute('data-isStamped');
+		if ( isStamped == "true") {
+			$container.packery( 'unstamp', $stamp );
+			$stamp.setAttribute('data-isStamped', 'false');
+			this.style.color = "silver";
+		} else {
+			$container.packery( 'stamp', $stamp );
+			$stamp.setAttribute('data-isStamped', 'true');
+			this.style.color = "grey";
+		}
+		$container.packery();
+	});
+}
 
 /*
  * Image View
@@ -28,18 +75,11 @@ function imageView(json) {
 	// inject new fields into the precompiled template
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
-	// on more info button click, toggle the more info view
-	var toggleView = newDiv.find("#more_info_view");
-	newDiv.find("#image_view").find("#more_info_button").click({view: toggleView}, function(event) {
-		event.data.view.slideToggle();
-	});
-    
-	// suppress submit on form.
-	newDiv.find("#more_info_view").find("#more_info_form").submit(function(event) {
-		event.preventDefault();
-		updateImageInfo();
-		// show message that save was successful
-	});
+	// call backs
+	bindToggleBtnCallback(newDiv);
+	updateImageInfo(newDiv);
+	bindDeleteBtnCallback(newDiv);
+	bindLockItemBtnCallback(newDiv);
 	// append the div to the container.
 	var result = $container.append(newDiv);
 	$container.packery( 'appended', newDiv);
@@ -49,7 +89,7 @@ function imageView(json) {
 
 
 //update image data
-function updateImageInfo(){
+function updateImageInfoInDb(){
 	var url = "/xgds_image/updateImageInfo/"; // the script where you handle the form input.
 	var postData = $("#more_info_form").serializeArray();
 	$.ajax({
@@ -59,15 +99,16 @@ function updateImageInfo(){
 		data: postData, // serializes the form's elements.
 		success: function(data)
 		{
-			var rawTemplate = $('#template-image-view').html();
-			var compiledTemplate = Handlebars.compile(rawTemplate);
-			$("item_" + data['imageName']).html(compiledTemplate);		
+			// display success message
+			$('#message').addClass('success-message');
+			$('#message').text("Save successful");	
 		},
 		error: function() {
-			alert("failed!");
+			$('#message').addClass('error-message');
+			$('#message').text("Error: Save failed");
 		}
 	});
-	return false; // avoid to execute the actual submit of the form.
+	return false; 
 }
 
 /* 
