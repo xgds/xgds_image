@@ -30,7 +30,10 @@ def createThumbnail(src):
     im.thumbnail(size, Image.ANTIALIAS)
     dstFileName = 'thumbnail_' + src
     dst = imgDir + dstFileName
-    im.save(dst)
+    try: 
+        im.save(dst)
+    except: 
+        pass  # image already exists.
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + dstFileName
 
 """

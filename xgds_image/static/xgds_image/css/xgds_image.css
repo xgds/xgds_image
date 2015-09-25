@@ -60,10 +60,12 @@ br
 
 ul li {
 	display: inline-block;
+	padding-right: 15px;
 }
 
 ul li label {
 	display: block;
+	font-weight: bold;
 }
 
 .image-wrapper {

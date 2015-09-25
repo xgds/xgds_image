@@ -26,27 +26,29 @@ from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from models import *
-from forms import UploadFileForm
+from forms import UploadFileForm, ImageSetForm
 from xgds_image import settings
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnail
 from geocamUtil.loader import getModelByName
+from fileinput import filename
 
 
 def getImageUploadPage(request):
-    images = SingleImage.objects.filter(imageSet__author = request.user)
-    uploadedImages = [json.dumps(image.toMapDict()) for image in images]
+    imageSets = ImageSet.objects.filter(author = request.user)
+    imageSets = imageSets.order_by('creation_time')
+    imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
     # options for select boxes in the more info template.
-    allAuthors = [{'author': str(user.username)} for user in User.objects.all()]
-    allSources = [{'source': str(camera.display_name)} for camera in Camera.objects.all()]
+    allAuthors = [{'author_name': str(user.username)} for user in User.objects.all()]
+    allCameras = [{'camera_name': str(camera.display_name)} for camera in Camera.objects.all()]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     templates = get_handlebars_templates(fullTemplateList)
-    data = {'uploadedImages': uploadedImages,
+    data = {'imageSetsJson': imageSetsJson,
             'allAuthors': allAuthors,
-            'allSources': allSources,
+            'allCameras': allCameras,
             'templates': templates,
             'app': 'xgds_map_server/js/simpleMapApp.js'}
     return render_to_response("xgds_image/imageUpload.html", data,
@@ -73,51 +75,38 @@ def updateImageInfo(request):
     Saves update image info entered by the user in the image view.
     """
     if request.method == 'POST':
-        data = request.POST
-        #TODO: use django forms!
-        imageId = data['imageId']
-        description = data['description']
-        author = data['author']
-        altitude = data['altitude']
-        longitude = data['longitude']
-        latitude = data['latitude']
-        source = data['source']
-        
-        image = SingleImage.objects.filter(id = imageId)[0]
-        imageName = None
-        if image:
-            imageSet = image.imageSet
-            imageSet.camera = Camera.objects.get(display_name = source)
-            imageSet.asset_position.latitude = latitude
-            imageSet.asset_position.longitude = longitude
-            imageSet.asset_position.altitude = altitude
-            imageSet.author = User.objects.get(username = author)
-            imageSet.description = description
+        form = ImageSetForm(request.POST)
+        if form.is_valid():
+            imageSet = form.save(commit = False)
+            imageSet.asset_position.latitude = form.cleaned_data['latitude']
+            imageSet.asset_position.longitude = form.cleaned_data['longitude']
+            imageSet.asset_position.altitude = form.cleaned_data['altitude']
+            imageSet.asset_position.save()
             imageSet.save()
-            imageName = image.file.name.split('/')[-1]
-        response_data={}
-        response_data['success'] = 'true'
-        response_data['imageName'] = imageName
-        return HttpResponse(json.dumps(response_data),
-            content_type="application/json"
-        )
-    else: 
-        return HttpResponse(json.dumps({'error':{'message': 'could not update image info'}}),
-                            content_type='application/json')
+            response_data={}
+            response_data['status'] = 'success'
+            response_data['message'] = 'Save successful!'
+            return HttpResponse(json.dumps(response_data),
+                content_type="application/json"
+            )
+        else: 
+            return HttpResponse(json.dumps({'status': 'error',
+                                            'message': "Failed to save."}),
+                                content_type='application/json')
 
 
-def createNewImageSet(exifData, author, origImg):
+def createNewImageSet(exifData, author, fileName):
     """
     creates new imageSet instance
     """
     # set location
     gpsLatLon = getLatLon(exifData)
     newImageSet = ImageSet()
+    newImageSet.name = fileName
+    # get GPS
     if gpsLatLon: 
         positionModel = getModelByName(PAST_POSITION_MODEL)
-        #TODO: in a fixture create a dummy resouce and track and link them here. Call them "Unknown" and fixture in geocamTrack.
-        dummyResource = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL).objects.create(name="dummy resource")
-        dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.create(name="dummy track", resource = dummyResource)
+        dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.get(name="dummy_track")
         gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
         position = positionModel.objects.create(track = dummyTrack, 
                                                 timestamp= gpsTimeStamp,
@@ -139,13 +128,6 @@ def createNewImageSet(exifData, author, origImg):
         newImageSet.camera = Camera.objects.create(display_name = cameraName)    
     # save image set
     newImageSet.save()
-    # create a thumbnail #TODO: ask Dave
-    thumbnailFile = createThumbnail(origImg)
-    thumbnail = SingleImage(file = thumbnailFile, 
-                raw = False, 
-                thumbnail = True,
-                imageSet = newImageSet)
-    thumbnail.save()
     return newImageSet
 
 
@@ -159,17 +141,23 @@ def saveImage(request):
             # create and save a single image obj
             uploadedFile = request.FILES['file']
             newImage = SingleImage(file = uploadedFile)
-            
+            fileName = uploadedFile.name
             # create a new image set instance           
             exifData = getExifData(newImage)
             author = request.user  # set user as image author
-            newSet = createNewImageSet(exifData, author, uploadedFile.name)
+            newSet = createNewImageSet(exifData, author, fileName)
             newImage.imageSet = newSet
             newImage.save()
-            
-            # pass the uploaded image to front end as json.
-            newFileJson = newImage.toMapDict() 
-            return HttpResponse(json.dumps({'success': 'true', 'json': newFileJson}), 
+            # create a thumbnail
+            thumbnailFile = createThumbnail(fileName)
+            thumbnail = SingleImage(file = thumbnailFile, 
+                        raw = False, 
+                        thumbnail = True,
+                        imageSet = newSet)
+            thumbnail.save()
+            # pass the image set to the client as json.
+            imageSetJson= newSet.toMapDict() 
+            return HttpResponse(json.dumps({'success': 'true', 'json': imageSetJson}), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Uploaded image is not valid'}), content_type='application/json')  

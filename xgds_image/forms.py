@@ -15,11 +15,16 @@
 # __END_LICENSE__
 
 from django import forms
-from models import SingleImage
+from models import SingleImage, ImageSet
 
  
 class UploadFileForm(forms.ModelForm):
     class Meta:
         model = SingleImage
         fields = ['file']
+     
         
+class ImageSetForm(forms.ModelForm):
+    class Meta:
+        model = ImageSet
+        fields = ['camera', 'author', 'description', 'asset_position']

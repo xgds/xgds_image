@@ -13,12 +13,12 @@
 		
 		<ul>
 			<li>
-				<label>Source</label>
-				{{ source }}
+				<label>Camera</label>
+				{{ camera_name }}
 			</li>
 			<li>
 				<label>Author</label>
-				{{ author }}
+				{{ author_name }}
 			</li>
 			<li>
 				<label>Altitude</label>
@@ -32,38 +32,38 @@
 		<form action="/xgds_image/updateImageInfo/" id="more_info_form" method="post">
 			<fieldset>
 				<ul>
-					<input name="imageId" value="{{imageId}}" hidden></input>
+					<input name="id" value="{{id}}" hidden></input>
 					<li>
-						<label>Source</label>
-						<select name="source">
-						{{#each allSources}}
-	 						<option value="{{source}}">{{source}}</option>
+						<label>Camera</label>
+						<select name="camera" id="camera">
+						{{#each allCameras}}
+	 						<option value="{{camera_name}}">{{camera_name}}</option>
 						{{/each}}
 						</select>
 					</li>
 					<li>
 						<label>Latitude</label>
-						<input name="latitude" value="{{latitude}}"></input>
+						<input name="latitude" id="latitude" value="{{latitude}}"></input>
 					</li>
 					<li>
 						<label>Longitude</label>
-						<input name="longitude" value="{{longitude}}"></input>
+						<input name="longitude" id="longitude" value="{{longitude}}"></input>
 					</li>
 					<li>
 						<label>Altitude</label>
-						<input name="altitude" value="{{altitude}}"></input>
+						<input name="altitude" id="altitude" value="{{altitude}}"></input>
 					</li>
 					<li>
 						<label>Author</label>
-						<select name="author">
+						<select name="author", id="author">
 						{{#each allAuthors}}
-	 						<option value="{{author}}">{{author}}</option>
+	 						<option value="{{author_name}}">{{author_name}}</option>
 						{{/each}}
 						</select>
 					</li>
 					<li>
 						<label>Description</label>
-						<textarea name="description">{{description}}</textarea>
+						<textarea name="description" id="description">{{description}}</textarea>
 					</li>
 					<input type="submit" value="Save" />
 					<li>

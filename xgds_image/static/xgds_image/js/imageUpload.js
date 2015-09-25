@@ -1,12 +1,10 @@
 var $container = $('#container'); 
-var _imageViewIndex = 0;
 bindLockItemBtnCallback($container);
 
 
 /**
  * Helpers
  */
-
 function stringContains(string, substring) {
 	// checks that string contains substring
 	return string.indexOf(substring) > -1;
@@ -61,17 +59,76 @@ function bindLockItemBtnCallback(htmlSnippet) {
 	});
 }
 
+function getCurrentImageAndIndex(htmlSnippet) {
+	/**
+	 * Helper that finds index in imageSetsArray
+	 * of the currently displayed image in the imageView.
+	 */
+	// get the img's name.
+	var currentImgUrl = htmlSnippet.find("img").attr('src');
+	var currentImgIndex = null;
+	// find the index of the current img
+	for (var i = 0; i < imageSetsArray.length; i++) {
+		if (imageSetsArray[i]['raw_image_url'] == currentImgUrl) {
+			currentImgIndex = i;
+			break;
+		}
+	}
+	return currentImgIndex;
+}
+
+function updateImageView(htmlSnippet, index) {
+	/**
+	 * Helper that updates the the image view info.
+	 */
+	if (index != null) {
+		var imageJson = imageSetsArray[index];
+		// update image name
+		htmlSnippet.find(".image-name strong").text(imageJson['name'])
+		// update image display
+		htmlSnippet.find('img').attr('src', imageJson['raw_image_url']);
+		// update image info 
+		
+	}
+}
+
+function bindImagePrevAndNextBtnCallback(htmlSnippet) {
+	htmlSnippet.find('.prev-button').click(function(event) {
+		// set the img src
+		var index = getCurrentImageAndIndex(htmlSnippet);
+		if (index != null) {
+			if (index == 0) {
+				index = imageSetsArray.length -1;
+			} else {
+				index = index - 1;
+			}
+			updateImageView(htmlSnippet, index);
+		}
+	});
+	
+	//TODO: when an image is uploaded, make sure to add to the imageSetsArray.
+	htmlSnippet.find(".next-button").click(function(event) {
+		var index = getCurrentImageAndIndex(htmlSnippet);
+		if (index == (imageSetsArray.length - 1)) {
+			index = 0;
+		} else {
+			index = index + 1;
+		}
+		updateImageView(htmlSnippet, index);
+	});
+}
+
 /*
  * Image View
  */
-function imageView(json) {
+function constructImageView(json) {
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
 	// append additional fields to json object to pass to handlebar
-	json.imageName = json['imageName'];
-	json.imagePath = json['imageUrl'];
+	json.imageName = json['name'];
+	json.imagePath = json['raw_image_url'];
 	json.allAuthors = allAuthors;
-	json.allSources = allSources;
+	json.allCameras = allCameras;
 	// inject new fields into the precompiled template
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
@@ -80,13 +137,24 @@ function imageView(json) {
 	updateImageInfo(newDiv);
 	bindDeleteBtnCallback(newDiv);
 	bindLockItemBtnCallback(newDiv);
+	bindImagePrevAndNextBtnCallback(newDiv);
 	// append the div to the container.
 	var result = $container.append(newDiv);
 	$container.packery( 'appended', newDiv);
 	makeChildrenResizable($container, newDiv);
-	_imageViewIndex = _imageViewIndex + 1;
 }
 
+function setSaveStatusMessage(handler, data){
+	if (data['status'] == 'success') {
+		handler.attr('class', 'success-message');
+	} else {
+		handler.attr('class', 'error-message');
+	}
+	handler.text(data['message']);
+	setTimeout(function() { // messages fades out.
+		handler.fadeOut().empty();
+	}, 5000);
+}
 
 //update image data
 function updateImageInfoInDb(){
@@ -99,35 +167,34 @@ function updateImageInfoInDb(){
 		data: postData, // serializes the form's elements.
 		success: function(data)
 		{
-			// display success message
-			$('#message').addClass('success-message');
-			$('#message').text("Save successful");	
+			setSaveStatusMessage($('#message'), data);
+
 		},
 		error: function() {
-			$('#message').addClass('error-message');
-			$('#message').text("Error: Save failed");
+			setSaveStatusMessage($('#message'), data);
 		}
 	});
 	return false; 
 }
+
 
 /* 
  * Table View
  */
 // initialize the image table with json of existing images.
 var imageTable = $('#image_table'); 
-defaultOptions["aaData"] = imageJson;
+defaultOptions["aaData"] = imageSetsArray;
 defaultOptions["aoColumns"] = [
                                {"mRender":function(data, type, full){
-                            	   var imageName = full['imageName'];
+                            	   var imageName = full['name'];
                             	   var jsonString = JSON.stringify(full);
-                                   return "<a onclick='imageView(" + jsonString + ")'>"+ imageName +"</a>";
+                                   return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
                                }},
-                               {"mData": "creation_time"},
-                               {"mData": "source"},
+                               {"mData": "camera_name"},
                                {"mData": "latitude"},
                                {"mData": "longitude"},
-                               {"mData": "altitude"}
+                               {"mData": "altitude"},
+                               {"mData": "author_name"},
 ];
 
 if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {

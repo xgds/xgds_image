@@ -65,6 +65,15 @@ class AbstractImageSet(models.Model):
         Return a reduced dictionary that will be turned to JSON for rendering in a map
         """
         result = modelToDict(self)
+        result['id'] = self.id
+        result['camera_name'] = self.camera.display_name
+        result['author_name'] = self.author.username
+        image = SingleImage.objects.get(imageSet = self, raw = True)
+        result['raw_image_url'] = settings.DATA_URL + image.file.name
+        result['latitude'] = self.asset_position.latitude
+        result['longitude'] = self.asset_position.longitude
+        result['altitude'] = self.asset_position.altitude
+        
         return result
 
     def getRawImage(self):
@@ -127,37 +136,7 @@ class SingleImage(AbstractSingleImage):
     """
     def toMapDict(self):
         """
-        Return a reduced dictionary that will be turned to JSON for rendering in a map
+        Return a reduced dictionary that will be turned to JSON
         """
         result = modelToDict(self)
-        del(result['file']) 
-        result['imageName'] = self.file.name.split('/')[-1]
-        result['imageUrl'] = settings.DATA_URL + self.file.name
-        result['imageId'] = self.id
-        result['creation_time'] = str(self.creation_time)
-        try: 
-            result['source'] = self.imageSet.camera.display_name
-        except: 
-            result['source'] = 'Not available'
-        try: 
-            result['author'] = self.imageSet.author.username
-        except: 
-            result['author'] = 'Not available'
-        try:
-            result['latitude'] = self.imageSet.asset_position.latitude
-        except: 
-            result['latitude'] = 'Not available'
-        try:  
-            result['longitude'] = self.imageSet.asset_position.longitude
-        except: 
-            result['longitude'] = 'Not available'
-        try:     
-            result['altitude'] = self.imageSet.asset_position.altitude
-        except: 
-            result['altitude'] = 'Not available'
-        try: 
-            result['description'] = self.imageSet.description
-        except: 
-            result['description'] = 'Not available'
-        
         return result

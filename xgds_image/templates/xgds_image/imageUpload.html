@@ -53,17 +53,16 @@
     
     <script type="text/javascript">
     <!--  parse image json -->
-    var uploadedImages = {{ uploadedImages|safe }};
-    var imageJson = []; // stores JSON objects
-    $(uploadedImages).each(function() {
-    	imageJson.push(JSON.parse(this)); // parse json string
+    var imageSetsJson = {{ imageSetsJson|safe }};
+    var imageSetsArray = []; // stores JSON objects
+    $(imageSetsJson).each(function() {
+    	imageSetsArray.push(JSON.parse(this)); // parse json string
     });
     <!-- set vars -->
     var allAuthors = {{ allAuthors|safe }};
-    var allSources = {{ allSources|safe }};
+    var allCameras = {{ allCameras|safe }};
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
-	
 	<!--  load handlebars -->
 	<script type="text/javascript" src="/static/geocamUtil/js/datatable_helpers.js"></script>
 	{% for template_name, template in templates.items %}
@@ -99,11 +98,11 @@
 					<thead class="table_header">
 						<tr>
 							<th>Name</th>
-						    <th>Timestamp</th>
 						    <th>Source</th>
 						    <th>Latitude</th>
 						    <th>Longitude</th>
 						    <th>Altitude</th>
+						    <th>Author</th>
 					    </tr>
 					</thead>
 					<tbody>
