@@ -43,10 +43,6 @@ class AbstractImageSet(models.Model):
     Set includes the raw image and any resized images.
     Contains utility functions to fetch different sized images.
     """
-    # custom id field for uniqueness
-    id = models.CharField(max_length=128,
-                          unique=True, blank=False,
-                          editable=False, primary_key=True)
     name = models.CharField(max_length=128, blank=True, null=True, help_text="human-readable image set name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
     camera = models.ForeignKey(Camera)
@@ -68,12 +64,20 @@ class AbstractImageSet(models.Model):
         result['id'] = self.id
         result['camera_name'] = self.camera.display_name
         result['author_name'] = self.author.username
+        print "image set name and id"
+        print self.name
+        print self.id
         image = SingleImage.objects.get(imageSet = self, raw = True)
+        print image
         result['raw_image_url'] = settings.DATA_URL + image.file.name
-        result['latitude'] = self.asset_position.latitude
-        result['longitude'] = self.asset_position.longitude
-        result['altitude'] = self.asset_position.altitude
-        
+        if self.asset_position:
+            result['latitude'] = self.asset_position.latitude
+            result['longitude'] = self.asset_position.longitude
+            result['altitude'] = self.asset_position.altitude
+        else:
+            result['latitude'] = "Not available"
+            result['longitude'] = "Not available"
+            result['altitude'] = "Not available"
         return result
 
     def getRawImage(self):
@@ -84,15 +88,6 @@ class AbstractImageSet(models.Model):
     
     def getThumbnail(self):
         return SingleImage.objects.filter(imageSet=self, thumbnail=True)
-        
-    def fillId(self):
-        index = self.__class__.objects.count() + 1
-        self.id = HOSTNAME + "_" + str(index)
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.fillId()
-        super(AbstractImageSet, self).save(*args, **kwargs)
 
 
 class ImageSet(AbstractImageSet):
@@ -103,11 +98,6 @@ class AbstractSingleImage(models.Model):
     """ 
     An abstract image which may not necessarily have a location on a map
     """
-    # custom id field for uniqueness
-    id = models.CharField(max_length=128,
-                          unique=True, blank=False,
-                          editable=False, primary_key=True)
-
     file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     raw = models.BooleanField(default=True)
@@ -117,18 +107,6 @@ class AbstractSingleImage(models.Model):
     class Meta:
         abstract = True
 
-    def fillId(self):
-        index = self.__class__.objects.count() + 1
-        self.pk = HOSTNAME + "_" + str(index)
-
-    def preSave(self):
-        pass
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.fillId()
-        self.preSave()
-        super(AbstractSingleImage, self).save(*args, **kwargs)
         
 
 class SingleImage(AbstractSingleImage):

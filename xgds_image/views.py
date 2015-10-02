@@ -14,10 +14,9 @@
 # specific language governing permissions and limitations under the License.
 # __END_LICENSE__
 
-import glob
 import json
-import os
 import time
+from datetime import datetime
 
 from django.forms.formsets import formset_factory
 from django.shortcuts import render_to_response
@@ -32,16 +31,18 @@ from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnail
 from geocamUtil.loader import getModelByName
-from fileinput import filename
 
+# import pydevd
+
+PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
 
 def getImageUploadPage(request):
     imageSets = ImageSet.objects.filter(author = request.user)
     imageSets = imageSets.order_by('creation_time')
     imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
     # options for select boxes in the more info template.
-    allAuthors = [{'author_name': str(user.username)} for user in User.objects.all()]
-    allCameras = [{'camera_name': str(camera.display_name)} for camera in Camera.objects.all()]
+    allAuthors = [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()]
+    allCameras = [{'camera_name_index': [str(camera.display_name), int(camera.id)]} for camera in Camera.objects.all()]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
@@ -74,14 +75,12 @@ def updateImageInfo(request):
     """
     Saves update image info entered by the user in the image view.
     """
+    print "Inside updateImageInfo"
     if request.method == 'POST':
+        print request.POST
         form = ImageSetForm(request.POST)
         if form.is_valid():
             imageSet = form.save(commit = False)
-            imageSet.asset_position.latitude = form.cleaned_data['latitude']
-            imageSet.asset_position.longitude = form.cleaned_data['longitude']
-            imageSet.asset_position.altitude = form.cleaned_data['altitude']
-            imageSet.asset_position.save()
             imageSet.save()
             response_data={}
             response_data['status'] = 'success'
@@ -99,20 +98,27 @@ def createNewImageSet(exifData, author, fileName):
     """
     creates new imageSet instance
     """
+#     pydevd.settrace('128.102.236.79')
     # set location
     gpsLatLon = getLatLon(exifData)
     newImageSet = ImageSet()
     newImageSet.name = fileName
-    # get GPS
-    if gpsLatLon: 
-        positionModel = getModelByName(PAST_POSITION_MODEL)
-        dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.get(name="dummy_track")
+    positionModel = getModelByName(PAST_POSITION_MODEL)
+    dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.get(name="dummy_track")
+    try: # if there is GPS 
         gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
         position = positionModel.objects.create(track = dummyTrack, 
                                                 timestamp= gpsTimeStamp,
                                                 latitude = gpsLatLon[0], 
                                                 longitude= gpsLatLon[1])
-        newImageSet.asset_position = position
+    except:
+        position = positionModel.objects.create(track = dummyTrack,
+                                                timestamp = None, #<--- DOES NOT WORK!
+                                                latitude = None,
+                                                longitude = None)
+        print "Position is not available for this image"
+    
+    newImageSet.asset_position = position
     # set author
     newImageSet.author = author
     # set time stamp
@@ -127,7 +133,6 @@ def createNewImageSet(exifData, author, fileName):
     else: 
         newImageSet.camera = Camera.objects.create(display_name = cameraName)    
     # save image set
-    newImageSet.save()
     return newImageSet
 
 
@@ -140,12 +145,13 @@ def saveImage(request):
         if form.is_valid():
             # create and save a single image obj
             uploadedFile = request.FILES['file']
-            newImage = SingleImage(file = uploadedFile)
+            newImage = SingleImage.objects.create(file = uploadedFile)
             fileName = uploadedFile.name
             # create a new image set instance           
             exifData = getExifData(newImage)
             author = request.user  # set user as image author
             newSet = createNewImageSet(exifData, author, fileName)
+            newSet.save()
             newImage.imageSet = newSet
             newImage.save()
             # create a thumbnail

@@ -25,6 +25,18 @@ class UploadFileForm(forms.ModelForm):
      
         
 class ImageSetForm(forms.ModelForm):
+    latitude = forms.FloatField()
+    longitude = forms.FloatField()
+    altitude = forms.FloatField()
+    
     class Meta:
         model = ImageSet
-        fields = ['camera', 'author', 'description', 'asset_position']
+        fields = ['camera', 'author', 'description']
+    
+    def save(self, commit=True):
+        # do something with self.cleaned_data['temp_id']
+        self.model.asset_position.latitude = self.cleaned_data['latitude']
+        self.model.asset_position.longitude = self.cleaned_data['longitude']
+        self.model.asset_position.altitude = self.cleaned_data['altitude']
+        self.model.asset_position.save()
+        return super(ImageSetForm, self).save(commit=commit)

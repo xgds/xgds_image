@@ -159,11 +159,10 @@ function setSaveStatusMessage(handler, data){
 //update image data
 function updateImageInfoInDb(){
 	var url = "/xgds_image/updateImageInfo/"; // the script where you handle the form input.
-	var postData = $("#more_info_form").serializeArray();
+	var postData = $("#more_info_form").serialize();
 	$.ajax({
 		url: url,
 		type: "POST",
-		dataType: 'json',
 		data: postData, // serializes the form's elements.
 		success: function(data)
 		{
