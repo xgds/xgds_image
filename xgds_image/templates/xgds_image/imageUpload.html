@@ -61,6 +61,7 @@
     <!-- set vars -->
     var allAuthors = {{ allAuthors|safe }};
     var allCameras = {{ allCameras|safe }};
+    var updateImageUrl = "{% url 'xgds_update_image_info' %}";
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
 	<!--  load handlebars -->

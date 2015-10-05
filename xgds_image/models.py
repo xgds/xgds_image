@@ -21,6 +21,7 @@ from geocamUtil.defaultSettings import HOSTNAME
 from django.contrib.auth.models import User
 from geocamUtil.models import AbstractEnumModel
 from geocamUtil.modelJson import modelToDict
+from geocamTrack.models import AbstractResource
 from django.conf import settings
 
 PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
@@ -30,7 +31,7 @@ def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
-class Camera(AbstractEnumModel):
+class Camera(AbstractResource):
     """
     Camera class
     """
@@ -62,13 +63,9 @@ class AbstractImageSet(models.Model):
         """
         result = modelToDict(self)
         result['id'] = self.id
-        result['camera_name'] = self.camera.display_name
+        result['camera_name'] = self.camera.name
         result['author_name'] = self.author.username
-        print "image set name and id"
-        print self.name
-        print self.id
         image = SingleImage.objects.get(imageSet = self, raw = True)
-        print image
         result['raw_image_url'] = settings.DATA_URL + image.file.name
         if self.asset_position:
             result['latitude'] = self.asset_position.latitude

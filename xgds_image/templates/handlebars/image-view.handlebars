@@ -28,7 +28,7 @@
 		<form action="/xgds_image/updateImageInfo/" id="more_info_form" method="post">
 			<fieldset>
 				<ul>
-					<input name="id" value="{{id}}" hidden></input>
+					<input name="id" value="{{id}}" hidden id="id_id"></input>
 					<li>
 						<label>Camera</label>
 						<select name="camera" id="camera">
@@ -39,16 +39,19 @@
 					</li>
 					<li>
 						<label>Latitude</label>
-						<input name="latitude" id="latitude" value="{{latitude}}"></input>
+						<input name="latitude" id="id_latitude" value="{{latitude}}"></input>
 					</li>
 					<li>
 						<label>Longitude</label>
-						<input name="longitude" id="longitude" value="{{longitude}}"></input>
+						<input name="longitude" id="id_longitude" value="{{longitude}}"></input>
 					</li>
-					<input hidden name="altitude" id="altitude" value=0></input>
+					<li>
+						<label>Altitude</label>
+						<input name="altitude" id="id_altitude" value="{{altitude}}"></input>
+					</li>
 					<li>
 						<label>Author</label>
-						<select name="author", id="author">
+						<select name="author", id="id_author">
 						{{#each allAuthors}}
 	 						<option value={{author_name_index.[1]}}>{{author_name_index.[0]}}</option>
 						{{/each}}
@@ -56,7 +59,7 @@
 					</li>
 					<li>
 						<label>Description</label>
-						<textarea name="description" id="description">{{description}}</textarea>
+						<textarea name="description" id="id_description">{{description}}</textarea>
 					</li>
 					<input type="submit" value="Save" />
 					<li>

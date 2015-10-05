@@ -26,13 +26,25 @@ function bindToggleBtnCallback(htmlSnippet) {
 	});
 }
 
-function updateImageInfo(htmlSnippet) {
-	// avoid to execute the actual submit of the form.
+function bindUpdateImageInfoCallback(htmlSnippet) {
 	htmlSnippet.find("#more_info_view").find("#more_info_form").submit(function(event) {
-		event.preventDefault();
-		// call back on submit
-		updateImageInfoInDb();
-		// show message that save was successful
+		event.preventDefault(); 	// avoid to execute the actual submit of the form.
+		var url = updateImageUrl; // the script where you handle the form input.
+		var postData = $("#more_info_form").serialize();
+		$.ajax({
+			url: url,
+			type: "POST",
+			data: postData, // serializes the form's elements.
+			success: function(data)
+			{
+				setSaveStatusMessage($('#message'), data);
+
+			},
+			error: function() {
+				setSaveStatusMessage($('#message'), data);
+			}
+		});
+		return false; 
 	});
 }
 
@@ -133,8 +145,8 @@ function constructImageView(json) {
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
 	// call backs
+	bindUpdateImageInfoCallback(newDiv);
 	bindToggleBtnCallback(newDiv);
-	updateImageInfo(newDiv);
 	bindDeleteBtnCallback(newDiv);
 	bindLockItemBtnCallback(newDiv);
 	bindImagePrevAndNextBtnCallback(newDiv);
@@ -156,25 +168,7 @@ function setSaveStatusMessage(handler, data){
 	}, 5000);
 }
 
-//update image data
-function updateImageInfoInDb(){
-	var url = "/xgds_image/updateImageInfo/"; // the script where you handle the form input.
-	var postData = $("#more_info_form").serialize();
-	$.ajax({
-		url: url,
-		type: "POST",
-		data: postData, // serializes the form's elements.
-		success: function(data)
-		{
-			setSaveStatusMessage($('#message'), data);
 
-		},
-		error: function() {
-			setSaveStatusMessage($('#message'), data);
-		}
-	});
-	return false; 
-}
 
 
 /* 

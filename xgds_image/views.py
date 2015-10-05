@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 from django.forms.formsets import formset_factory
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -29,10 +29,11 @@ from forms import UploadFileForm, ImageSetForm
 from xgds_image import settings
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
-from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnail
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile
 from geocamUtil.loader import getModelByName
 
-# import pydevd
+import pydevd
+from apps.geocamUtil.models.UuidField import makeUuid
 
 PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
 
@@ -42,7 +43,7 @@ def getImageUploadPage(request):
     imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
     # options for select boxes in the more info template.
     allAuthors = [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()]
-    allCameras = [{'camera_name_index': [str(camera.display_name), int(camera.id)]} for camera in Camera.objects.all()]
+    allCameras = [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in Camera.objects.all()]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
@@ -76,11 +77,22 @@ def updateImageInfo(request):
     Saves update image info entered by the user in the image view.
     """
     print "Inside updateImageInfo"
+    pydevd.settrace('128.102.236.253')
     if request.method == 'POST':
-        print request.POST
         form = ImageSetForm(request.POST)
         if form.is_valid():
             imageSet = form.save(commit = False)
+            # TODO PAST_POSITION_MODEL from geocamTrack stores the position data per track.
+            # a track is associated with a resource
+            # a geocamTrack resource has a name, optional user, uuid, and extras
+            # We need a way to tie together a camera with a position source (ie track) in the past we have done this by name.
+            # If we have a configuration where you 'register' a camera (by serial number) with a track source then it should lazily fill in the asset position from the track
+            # This posiiton and altitude data should then be stored within the exif header for images 
+            # sometimes an image will have its own exif asset position info in which case you SHOULD create a new asset position with the resource being the camera itself
+#             print "imageSet asset_position is "
+#             print imageSet.asset_position
+#             imageSet.asset_position.latitude = request.POST['latitude']
+#             imageSet.asset_position.save()
             imageSet.save()
             response_data={}
             response_data['status'] = 'success'
@@ -98,24 +110,47 @@ def createNewImageSet(exifData, author, fileName):
     """
     creates new imageSet instance
     """
-#     pydevd.settrace('128.102.236.79')
-    # set location
-    gpsLatLon = getLatLon(exifData)
+    pydevd.settrace('128.102.236.253')
+    
     newImageSet = ImageSet()
     newImageSet.name = fileName
-    positionModel = getModelByName(PAST_POSITION_MODEL)
-    dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.get(name="dummy_track")
+    
+    # set camera 
+    cameraName = exifData['Model'] #TODO: change to serial number
+    #TODO: what are we storing in the camera model? 
+    cameras = Camera.objects.filter(name = cameraName)
+    if cameras.exists():
+        newImageSet.camera = cameras[0] 
+    else: 
+        newImageSet.camera = Camera(name = cameraName)
+    
+    # make sure there is a track for this camera for today
+    # right now we are haivng one track for each camera.  In future we need to segment this by mission day or by 'flight' and
+    # we will want to set a track 'source' for the camera
+    # related_name = settings.GEOCAM_TRACK_TRACK_MODEL + "_related_set"
+    # TODO make the below generic
+    TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
+    tracks = TRACK_MODEL.get().objects.filter(resource=newImageSet.camera)
+    if not tracks:
+        track = TRACK_MODEL.get().objects.create(name=newImageSet.camera.name, resource=newImageSet.camera, uuid=makeUuid())
+    else:
+        track = tracks[0]
+    # set location
+    gpsLatLon = getLatLon(exifData)
+    
+    positionModel = LazyGetModelByName(PAST_POSITION_MODEL).get()
+#     dummyTrack = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL).objects.get(name="dummy_track")
     try: # if there is GPS 
         gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
-        position = positionModel.objects.create(track = dummyTrack, 
-                                                timestamp= gpsTimeStamp,
-                                                latitude = gpsLatLon[0], 
-                                                longitude= gpsLatLon[1])
+        position = positionModel.create(track = track, 
+                                        timestamp= gpsTimeStamp,
+                                        latitude = gpsLatLon[0], 
+                                        longitude= gpsLatLon[1])
     except:
-        position = positionModel.objects.create(track = dummyTrack,
-                                                timestamp = None, #<--- DOES NOT WORK!
-                                                latitude = None,
-                                                longitude = None)
+        position = positionModel.create(track = track,
+                                        timestamp = None,
+                                        latitude = None,
+                                        longitude = None)
         print "Position is not available for this image"
     
     newImageSet.asset_position = position
@@ -124,15 +159,7 @@ def createNewImageSet(exifData, author, fileName):
     # set time stamp
     exifTime = time.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
     newImageSet.creation_time = time.strftime("%Y-%m-%d %H:%M:%S", exifTime)
-    # set camera 
-    cameraName = exifData['Model'] #TODO: Get a unique name like a serial number. Maybe camera name + username
-    #TODO: what are we storing in the camera model? 
-    cameras = Camera.objects.filter(display_name = cameraName)
-    if cameras.exists():
-        newImageSet.camera = cameras[0] 
-    else: 
-        newImageSet.camera = Camera.objects.create(display_name = cameraName)    
-    # save image set
+        
     return newImageSet
 
 
@@ -155,7 +182,7 @@ def saveImage(request):
             newImage.imageSet = newSet
             newImage.save()
             # create a thumbnail
-            thumbnailFile = createThumbnail(fileName)
+            thumbnailFile = createThumbnailFile(fileName)
             thumbnail = SingleImage(file = thumbnailFile, 
                         raw = False, 
                         thumbnail = True,
