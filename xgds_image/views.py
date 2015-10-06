@@ -36,16 +36,22 @@ from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumb
 from geocamUtil.loader import getModelByName
 
 from apps.geocamUtil.models.UuidField import makeUuid
+from apps.geocamUtil.loader import LazyGetModelByName
 
-PAST_POSITION_MODEL = settings.GEOCAM_TRACK_PAST_POSITION_MODEL
+IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
+SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
+CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
+TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
+POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+
 
 def getImageUploadPage(request):
-    imageSets = ImageSet.objects.filter(author = request.user)
+    imageSets = IMAGE_SET_MODEL.get().objects.filter(author = request.user)
     imageSets = imageSets.order_by('creation_time')
     imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
     # options for select boxes in the more info template.
     allAuthors = [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()]
-    allCameras = [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in Camera.objects.all()]
+    allCameras = [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in CAMERA_MODEL.get().objects.all()]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
@@ -64,9 +70,9 @@ def getImageSearchPage(request):
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     templates = get_handlebars_templates(fullTemplateList)
     # search stuff
-    theForm = SpecializedForm(SearchForm, ImageSet)
+    theForm = SpecializedForm(SearchForm, IMAGE_SET_MODEL.get())
     theFormSetMaker = formset_factory(theForm, extra=0)
-    theFormSet = theFormSetMaker(initial=[{'modelClass': AbstractImageSet}])
+    theFormSet = theFormSetMaker(initial=[{'modelClass': IMAGE_SET_MODEL.get()}])
     return render_to_response("xgds_image/imageSearch.html", 
                               {'templates': templates,
                                'formset': theFormSet,
@@ -111,23 +117,22 @@ def createNewImageSet(exifData, author, fileName):
     creates new imageSet instance
     """
     
-    newImageSet = ImageSet()
+    newImageSet = IMAGE_SET_MODEL.get()()
     newImageSet.name = fileName
     
     # set camera 
     cameraName = exifData['Model'] #TODO: change to serial number
     #TODO: what are we storing in the camera model? 
-    cameras = Camera.objects.filter(name = cameraName)
+    cameras = CAMERA_MODEL.get().objects.filter(name = cameraName)
     if cameras.exists():
         newImageSet.camera = cameras[0] 
     else: 
-        newImageSet.camera = Camera.objects.create(name = cameraName)
+        newImageSet.camera =  CAMERA_MODEL.get().objects.create(name = cameraName)
     
     # make sure there is a track for this camera for today
     # right now we have one track for each camera.  In future we need to segment this by mission day or by 'flight' and
     # we will want to set a track 'source' for the camera
     # also right now we require the geocam track model to be a GenericTrack or extend GenericTrack
-    TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
     camera_model_type = ContentType.objects.get_for_model(newImageSet.camera)
     tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=newImageSet.camera.id, generic_resource_content_type=camera_model_type)
     if not tracks:
@@ -141,10 +146,9 @@ def createNewImageSet(exifData, author, fileName):
     # set location
     gpsLatLon = getLatLon(exifData)
     
-    positionModel = LazyGetModelByName(PAST_POSITION_MODEL).get()
     try: # if there is GPS 
         gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
-        position = positionModel.objects.create(track = track, 
+        position = POSITION_MODEL.get().objects.create(track = track, 
                                                 timestamp= gpsTimeStamp,
                                                 latitude = gpsLatLon[0], 
                                                 longitude= gpsLatLon[1])
@@ -171,7 +175,7 @@ def saveImage(request):
         if form.is_valid():
             # create and save a single image obj
             uploadedFile = request.FILES['file']
-            newImage = SingleImage.objects.create(file = uploadedFile)
+            newImage = SINGLE_IMAGE_MODEL.get().objects.create(file = uploadedFile)
             fileName = uploadedFile.name
             # create a new image set instance           
             exifData = getExifData(newImage)
@@ -182,7 +186,7 @@ def saveImage(request):
             newImage.save()
             # create a thumbnail
             thumbnailFile = createThumbnailFile(fileName)
-            thumbnail = SingleImage(file = thumbnailFile, 
+            thumbnail = SINGLE_IMAGE_MODEL.get()(file = thumbnailFile, 
                         raw = False, 
                         thumbnail = True,
                         imageSet = newSet)

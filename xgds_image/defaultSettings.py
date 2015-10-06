@@ -43,3 +43,7 @@ XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
 
 XGDS_IMAGE_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
 XGDS_IMAGE_HANDLEBARS_DIR = [os.path.join('xgds_image', 'templates', 'handlebars')]
+
+XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
+XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
+XGDS_IMAGE_CAMERA_MODEL = 'xgds_image.Camera'
