@@ -16,15 +16,18 @@
 
 import json
 import time
+import sys
+import traceback
 from datetime import datetime
 
 from django.forms.formsets import formset_factory
+from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
-from models import *
+from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_image import settings
 from xgds_map_server.views import get_handlebars_templates
@@ -75,7 +78,6 @@ def updateImageInfo(request):
     """
     Saves update image info entered by the user in the image view.
     """
-    print "Inside updateImageInfo"
     if request.method == 'POST':
         form = ImageSetForm(request.POST)
         if form.is_valid():
@@ -108,6 +110,7 @@ def createNewImageSet(exifData, author, fileName):
     """
     creates new imageSet instance
     """
+    
     newImageSet = ImageSet()
     newImageSet.name = fileName
     
@@ -118,16 +121,21 @@ def createNewImageSet(exifData, author, fileName):
     if cameras.exists():
         newImageSet.camera = cameras[0] 
     else: 
-        newImageSet.camera = Camera(name = cameraName)
+        newImageSet.camera = Camera.objects.create(name = cameraName)
     
     # make sure there is a track for this camera for today
     # right now we have one track for each camera.  In future we need to segment this by mission day or by 'flight' and
     # we will want to set a track 'source' for the camera
     # also right now we require the geocam track model to be a GenericTrack or extend GenericTrack
     TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
-    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=newImageSet.camera.id, generic_resource_content_type=ContentType.objects.get_for_model(newImageSet.camera))
+    camera_model_type = ContentType.objects.get_for_model(newImageSet.camera)
+    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=newImageSet.camera.id, generic_resource_content_type=camera_model_type)
     if not tracks:
-        track = TRACK_MODEL.get().objects.create(name=newImageSet.camera.name, generic_resource=newImageSet.camera, uuid=makeUuid())
+        track = TRACK_MODEL.get().objects.create(name=newImageSet.camera.name, 
+#                                                  generic_resource_id=newImageSet.camera.id, 
+#                                                  generic_resource_content_type=camera_model_type, 
+                                                 generic_resource=newImageSet.camera, 
+                                                 uuid=makeUuid())
     else:
         track = tracks[0]
     # set location
@@ -136,14 +144,14 @@ def createNewImageSet(exifData, author, fileName):
     positionModel = LazyGetModelByName(PAST_POSITION_MODEL).get()
     try: # if there is GPS 
         gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
-        position = positionModel.create(track = track, 
-                                        timestamp= gpsTimeStamp,
-                                        latitude = gpsLatLon[0], 
-                                        longitude= gpsLatLon[1])
+        position = positionModel.objects.create(track = track, 
+                                                timestamp= gpsTimeStamp,
+                                                latitude = gpsLatLon[0], 
+                                                longitude= gpsLatLon[1])
         newImageSet.asset_position = position
-    except:
-        pass
-    
+    except Exception:
+        traceback.print_exc()
+        
     # set author
     newImageSet.author = author
     # set time stamp
