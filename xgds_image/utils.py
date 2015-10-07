@@ -19,8 +19,7 @@ import PIL.ExifTags
 import datetime
 from PIL import Image
 import glob, os
-# from django.conf import settings
-from xgds_image import settings 
+from django.conf import settings
 
 
 def createThumbnailFile(src):

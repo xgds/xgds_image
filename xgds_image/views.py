@@ -19,6 +19,7 @@ import time
 import sys
 import traceback
 from datetime import datetime
+from django.conf import Settings
 
 from django.forms.formsets import formset_factory
 from django.contrib.contenttypes.models import ContentType
@@ -29,7 +30,6 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
-from xgds_image import settings
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile
