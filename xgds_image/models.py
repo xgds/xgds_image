@@ -61,17 +61,20 @@ class AbstractImageSet(models.Model):
         """
         result = modelToDict(self)
         result['id'] = self.id
+        result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name
         result['author_name'] = self.author.username
-        image = SingleImage.objects.get(imageSet = self, raw = True)
-        result['raw_image_url'] = settings.DATA_URL + image.file.name
+        rawimage = SingleImage.objects.get(imageSet = self, raw = True)
+        result['raw_image_url'] = settings.DATA_URL + rawimage.file.name
+        thumbimage = SingleImage.objects.get(imageSet = self, raw = False, thumbnail = True)
+        result['thumbnail_image_url'] = settings.DATA_URL + thumbimage.file.name
         if self.asset_position:
-            result['latitude'] = self.asset_position.latitude
-            result['longitude'] = self.asset_position.longitude
+            result['lat'] = self.asset_position.latitude
+            result['lon'] = self.asset_position.longitude
             result['altitude'] = self.asset_position.altitude
         else:
-            result['latitude'] = "Not available"
-            result['longitude'] = "Not available"
+            result['lat'] = "Not available"
+            result['lon'] = "Not available"
             result['altitude'] = "Not available"
         return result
 

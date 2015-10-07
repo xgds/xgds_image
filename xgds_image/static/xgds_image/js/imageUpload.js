@@ -184,8 +184,8 @@ defaultOptions["aoColumns"] = [
                                    return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
                                }},
                                {"mData": "camera_name"},
-                               {"mData": "latitude"},
-                               {"mData": "longitude"},
+                               {"mData": "lat"},
+                               {"mData": "lon"},
                                {"mData": "altitude"},
                                {"mData": "author_name"},
 ];
