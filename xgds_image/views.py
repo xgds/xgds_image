@@ -49,16 +49,13 @@ def getImageUploadPage(request):
     imageSets = IMAGE_SET_MODEL.get().objects.filter(author = request.user)
     imageSets = imageSets.order_by('creation_time')
     imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
-    # options for select boxes in the more info template.
-    allAuthors = [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()]
-    allCameras = [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in CAMERA_MODEL.get().objects.all()]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     templates = get_handlebars_templates(fullTemplateList)
     data = {'imageSetsJson': imageSetsJson,
-            'allAuthors': allAuthors,
-            'allCameras': allCameras,
+            'allAuthors': [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()],
+            'allCameras': [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in CAMERA_MODEL.get().objects.all()],
             'templates': templates,
             'app': 'xgds_map_server/js/simpleMapApp.js'}
     return render_to_response("xgds_image/imageUpload.html", data,
@@ -74,7 +71,10 @@ def getImageSearchPage(request):
     theFormSetMaker = formset_factory(theForm, extra=0)
     theFormSet = theFormSetMaker(initial=[{'modelClass': IMAGE_SET_MODEL.get()}])
     return render_to_response("xgds_image/imageSearch.html", 
-                              {'templates': templates,
+                              {'imageSetsJson': "[]",
+                               'allAuthors': [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()],
+                               'allCameras': [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in CAMERA_MODEL.get().objects.all()],
+                               'templates': templates,
                                'formset': theFormSet,
                                'app': 'xgds_map_server/js/simpleMapApp.js'},
                               context_instance=RequestContext(request))
