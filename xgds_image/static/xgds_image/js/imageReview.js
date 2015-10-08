@@ -179,9 +179,6 @@ function setupTable(){
 	];
 
 	if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
-		  $('#image_table').DataTable(defaultOptions);
+		  theDataTable = $('#image_table').dataTable(defaultOptions);
 	}
-
 }
-
-s

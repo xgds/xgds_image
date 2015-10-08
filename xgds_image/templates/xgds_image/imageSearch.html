@@ -5,6 +5,14 @@
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageSearch.js"></script>
 {% endblock scripts %}
 
+{% block jsInit %}
+{{ block.super }}
+
+$("#item_image_search").submit(function(event) {
+	doSearch(event);
+});
+
+{% endblock jsInit %}
 
 {% block firstPackery %}
 		<div class='item w2 lockAspect' id='item_image_search'>
@@ -16,7 +24,7 @@
 				{{ form.as_table }}
 				</table>
 				{% endfor %}
-				<button id="doSearch" class="small">Search</button>
+				<input type="submit" id="doSearch" class="small" value="Search"/>
 			</form>
 		</div>
 {% endblock firstPackery %}
