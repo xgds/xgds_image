@@ -70,8 +70,6 @@ def getImageSearchPage(request):
     theFormSet = theFormSetMaker(initial=[{'modelClass': IMAGE_SET_MODEL.get()}])
     return render_to_response("xgds_image/imageSearch.html", 
                               {'imageSetsJson': "[]",
-                               'allAuthors': [{'author_name_index': [str(user.username), int(user.id)]} for user in User.objects.all()],
-                               'allCameras': [{'camera_name_index': [str(camera.name), int(camera.id)]} for camera in CAMERA_MODEL.get().objects.all()],
                                'templates': templates,
                                'formset': theFormSet,
                                'app': 'xgds_map_server/js/simpleMapApp.js'},

@@ -1,15 +1,17 @@
 var $container = $('#container'); 
 bindLockItemBtnCallback($container);
 
-
-/**
- * Helpers
- */
 function stringContains(string, substring) {
 	// checks that string contains substring
 	return string.indexOf(substring) > -1;
 }
 
+/*
+ * Event binders
+ */
+/**
+ * Removes packery item upon delete button click.
+ */
 function bindDeleteBtnCallback(htmlSnippet) {
 	htmlSnippet.find(".icon-cancel-circled").bind("click", function() {
 		// remove clicked element
@@ -19,6 +21,9 @@ function bindDeleteBtnCallback(htmlSnippet) {
 	});	
 }
 
+/**
+ * Toggles on additional information of the image when 'more info' button is clicked.
+ */
 function bindToggleBtnCallback(htmlSnippet) {
 	var toggleView = htmlSnippet.find("#more_info_view");
 	htmlSnippet.find("#image_view").find("#more_info_button").click({view: toggleView}, function(event) {
@@ -26,6 +31,9 @@ function bindToggleBtnCallback(htmlSnippet) {
 	});
 }
 
+/**
+ * Saves image info to the db when user updates it and submits.
+ */
 function bindUpdateImageInfoCallback(htmlSnippet) {
 	htmlSnippet.find("#more_info_view").find("#more_info_form").submit(function(event) {
 		event.preventDefault(); 	// avoid to execute the actual submit of the form.
@@ -48,6 +56,9 @@ function bindUpdateImageInfoCallback(htmlSnippet) {
 	});
 }
 
+/**
+ * Locks/unlocks the packery template when user clicks on the key icon.
+ */
 function bindLockItemBtnCallback(htmlSnippet) {
 	htmlSnippet.find(".icon-key").bind("click", function() {
 		var key = event.target;
@@ -71,11 +82,15 @@ function bindLockItemBtnCallback(htmlSnippet) {
 	});
 }
 
+/* 
+ * Image next and previous button stuff
+ */
+
+/**
+ * Helper that finds index in imageSetsArray
+ * of the currently displayed image in the imageView.
+ */
 function getCurrentImageAndIndex(htmlSnippet) {
-	/**
-	 * Helper that finds index in imageSetsArray
-	 * of the currently displayed image in the imageView.
-	 */
 	// get the img's name.
 	var currentImgUrl = htmlSnippet.find("img").attr('src');
 	var currentImgIndex = null;
@@ -89,10 +104,10 @@ function getCurrentImageAndIndex(htmlSnippet) {
 	return currentImgIndex;
 }
 
+/**
+ * Helper that updates the the image view info.
+ */
 function updateImageView(htmlSnippet, index) {
-	/**
-	 * Helper that updates the the image view info.
-	 */
 	if (index != null) {
 		var imageJson = imageSetsArray[index];
 		// update image name
@@ -117,8 +132,6 @@ function bindImagePrevAndNextBtnCallback(htmlSnippet) {
 			updateImageView(htmlSnippet, index);
 		}
 	});
-	
-	//TODO: when an image is uploaded, make sure to add to the imageSetsArray.
 	htmlSnippet.find(".next-button").click(function(event) {
 		var index = getCurrentImageAndIndex(htmlSnippet);
 		if (index == (imageSetsArray.length - 1)) {
@@ -131,7 +144,7 @@ function bindImagePrevAndNextBtnCallback(htmlSnippet) {
 }
 
 /*
- * Image View
+ * Construct the image view item
  */
 function constructImageView(json) {
 	var rawTemplate = $('#template-image-view').html();
@@ -139,8 +152,6 @@ function constructImageView(json) {
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
-	json.allAuthors = allAuthors;
-	json.allCameras = allCameras;
 	// inject new fields into the precompiled template
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
@@ -169,8 +180,6 @@ function setSaveStatusMessage(handler, data){
 }
 
 
-
-
 /* 
  * Table View
  */
@@ -178,12 +187,16 @@ function setSaveStatusMessage(handler, data){
 var imageTable = $('#image_table'); 
 defaultOptions["aaData"] = imageSetsArray;
 defaultOptions["aoColumns"] = [
+                               {"mRender": function(data, type, full) {
+                            	   return "<img src='"+full['raw_image_url']+"' width='130'></img>"
+                               }},
                                {"mRender":function(data, type, full){
                             	   var imageName = full['name'];
                             	   var jsonString = JSON.stringify(full);
                                    return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
                                }},
                                {"mData": "camera_name"},
+                               {"mData": "creation_time"},
                                {"mData": "lat"},
                                {"mData": "lon"},
                                {"mData": "altitude"},
@@ -193,5 +206,5 @@ defaultOptions["aoColumns"] = [
 if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
 	  $('#image_table').DataTable(defaultOptions);
 }
-app.vent.trigger("mapSearch:found", imageSetsArray); 
 
+app.vent.trigger("mapSearch:found", imageSetsArray); 
