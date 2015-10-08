@@ -63,6 +63,7 @@ class AbstractImageSet(models.Model):
         result['id'] = self.id
         result['camera_name'] = self.camera.name
         result['author_name'] = self.author.username
+        result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         image = SingleImage.objects.get(imageSet = self, raw = True)
         result['raw_image_url'] = settings.DATA_URL + image.file.name
         if self.asset_position:

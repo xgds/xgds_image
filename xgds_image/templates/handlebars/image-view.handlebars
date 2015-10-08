@@ -8,13 +8,28 @@
 		<button class="small info btn next-button"><i class="icon-right-dir"></i></button>
 		<br>
 		<div class="image-wrapper"> 
-			<img src="{{ imagePath }}"></img>
+			<img class="display_image" src="{{ imagePath }}"></img>
 		</div>
-		
 		<ul>
 			<li>
 				<label>Camera</label>
 				{{ camera_name }}
+			</li>
+			<li>
+				<label>Creation Time</label>
+				{{ creation_time }}
+			</li>
+			<li>
+				<label>Latitude</label>
+				{{ latitude }}
+			</li>
+			<li>
+				<label>Longitude</label>
+				{{ longitude }}
+			</li>
+			<li>
+				<label>Altitude</label>
+				{{ altitude }}
 			</li>
 			<li>
 				<label>Author</label>
@@ -30,14 +45,6 @@
 				<ul>
 					<input name="id" value="{{id}}" hidden id="id_id"></input>
 					<li>
-						<label>Camera</label>
-						<select name="camera" id="camera">
-						{{#each allCameras}}
-	 						<option value={{camera_name_index.[1]}}>{{camera_name_index.[0]}}</option>
-						{{/each}}
-						</select>
-					</li>
-					<li>
 						<label>Latitude</label>
 						<input name="latitude" id="id_latitude" value="{{latitude}}"></input>
 					</li>
@@ -48,14 +55,6 @@
 					<li>
 						<label>Altitude</label>
 						<input name="altitude" id="id_altitude" value="{{altitude}}"></input>
-					</li>
-					<li>
-						<label>Author</label>
-						<select name="author", id="id_author">
-						{{#each allAuthors}}
-	 						<option value={{author_name_index.[1]}}>{{author_name_index.[0]}}</option>
-						{{/each}}
-						</select>
 					</li>
 					<li>
 						<label>Description</label>

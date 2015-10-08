@@ -139,8 +139,6 @@ function constructImageView(json) {
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
-	json.allAuthors = allAuthors;
-	json.allCameras = allCameras;
 	// inject new fields into the precompiled template
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
@@ -178,12 +176,16 @@ function setSaveStatusMessage(handler, data){
 var imageTable = $('#image_table'); 
 defaultOptions["aaData"] = imageSetsArray;
 defaultOptions["aoColumns"] = [
+                               {"mRender": function(data, type, full) {
+                            	   return "<img src='"+full['raw_image_url']+"' width='130'></img>"
+                               }},
                                {"mRender":function(data, type, full){
                             	   var imageName = full['name'];
                             	   var jsonString = JSON.stringify(full);
                                    return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
                                }},
                                {"mData": "camera_name"},
+                               {"mData": "creation_time"},
                                {"mData": "latitude"},
                                {"mData": "longitude"},
                                {"mData": "altitude"},
