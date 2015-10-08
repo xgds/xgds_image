@@ -1,0 +1,112 @@
+{% extends 'image_base.html' %}
+{% load pipeline %}
+
+ {% block cssExtras %}
+ {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
+    
+    <!--  map stuff -->
+	<link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}openlayers3/ol.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.css"></link>
+    <style scoped>
+    #map {
+	  	 margin-top: 25px;
+	 	 height: 200px;
+	  }
+    </style>
+    <!--  end map stuff -->
+    <!--  map layers stuff -->
+    <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css"></link>
+    <!--  end layers stuff -->
+        
+ {% endblock cssExtras %}
+
+
+{% block jsInit %}
+	appOptions = {
+		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
+		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
+		dataUrl: "{{ settings.DATA_URL }}"
+	}
+	$(function(){
+    	app.start(appOptions);
+	});
+	initializePackery();
+{% endblock %}
+
+
+{% block scripts %}
+{{block.super}}
+	{% include "MapJS.html" %}
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}/jssor/js/jssor.slider.mini.js'></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}packery/dist/packery.pkgd.min.js" ></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/packem.js"></script>
+    
+    <script type="text/javascript">
+    <!--  parse image json -->
+    var imageSetsJson = {{ imageSetsJson|safe }};
+    var imageSetsArray = []; // stores JSON objects
+    $(imageSetsJson).each(function() {
+    	imageSetsArray.push(JSON.parse(this)); // parse json string
+    });
+    <!-- set vars -->
+    var updateImageUrl = "{% url 'xgds_update_image_info' %}";
+    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
+	<!--  load handlebars -->
+	<script type="text/javascript" src="/static/geocamUtil/js/datatable_helpers.js"></script>
+	{% for template_name, template in templates.items %}
+		<script type="text/handlebars" id="template-{{template_name}}">
+			{{template|safe}}
+		</script>
+	{% endfor %}
+	
+	{% javascript 'custom_map' %}
+{% endblock scripts %}
+
+
+{% block content %}
+	{% block packery %}
+	<div id="container"> 
+		
+		{% block firstPackery %}
+		{% endblock firstPackery %}
+		
+		<!-- Image list table -->
+		<div class='item w2 lockAspect' id='item_image_table' data-isStamped="false">
+			<i class="icon-key"></i>
+			<div id="image_table_div"> 
+				<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
+					<thead class="table_header">
+						<tr>
+							<th></th>
+							<th>Name</th>
+						    <th>Source</th>
+						    <th>Creation Time </th>
+						    <th>Latitude</th>
+						    <th>Longitude</th>
+						    <th>Altitude</th>
+						    <th>Author</th>
+					    </tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		
+		<div id="map" class="item w2 freeAspect" data-isStamped="false">
+			<i class="icon-key"></i>
+		</div>
+		<div id="layers" hidden></div>
+        <!-- <div id="layers" class="item w2 lockAspect"></div>  -->
+	</div> <!--  js packery container -->
+	{% endblock packery %}
+{% endblock content %}

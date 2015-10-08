@@ -139,6 +139,8 @@ function constructImageView(json) {
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
+	json.allAuthors = allAuthors;
+	json.allCameras = allCameras;
 	// inject new fields into the precompiled template
 	var htmlString = compiledTemplate(json);
 	var newDiv = $(htmlString);
@@ -176,16 +178,12 @@ function setSaveStatusMessage(handler, data){
 var imageTable = $('#image_table'); 
 defaultOptions["aaData"] = imageSetsArray;
 defaultOptions["aoColumns"] = [
-                               {"mRender": function(data, type, full) {
-                            	   return "<img src='"+full['raw_image_url']+"' width='130'></img>"
-                               }},
                                {"mRender":function(data, type, full){
                             	   var imageName = full['name'];
                             	   var jsonString = JSON.stringify(full);
                                    return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
                                }},
                                {"mData": "camera_name"},
-                               {"mData": "creation_time"},
                                {"mData": "lat"},
                                {"mData": "lon"},
                                {"mData": "altitude"},
@@ -195,29 +193,5 @@ defaultOptions["aoColumns"] = [
 if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
 	  $('#image_table').DataTable(defaultOptions);
 }
+app.vent.trigger("mapSearch:found", imageSetsArray); 
 
-/*
- * Image drag and drop upload
- */
-Dropzone.options.imageDropZone = {
-	// Prevents Dropzone from uploading dropped files immediately
-	autoProcessQueue : false,
-	//	acceptedFiles: 'application/image',
-	init : function() {
-		var submitButton = document.querySelector("#submit-all")
-		imageDropZone = this;
-
-		submitButton.addEventListener("click", function() {
-			imageDropZone.processQueue();  // Tell Dropzone to process all queued files.
-		});
-		// You might want to show the submit button only when
-		// files are dropped here:
-		this.on("addedfile", function() {
-			// Show submit button here and/or inform user to click it.
-		});
-		this.on("success", function(file, responseText, e) {
-			var json = responseText['json'];
-			imageTable.dataTable().fnAddData(json);
-		});
-	}
-};
