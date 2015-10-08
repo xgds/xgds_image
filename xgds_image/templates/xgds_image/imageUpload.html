@@ -10,20 +10,19 @@
 {{block.super}}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/dropzone.js'></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
-	
 {% endblock scripts %}
 
 
 {% block firstPackery %}	
-		<div class='item w2 lockAspect' id='item_image_upload' data-isStamped="false">
-			<i class="icon-key"></i>
-			<!-- Dropzone image upload -->
-			<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
-			enctype="multipart/form-data">
-			{% csrf_token %}
-			</form>
-			<button id="submit-all">
-				Upload Images
-			</button>
-		</div>
+	<div class='item w2 lockAspect' id='item_image_upload' data-isStamped="false">
+		<i class="icon-key"></i>
+		<!-- Dropzone image upload -->
+		<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
+		enctype="multipart/form-data">
+		{% csrf_token %}
+		</form>
+		<button id="submit-all">
+			Upload Images
+		</button>
+	</div>
 {% endblock firstPackery %}

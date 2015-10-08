@@ -1,5 +1,4 @@
 var $container = $('#container'); 
-bindLockItemBtnCallback($container);
 
 function stringContains(string, substring) {
 	// checks that string contains substring
@@ -56,31 +55,6 @@ function bindUpdateImageInfoCallback(htmlSnippet) {
 	});
 }
 
-/**
- * Locks/unlocks the packery template when user clicks on the key icon.
- */
-function bindLockItemBtnCallback(htmlSnippet) {
-	htmlSnippet.find(".icon-key").bind("click", function() {
-		var key = event.target;
-		if (stringContains(key.parentElement.className, "item")) {
-			$stamp = key.parentElement;
-		} else {
-			$stamp = key.parentElement.parentElement;
-		}
-		
-		var isStamped = $stamp.getAttribute('data-isStamped');
-		if ( isStamped == "true") {
-			$container.packery( 'unstamp', $stamp );
-			$stamp.setAttribute('data-isStamped', 'false');
-			this.style.color = "silver";
-		} else {
-			$container.packery( 'stamp', $stamp );
-			$stamp.setAttribute('data-isStamped', 'true');
-			this.style.color = "grey";
-		}
-		$container.packery();
-	});
-}
 
 /* 
  * Image next and previous button stuff
@@ -183,28 +157,31 @@ function setSaveStatusMessage(handler, data){
 /* 
  * Table View
  */
-// initialize the image table with json of existing images.
-var imageTable = $('#image_table'); 
-defaultOptions["aaData"] = imageSetsArray;
-defaultOptions["aoColumns"] = [
-                               {"mRender": function(data, type, full) {
-                            	   return "<img src='"+full['raw_image_url']+"' width='130'></img>"
-                               }},
-                               {"mRender":function(data, type, full){
-                            	   var imageName = full['name'];
-                            	   var jsonString = JSON.stringify(full);
-                                   return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
-                               }},
-                               {"mData": "camera_name"},
-                               {"mData": "creation_time"},
-                               {"mData": "lat"},
-                               {"mData": "lon"},
-                               {"mData": "altitude"},
-                               {"mData": "author_name"},
-];
+function setupTable(){
+	// initialize the image table with json of existing images.
+	var imageTable = $('#image_table'); 
+	defaultOptions["aaData"] = imageSetsArray;
+	defaultOptions["aoColumns"] = [
+	                               {"mRender": function(data, type, full) {
+	                            	   return "<img src='"+full['thumbnail_image_url']+"' width='130'></img>"
+	                               }},
+	                               {"mRender":function(data, type, full){
+	                            	   var imageName = full['name'];
+	                            	   var jsonString = JSON.stringify(full);
+	                                   return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
+	                               }},
+	                               {"mData": "camera_name"},
+	                               {"mData": "creation_time"},
+	                               {"mData": "lat"},
+	                               {"mData": "lon"},
+	                               {"mData": "altitude"},
+	                               {"mData": "author_name"},
+	];
 
-if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
-	  $('#image_table').DataTable(defaultOptions);
+	if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
+		  $('#image_table').DataTable(defaultOptions);
+	}
+
 }
 
-app.vent.trigger("mapSearch:found", imageSetsArray); 
+s

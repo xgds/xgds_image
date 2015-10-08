@@ -24,6 +24,17 @@
 
 
 {% block jsInit %}
+	// initialize global javascript variables
+	<!--  parse image json -->
+    var imageSetsJson = {{ imageSetsJson|safe }};
+    var imageSetsArray = []; // stores JSON objects
+    $(imageSetsJson).each(function() {
+    	imageSetsArray.push(JSON.parse(this)); // parse json string
+    });
+    <!-- set vars -->
+    var updateImageUrl = "{% url 'xgds_update_image_info' %}";
+    
+	setupTable();
 	appOptions = {
 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
@@ -49,16 +60,6 @@
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}packery/dist/packery.pkgd.min.js" ></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/packem.js"></script>
     
-    <script type="text/javascript">
-    <!--  parse image json -->
-    var imageSetsJson = {{ imageSetsJson|safe }};
-    var imageSetsArray = []; // stores JSON objects
-    $(imageSetsJson).each(function() {
-    	imageSetsArray.push(JSON.parse(this)); // parse json string
-    });
-    <!-- set vars -->
-    var updateImageUrl = "{% url 'xgds_update_image_info' %}";
-    </script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
 	<!--  load handlebars -->
 	<script type="text/javascript" src="/static/geocamUtil/js/datatable_helpers.js"></script>

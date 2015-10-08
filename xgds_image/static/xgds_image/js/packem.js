@@ -7,6 +7,8 @@ function initializePackery() {
 	});
 
 	makeResizable($container);
+	bindLockItemBtnCallback($container);
+
 }
 
 function makeResizable($container) {
@@ -43,4 +45,30 @@ function makeChildrenResizable($container, $itemElems){
 				$container.packery( 'fit', ui.element[0] );
 			}, 100 );
 		});
+}
+
+/**
+ * Locks/unlocks the packery template when user clicks on the key icon.
+ */
+function bindLockItemBtnCallback($container) {
+	$container.find(".icon-key").bind("click", function() {
+		var key = event.target;
+		if (stringContains(key.parentElement.className, "item")) {
+			$stamp = key.parentElement;
+		} else {
+			$stamp = key.parentElement.parentElement;
+		}
+		
+		var isStamped = $stamp.getAttribute('data-isStamped');
+		if ( isStamped == "true") {
+			$container.packery( 'unstamp', $stamp );
+			$stamp.setAttribute('data-isStamped', 'false');
+			this.style.color = "silver";
+		} else {
+			$container.packery( 'stamp', $stamp );
+			$stamp.setAttribute('data-isStamped', 'true');
+			this.style.color = "grey";
+		}
+		$container.packery();
+	});
 }
