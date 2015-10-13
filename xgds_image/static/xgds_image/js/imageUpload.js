@@ -4,6 +4,8 @@
 Dropzone.options.imageDropZone = {
 	// Prevents Dropzone from uploading dropped files immediately
 	autoProcessQueue : false,
+	parallelUploads: 1000, // upload up to 1000 images in parallel
+	addRemoveLinks: true,
 	//	acceptedFiles: 'application/image',
 	init : function() {
 		var submitButton = document.querySelector("#submit-all")
