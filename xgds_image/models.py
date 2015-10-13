@@ -51,6 +51,9 @@ class AbstractImageSet(models.Model):
     description = models.CharField(max_length=128, blank=True)
     asset_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
     
+    class Meta:
+        abstract = True
+    
     def __unicode__(self):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
                 % (self.id, self.name, self.shortName))
@@ -74,9 +77,9 @@ class AbstractImageSet(models.Model):
             result['lon'] = self.asset_position.longitude
             result['altitude'] = self.asset_position.altitude
         else:
-            result['lat'] = "Not available"
-            result['lon'] = "Not available"
-            result['altitude'] = "Not available"
+            result['lat'] = ""
+            result['lon'] = ""
+            result['altitude'] = ""
         return result
 
     def getRawImage(self):

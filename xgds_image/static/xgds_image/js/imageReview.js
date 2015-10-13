@@ -159,7 +159,6 @@ function setSaveStatusMessage(handler, data){
  */
 function setupTable(){
 	// initialize the image table with json of existing images.
-	var imageTable = $('#image_table'); 
 	defaultOptions["aaData"] = imageSetsArray;
 	defaultOptions["aoColumns"] = [
 	                               {"mRender": function(data, type, full) {

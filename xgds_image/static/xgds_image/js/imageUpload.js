@@ -19,6 +19,7 @@ Dropzone.options.imageDropZone = {
 		});
 		this.on("success", function(file, responseText, e) {
 			var json = responseText['json'];
+			var imageTable = $('#image_table'); 
 			imageTable.dataTable().fnAddData(json);
 		});
 	}

@@ -28,8 +28,8 @@ class ImageSetForm(forms.ModelForm):
     latitude = forms.FloatField(required=False)
     longitude = forms.FloatField(required=False)
     altitude = forms.FloatField(required=False)
-    id= forms.CharField(widget=forms.HiddenInput())
     
+    id= forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = ImageSet
-        fields = ['id', 'camera', 'author', 'description']
+        fields = ['id', 'description']

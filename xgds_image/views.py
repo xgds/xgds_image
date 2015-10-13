@@ -38,6 +38,7 @@ from geocamUtil.loader import getModelByName
 from apps.geocamUtil.models.UuidField import makeUuid
 from apps.geocamUtil.loader import LazyGetModelByName
 
+
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
@@ -81,20 +82,30 @@ def updateImageInfo(request):
     Saves update image info entered by the user in the image view.
     """
     if request.method == 'POST':
-        form = ImageSetForm(request.POST)
+        imageSet = IMAGE_SET_MODEL.get().objects.get(id=request.POST['id'])
+        form = ImageSetForm(request.POST, instance = imageSet)
+        print 'form errors'
+        print form.errors
         if form.is_valid():
+            latitude =  form.cleaned_data['latitude']
+            longitude =  form.cleaned_data['longitude']
+            altitude =  form.cleaned_data['altitude']
+#             imageSet.description = form.cleaned_data['description']
             imageSet = form.save(commit = False)
-            # TODO PAST_POSITION_MODEL from geocamTrack stores the position data per track.
-            # a track is associated with a resource
-            # a geocamTrack resource has a name, optional user, uuid, and extras
-            # We need a way to tie together a camera with a position source (ie track) in the past we have done this by name.
-            # If we have a configuration where you 'register' a camera (by serial number) with a track source then it should lazily fill in the asset position from the track
-            # This posiiton and altitude data should then be stored within the exif header for images 
-            # sometimes an image will have its own exif asset position info in which case you SHOULD create a new asset position with the resource being the camera itself
-#             print "imageSet asset_position is "
-#             print imageSet.asset_position
-#             imageSet.asset_position.latitude = request.POST['latitude']
-#             imageSet.asset_position.save()
+            if (latitude or longitude or altitude):
+                if not imageSet.asset_position:            
+                    track = getTrack(imageSet.camera)
+                    imageSet.position = POSITION_MODEL.get().objects.create(track = track, 
+                                                                            timestamp= imageSet.creation_time,
+                                                                            latitude = latitude, 
+                                                                            longitude= longitude)
+                else:
+                    imageSet.position.latitude =  latitude
+                    imageSet.position.longitude =  longitude
+                try:
+                    imageSet.position.altitude = altitude
+                except:
+                    pass
             imageSet.save()
             response_data={}
             response_data['status'] = 'success'
@@ -108,58 +119,50 @@ def updateImageInfo(request):
                                 content_type='application/json')
 
 
-def createNewImageSet(exifData, author, fileName):
-    """
-    creates new imageSet instance
-    """
-    
-    newImageSet = IMAGE_SET_MODEL.get()()
-    newImageSet.name = fileName
-    
-    # set camera 
-    cameraName = exifData['Model'] #TODO: change to serial number
-    #TODO: what are we storing in the camera model? 
-    cameras = CAMERA_MODEL.get().objects.filter(name = cameraName)
-    if cameras.exists():
-        newImageSet.camera = cameras[0] 
-    else: 
-        newImageSet.camera =  CAMERA_MODEL.get().objects.create(name = cameraName)
-    
-    # make sure there is a track for this camera for today
-    # right now we have one track for each camera.  In future we need to segment this by mission day or by 'flight' and
-    # we will want to set a track 'source' for the camera
-    # also right now we require the geocam track model to be a GenericTrack or extend GenericTrack
-    camera_model_type = ContentType.objects.get_for_model(newImageSet.camera)
-    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=newImageSet.camera.id, generic_resource_content_type=camera_model_type)
+def getTrack(camera):
+    camera_model_type = ContentType.objects.get_for_model(camera)
+    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=camera.id, generic_resource_content_type=camera_model_type)
     if not tracks:
-        track = TRACK_MODEL.get().objects.create(name=newImageSet.camera.name, 
-#                                                  generic_resource_id=newImageSet.camera.id, 
-#                                                  generic_resource_content_type=camera_model_type, 
-                                                 generic_resource=newImageSet.camera, 
+        track = TRACK_MODEL.get().objects.create(name=camera.name, 
+                                                 generic_resource=camera, 
                                                  uuid=makeUuid())
     else:
         track = tracks[0]
-    # set location
-    gpsLatLon = getLatLon(exifData)
+    return track
+
+
+def getCameraObject(exif):
+    '''
+    Given image exif data, either creates a new camera object or returns an
+    existing one.
+    '''
+    cameraName = exif['Model']
+    cameras = CAMERA_MODEL.get().objects.filter(name = cameraName)
+    if cameras.exists():
+        return cameras[0]
+    else: 
+        return CAMERA_MODEL.get().objects.create(name = cameraName)
     
-    try: # if there is GPS 
-        gpsTimeStamp = getGPSDatetime(exifData) #TODO: use the DatetimeOriginal and check that it is in uTC
-        position = POSITION_MODEL.get().objects.create(track = track, 
-                                                timestamp= gpsTimeStamp,
-                                                latitude = gpsLatLon[0], 
-                                                longitude= gpsLatLon[1])
-        newImageSet.asset_position = position
+    
+def getPositionObject(exif, camera):
+    '''
+    Given the image's exif data and a camera object, 
+    creates a new position object that contains the lat and lon information.
+    '''
+    try: # if there is GPS
+        track = getTrack(camera)
+        gpsLatLon = getLatLon(exif)
+        gpsTimeStamp = getGPSDatetime(exif) #TODO: use the DatetimeOriginal and check that it is in uTC
+        if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
+            position = POSITION_MODEL.get().objects.create(track = track, 
+                                                           timestamp= gpsTimeStamp,
+                                                           latitude = gpsLatLon[0], 
+                                                           longitude= gpsLatLon[1])
+            return position
     except Exception:
+        print 'no gps data for image not really an error'
         traceback.print_exc()
-        
-    # set author
-    newImageSet.author = author
-    # set time stamp
-    exifTime = time.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
-    newImageSet.creation_time = time.strftime("%Y-%m-%d %H:%M:%S", exifTime)
-    newImageSet.save()
-        
-    return newImageSet
+        return None
 
 
 def saveImage(request):
@@ -172,23 +175,35 @@ def saveImage(request):
             # create and save a single image obj
             uploadedFile = request.FILES['file']
             newImage = SINGLE_IMAGE_MODEL.get().objects.create(file = uploadedFile)
-            fileName = uploadedFile.name
-            # create a new image set instance           
             exifData = getExifData(newImage)
+            exifTime = datetime.datetime.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
+            newImage.creation_time = exifTime
+            
+            # create a new image set instance           
             author = request.user  # set user as image author
-            newSet = createNewImageSet(exifData, author, fileName)
-            newSet.save()
-            newImage.imageSet = newSet
+            newImageSet = IMAGE_SET_MODEL.get()()
+            fileName = uploadedFile.name
+            newImageSet.name = fileName
+            newImageSet.camera = getCameraObject(exifData)
+            position = getPositionObject(exifData, newImageSet.camera)
+            if position:
+                newImageSet.asset_position = position
+            newImageSet.author = author
+            newImageSet.save()
+            
+            # link the "image set" to "image".
+            newImage.imageSet = newImageSet
             newImage.save()
+            
             # create a thumbnail
             thumbnailFile = createThumbnailFile(fileName)
             thumbnail = SINGLE_IMAGE_MODEL.get()(file = thumbnailFile, 
                         raw = False, 
                         thumbnail = True,
-                        imageSet = newSet)
+                        imageSet = newImageSet)
             thumbnail.save()
             # pass the image set to the client as json.
-            imageSetJson= newSet.toMapDict() 
+            imageSetJson= newImageSet.toMapDict() 
             return HttpResponse(json.dumps({'success': 'true', 'json': imageSetJson}), 
                                 content_type='application/json')
         else: 
