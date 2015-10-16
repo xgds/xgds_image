@@ -92,3 +92,16 @@ ul li label {
 .success-message {
 	color: green;
 }
+
+.more-files-enqueued-icon {
+	background-color: #efefef;
+}
+
+.num-files-enqueued-text {
+    position: absolute;
+    height: 16px;
+    top: 50%;
+    left: 10%;
+    margin-top: -8px;
+    width: 80px;
+}

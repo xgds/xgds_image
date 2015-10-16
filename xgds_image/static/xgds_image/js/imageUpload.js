@@ -43,15 +43,18 @@ Dropzone.options.imageDropZone = {
 		this.on("complete", function(file) {
 			// automatically remove a file when it’s finished uploading
 			this.removeFile(file);
+			// update files enqueued message.
+			filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
 		});
+		
 		this.on("success", function(file, responseText, e) {
 			var json = responseText['json'];
 			var imageTable = $('#image_table'); 
 			imageTable.dataTable().fnAddData(json);			
 		});
+		
 		this.on("error", function(file, response) {
 			console.log("error response: ", response);
-			// here, list the files that have errored on the page so that user can do them again.
 		});
 	}
 };
