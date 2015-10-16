@@ -11,32 +11,32 @@
 			<img class="display_image" src="{{ imagePath }}"></img>
 		</div>
 		<ul>
-			<li>
-				<label>Camera</label>
+			<li class='summary'>
+				<label class='summary_label'>Camera</label>
 				{{ camera_name }}
 			</li>
-			<li>
-				<label>Creation Time</label>
+			<li class='summary'>
+				<label class='summary_label'>Creation Time</label>
 				{{ creation_time }}
 			</li>
-			<li>
-				<label>Latitude</label>
+			<li class='summary'>
+				<label class='summary_label'>Latitude</label>
 				{{ lat }}
 			</li>
-			<li>
-				<label>Longitude</label>
+			<li class='summary'>
+				<label class='summary_label'>Longitude</label>
 				{{ lon }}
 			</li>
-			<li>
-				<label>Altitude</label>
+			<li class='summary'>
+				<label class='summary_label'>Altitude</label>
 				{{ altitude }}
 			</li>
-			<li>
-				<label>Author</label>
+			<li class='summary'>
+				<label class='summary_label'>Author</label>
 				{{ author_name }}
 			</li>
 		</ul>
-		<button id="more_info_button"> More info </button>
+		<button class="small default btn" id="more_info_button"> More info </button>
 	</div> 
 	
 	<div id="more_info_view">
@@ -44,25 +44,25 @@
 			<fieldset>
 				<ul>
 					<input name="id" value="{{id}}" hidden id="id_id"></input>
-					<li>
-						<label>Latitude</label>
-						<input name="latitude" id="id_latitude" value="{{ lat }}"></input>
+					<li class='field'>
+						<label class="inline" for="id_latitude">Latitude</label>
+						<input class="narrow text input" type="text" name="latitude" id="id_latitude" value="{{ lat }}"></input>
 					</li>
-					<li>
-						<label>Longitude</label>
-						<input name="longitude" id="id_longitude" value="{{ lon }}"></input>
+					<li class='field'>
+						<label class="inline" for="id_longitude">Longitude</label>
+						<input class="narrow text input" type="text" name="longitude" id="id_longitude" value="{{ lon }}"></input>
 					</li>
-					<li>
-						<label>Altitude</label>
-						<input name="altitude" id="id_altitude" value="{{ altitude }}"></input>
+					<li class='field'>
+						<label class="inline" for="id_altitude">Altitude</label>
+						<input class="narrow text input" type="text" name="altitude" id="id_altitude" value="{{ altitude }}"></input>
 					</li>
-					<li>
-						<label>Description</label>
-						<textarea name="description" id="id_description">{{ description }}</textarea>
+					<li class='field'>
+						<label class="inline" for="id_description">Description</label>
+						<textarea class="input textarea" name="description" id="id_description">{{ description }}</textarea>
 					</li>
-					<input type="submit" value="Save" />
-					<li>
-						<div id="message"/>
+					<input class="medium info btn" type="submit" value="Save" />
+					<li class='field'>
+						<label class="inline" id="message"></label>
 					</li>
 				</ul>
 			</fieldset>

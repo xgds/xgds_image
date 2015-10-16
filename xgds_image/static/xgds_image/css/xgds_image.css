@@ -52,18 +52,18 @@ br
 #image_view {
 	float: left;	
 }
-
+ 
 #more_info_view {
 	margin-top: 10px;
 	display:none;
-}
+} 
 
-ul li {
+.summary {
 	display: inline-block;
 	padding-right: 15px;
 }
 
-ul li label {
+.summary_label {
 	display: block;
 	font-weight: bold;
 }

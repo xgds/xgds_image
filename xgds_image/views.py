@@ -95,15 +95,15 @@ def updateImageInfo(request):
             if (latitude or longitude or altitude):
                 if not imageSet.asset_position:            
                     track = getTrack(imageSet.camera)
-                    imageSet.position = POSITION_MODEL.get().objects.create(track = track, 
+                    imageSet.asset_position = POSITION_MODEL.get().objects.create(track = track, 
                                                                             timestamp= imageSet.creation_time,
                                                                             latitude = latitude, 
                                                                             longitude= longitude)
                 else:
-                    imageSet.position.latitude =  latitude
-                    imageSet.position.longitude =  longitude
+                    imageSet.asset_position.latitude =  latitude
+                    imageSet.asset_position.longitude =  longitude
                 try:
-                    imageSet.position.altitude = altitude
+                    imageSet.asset_position.altitude = altitude
                 except:
                     pass
             imageSet.save()
