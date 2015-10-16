@@ -9,18 +9,26 @@ Dropzone.options.imageDropZone = {
 	autoProcessQueue : false,
 	parallelUploads: 1000, // upload up to 1000 images in parallel
 	addRemoveLinks: true,
+	acceptedFiles: ".png,.jpg,.jpeg,.tif,.tiff,.gif,.pdf",
 	init : function() {
 		var submitButton = document.querySelector("#submit-all")
 		imageDropZone = this;
-
 		// display message showing number of files enqueued
 		filesEnqueuedMessage = document.createElement("div");
 		filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
 		this.previewsContainer.appendChild(filesEnqueuedMessage);
 		
+		// process files when submit is clicked.
 		submitButton.addEventListener("click", function() {
 			imageDropZone.processQueue();  // Tell Dropzone to process all queued files.
 		});
+		
+		this.on("reset", function() {
+			// reset the files enqueued message.
+			filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + 0;
+			// reset error msg (TODO: handle files that didn't failed on upload")
+			$(".upload-error").html("");
+		})
 		
 		this.on("addedfile", function(file) {
 			if (this.files.length == MAX_NUM_THUMBNAILS) {
@@ -42,9 +50,7 @@ Dropzone.options.imageDropZone = {
 		});
 		this.on("complete", function(file) {
 			// automatically remove a file when it’s finished uploading
-			this.removeFile(file);
-			// update files enqueued message.
-			filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
+			this.removeFile(file); 
 		});
 		
 		this.on("success", function(file, responseText, e) {
@@ -54,7 +60,7 @@ Dropzone.options.imageDropZone = {
 		});
 		
 		this.on("error", function(file, response) {
-			console.log("error response: ", response);
+			$(".upload-error").append(file.name +"   - "+ file.status + ": " + response + "<br />");
 		});
 	}
 };
