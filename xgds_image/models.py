@@ -19,7 +19,6 @@ from django.db import models
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from django.contrib.auth.models import User
-from geocamUtil.models import AbstractEnumModel
 from geocamUtil.modelJson import modelToDict
 from geocamTrack.models import AbstractResource
 from django.conf import settings
