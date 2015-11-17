@@ -181,3 +181,4 @@ function setupTable(){
 		  theDataTable = $('#image_table').dataTable(defaultOptions);
 	}
 }
+

@@ -25,6 +25,7 @@ function doSearch(event) {
             	theDataTable.fnClearTable();
             	theDataTable.fnAddData(data);
                 setMessage("");
+                app.vent.trigger("mapSearch:found", data); 
             }
         }, this),
         error: $.proxy(function(data){
