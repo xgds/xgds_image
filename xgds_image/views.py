@@ -102,8 +102,6 @@ def updateImageInfo(request):
     if request.method == 'POST':
         imageSet = IMAGE_SET_MODEL.get().objects.get(id=request.POST['id'])
         form = ImageSetForm(request.POST, instance = imageSet)
-        print 'form errors'
-        print form.errors
         if form.is_valid():
             latitude =  form.cleaned_data['latitude']
             longitude =  form.cleaned_data['longitude']
@@ -124,6 +122,7 @@ def updateImageInfo(request):
                     imageSet.asset_position.altitude = altitude
                 except:
                     pass
+                imageSet.asset_position.save()
             imageSet.save()
             response_data={}
             response_data['status'] = 'success'
