@@ -19,7 +19,7 @@ import time
 import sys
 import traceback
 from datetime import datetime
-from django.conf import Settings
+from django.conf import settings
 
 from django.forms.formsets import formset_factory
 from django.contrib.contenttypes.models import ContentType
@@ -46,6 +46,24 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 
+def getImageViewPage(request, imageSetID):
+    errors = None
+    try:
+        imageSet = IMAGE_SET_MODEL.get().objects.get(id=imageSetID)
+        imageSetsJson = [json.dumps(imageSet.toMapDict())]
+    except:
+        imageSetsJson = []
+        errors = "Image not found."
+        
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
+    data = {'imageSetsJson': imageSetsJson,
+            'templates': get_handlebars_templates(fullTemplateList),
+            'app': 'xgds_map_server/js/simpleMapApp.js',
+            'errors': errors}
+    return render_to_response("xgds_image/imageView.html", data,
+                              context_instance=RequestContext(request))
+    
 def getImageUploadPage(request):
     imageSets = IMAGE_SET_MODEL.get().objects.filter(author = request.user)
     imageSets = imageSets.order_by('creation_time')

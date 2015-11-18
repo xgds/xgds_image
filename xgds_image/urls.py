@@ -19,7 +19,7 @@ from django.views.generic.base import TemplateView
 from xgds_image import views
 
 urlpatterns = patterns('',
-#                        (r'^$', TemplateView.as_view(template_name='xgds_image/index.html'), {}, 'index'),
+                       (r'^view/(?P<imageSetID>[\w]*[\d]+)$', views.getImageViewPage, {}, 'xgds_image_view_image'),
                        (r'^imageUpload/', views.getImageUploadPage, {}, 'xgds_image_upload_page'),
                        (r'^imageSearch/', views.getImageSearchPage, {}, 'xgds_image_search_page'),
                        (r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),

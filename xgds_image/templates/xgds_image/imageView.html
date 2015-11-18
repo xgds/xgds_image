@@ -1,0 +1,21 @@
+{% extends 'xgds_image/imageDashboardBase.html' %}
+
+{% block jsInit %}
+{{ block.super }}
+if (imageSetsArray.length > 0){
+	constructImageView(imageSetsArray[0]);
+}
+{% endblock jsInit %}
+
+{% block packery %}
+	<div id="container"> 
+		
+		{% block firstPackery %}
+		{% endblock firstPackery %}
+		
+		<div id="map" class="item w2 freeAspect" data-isStamped="false">
+			<i class="icon-key"></i>
+		</div>
+		<div id="layers" hidden></div>
+	</div> <!--  js packery container -->
+{% endblock packery %}
