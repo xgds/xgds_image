@@ -48,14 +48,14 @@
 		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
 		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
 		dataUrl: "{{ settings.DATA_URL }}"
-	}
+	};
 	$(function(){
     	app.start(appOptions);
-    	app.vent.trigger("mapSearch:found", imageSetsArray); 
+    	app.vent.on("mapSearch:drewFeatures", function(e) {
+        	app.vent.trigger('mapSearch:fit');
+            });
+    	app.vent.trigger("mapSearch:found", imageSetsArray);
 	});
-	
-	
-	
 	initializePackery();
 {% endblock %}
 

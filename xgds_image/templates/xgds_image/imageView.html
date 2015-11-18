@@ -4,6 +4,7 @@
 {{ block.super }}
 if (imageSetsArray.length > 0){
 	constructImageView(imageSetsArray[0]);
+	hideImageNextPrev();
 }
 {% endblock jsInit %}
 

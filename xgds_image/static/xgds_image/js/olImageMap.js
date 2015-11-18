@@ -31,8 +31,8 @@ var ImageSet = {
             var olFeatures = [];
             for (var i = 0; i < imagesJson.length; i++) {
                 if (imagesJson[i].lat !== "") {
-                    var noteFeature = this.constructMapElement(imagesJson[i]);
-                    olFeatures = olFeatures.concat(noteFeature);
+                    var imageFeature = this.constructMapElement(imagesJson[i]);
+                    olFeatures = olFeatures.concat(imageFeature);
                 }
             }
             var vectorLayer = new ol.layer.Vector({

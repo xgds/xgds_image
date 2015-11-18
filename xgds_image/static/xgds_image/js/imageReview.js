@@ -93,6 +93,11 @@ function updateImageView(template, index) {
 	}
 }
 
+function hideImageNextPrev() {
+   $('.prev-button').hide();
+   $('.next-button').hide();
+}
+
 function onImageNextOrPrev(template) {
 	template.find('.prev-button').click(function(event) {
 		// set the img src
