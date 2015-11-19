@@ -20,8 +20,8 @@ from xgds_image import views
 
 urlpatterns = patterns('',
                        (r'^view/(?P<imageSetID>[\w]*[\d]+)$', views.getImageViewPage, {}, 'xgds_image_view_image'),
-                       (r'^imageUpload/', views.getImageUploadPage, {}, 'xgds_image_upload_page'),
-                       (r'^imageSearch/', views.getImageSearchPage, {}, 'xgds_image_search_page'),
+                       (r'^import/', views.getImageImportPage, {}, 'xgds_image_import'),
+                       (r'^search/', views.getImageSearchPage, {}, 'xgds_image_search'),
                        (r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
                        (r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info')
                        )

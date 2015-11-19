@@ -15,8 +15,6 @@
 # __END_LICENSE__
 
 import json
-import time
-import sys
 import traceback
 from datetime import datetime
 from django.conf import settings
@@ -64,7 +62,7 @@ def getImageViewPage(request, imageSetID):
     return render_to_response("xgds_image/imageView.html", data,
                               context_instance=RequestContext(request))
     
-def getImageUploadPage(request):
+def getImageImportPage(request):
     imageSets = IMAGE_SET_MODEL.get().objects.filter(author = request.user)
     imageSets = imageSets.order_by('creation_time')
     imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
@@ -75,7 +73,7 @@ def getImageUploadPage(request):
     data = {'imageSetsJson': imageSetsJson,
             'templates': templates,
             'app': 'xgds_map_server/js/simpleMapApp.js'}
-    return render_to_response("xgds_image/imageUpload.html", data,
+    return render_to_response("xgds_image/imageImport.html", data,
                               context_instance=RequestContext(request))
 
     
@@ -191,7 +189,7 @@ def saveImage(request):
         if form.is_valid():
             # create and save a single image obj
             uploadedFile = request.FILES['file']
-            newImage = SINGLE_IMAGE_MODEL.get().objects.create(file = uploadedFile)
+            newImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
             exifData = getExifData(newImage)
             exifTime = datetime.datetime.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
             newImage.creation_time = exifTime
@@ -214,14 +212,13 @@ def saveImage(request):
             
             # create a thumbnail
             thumbnailFile = createThumbnailFile(fileName)
-            thumbnail = SINGLE_IMAGE_MODEL.get()(file = thumbnailFile, 
-                        raw = False, 
-                        thumbnail = True,
-                        imageSet = newImageSet)
-            thumbnail.save()
+            SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailFile, 
+                                                    raw = False, 
+                                                    thumbnail = True,
+                                                    imageSet = newImageSet)
+
             # pass the image set to the client as json.
-            imageSetJson= newImageSet.toMapDict() 
-            return HttpResponse(json.dumps({'success': 'true', 'json': imageSetJson}), 
+            return HttpResponse(json.dumps({'success': 'true', 'json': newImageSet.toMapDict()}), 
                                 content_type='application/json')
         else: 
-            return HttpResponse(json.dumps({'error': 'Uploaded image is not valid'}), content_type='application/json')  
+            return HttpResponse(json.dumps({'error': 'Imported image is not valid'}), content_type='application/json')  
