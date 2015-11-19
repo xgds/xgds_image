@@ -24,7 +24,9 @@ $("#item_image_search").submit(function(event) {
 				{{ form.as_table }}
 				</table>
 				{% endfor %}
-				<input type="submit" id="doSearch" class="small" value="Search"/>
+				<input type="submit" id="doSearch" class="small" value="Search"/> &nbsp;
+				<span class="alert" id="message"></span>
+			   </div>
 			</form>
 		</div>
 {% endblock firstPackery %}

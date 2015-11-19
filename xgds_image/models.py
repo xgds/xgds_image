@@ -18,6 +18,7 @@ import datetime
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
@@ -65,14 +66,17 @@ class AbstractImageSet(ServerIdModel):
         """
         result = modelToDict(self)
         result['id'] = self.id
+        result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.id})
         result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name
         result['author_name'] = self.author.username
         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-        image = SingleImage.objects.get(imageSet = self, raw = True)
-        result['raw_image_url'] = settings.DATA_URL + image.file.name
-        thumbimage = SingleImage.objects.get(imageSet = self, raw = False, thumbnail = True)
-        result['thumbnail_image_url'] = settings.DATA_URL + thumbimage.file.name
+        rawImage = self.getRawImage()
+        if rawImage:
+            result['raw_image_url'] = settings.DATA_URL + rawImage.file.name
+        thumbImage = self.getThumbnail()
+        if thumbImage:
+            result['thumbnail_image_url'] = settings.DATA_URL + thumbImage.file.name
         if self.asset_position:
             result['lat'] = self.asset_position.latitude
             result['lon'] = self.asset_position.longitude
@@ -84,13 +88,21 @@ class AbstractImageSet(ServerIdModel):
         return result
 
     def getRawImage(self):
-        return SingleImage.objects.get(imageSet=self, raw=True)
+        rawImages = self.images.filter(raw=True)
+        if rawImages:
+            return rawImages[0]
+        else:
+            return None
 
     def getLowerResImages(self):
-        return SingleImage.objects.filter(imageSet=self, raw=False, thumbnail=False)
+        return self.images.filter(raw=False, thumbnail=False)
     
     def getThumbnail(self):
-        return SingleImage.objects.filter(imageSet=self, thumbnail=True)
+        thumbImages = self.images.filter(thumbnail=True)
+        if thumbImages:
+            return thumbImages[0]
+        else:
+            return None
 
 
 class ImageSet(AbstractImageSet):
@@ -104,7 +116,7 @@ class AbstractSingleImage(ServerIdModel):
     file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     raw = models.BooleanField(default=True)
-    imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, null=True)
+    imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, null=True, related_name="images")
     thumbnail = models.BooleanField(default=False)
        
     class Meta:

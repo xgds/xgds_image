@@ -60,12 +60,13 @@ var ImageSet = {
         },
         setupPopup: function(feature, imageJson) {
             var trString = "<tr><td>%s</td><td>%s</td></tr>";
-            var formattedString = "<img src='%s'></img><br/><table>";
-            for (j = 0; j< 7; j++){
+            var formattedString = "<a href='%s' target='_blank'><img src='%s'></img></a><br/><table>";
+            for (j = 0; j< 8; j++){
                 formattedString = formattedString + trString;
             }
             formattedString = formattedString + "</table>";
-            var data = [imageJson.thumbnail_image_url,
+            var data = [imageJson.view_url,
+                        imageJson.thumbnail_image_url,
                         "Note:", imageJson.description,
                         "Time:", imageJson.creation_time,
                         "Author:", imageJson.author_name,

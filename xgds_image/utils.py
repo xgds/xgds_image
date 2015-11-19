@@ -14,16 +14,13 @@
 #specific language governing permissions and limitations under the License.
 # __END_LICENSE__
 
-import PIL
-import PIL.ExifTags
 import datetime
-from PIL import Image
-import glob, os
+from PIL import Image, ExifTags
 from django.conf import settings
 
 
 def createThumbnailFile(src):
-    size = 128, 128 #TODO: change this to fit the aspect ratio from image size.
+    size = 128, 128 
     imgDir = settings.DATA_ROOT + settings.XGDS_IMAGE_DATA_SUBDIRECTORY
     im = Image.open(imgDir + src)
     im.thumbnail(size, Image.ANTIALIAS)
@@ -35,32 +32,35 @@ def createThumbnailFile(src):
         pass  # image already exists.
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + dstFileName
 
+
 """
 Exif utility Functions
 referenced: https://gist.github.com/erans/983821
 """
 def getExifData(imageModelInstance):
-    pilImageObj = PIL.Image.open(imageModelInstance.file)
+    pilImageObj = Image.open(imageModelInstance.file)
     exifData = {}
     for tag,value in pilImageObj._getexif().items():
-        decoded = PIL.ExifTags.TAGS.get(tag, tag)
-        if tag in PIL.ExifTags.TAGS:
+        decoded = ExifTags.TAGS.get(tag, tag)
+        if tag in ExifTags.TAGS:
             if decoded == "GPSInfo":
                 gpsData = {}
                 for t in value:
-                    gpsDecoded = PIL.ExifTags.GPSTAGS.get(t, t)
+                    gpsDecoded = ExifTags.GPSTAGS.get(t, t)
                     gpsData[gpsDecoded] = value[t]
                 exifData[decoded] = gpsData
             else: 
-                exifData[PIL.ExifTags.TAGS[tag]] = value
+                exifData[ExifTags.TAGS[tag]] = value
     return exifData
+
 
 def getIfExists(data, key):
     if key in data:
         return data[key]
         
     return None
-    
+
+
 def convertToDegrees(value):
     """Helper function to convert the GPS coordinates stored in the EXIF to degress in float format"""
     d0 = value[0][0]

@@ -63,14 +63,11 @@ def getImageViewPage(request, imageSetID):
                               context_instance=RequestContext(request))
     
 def getImageImportPage(request):
-    imageSets = IMAGE_SET_MODEL.get().objects.filter(author = request.user)
-    imageSets = imageSets.order_by('creation_time')
-    imageSetsJson = [json.dumps(imageSet.toMapDict()) for imageSet in imageSets]
     # map plus image templates for now
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     templates = get_handlebars_templates(fullTemplateList)
-    data = {'imageSetsJson': imageSetsJson,
+    data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
             'app': 'xgds_map_server/js/simpleMapApp.js'}
     return render_to_response("xgds_image/imageImport.html", data,

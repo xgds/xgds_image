@@ -1,5 +1,5 @@
 function setMessage(message){
-	console.log(message);
+    $("#message").text(message);
 }
 
 function doSearch(event) {
