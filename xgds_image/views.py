@@ -47,7 +47,7 @@ POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 def getImageViewPage(request, imageSetID):
     errors = None
     try:
-        imageSet = IMAGE_SET_MODEL.get().objects.get(id=imageSetID)
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imageSetID)
         imageSetsJson = [json.dumps(imageSet.toMapDict())]
     except:
         imageSetsJson = []
@@ -95,7 +95,7 @@ def updateImageInfo(request):
     Saves update image info entered by the user in the image view.
     """
     if request.method == 'POST':
-        imageSet = IMAGE_SET_MODEL.get().objects.get(id=request.POST['id'])
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=request.POST['id'])
         form = ImageSetForm(request.POST, instance = imageSet)
         if form.is_valid():
             latitude =  form.cleaned_data['latitude']
@@ -133,11 +133,10 @@ def updateImageInfo(request):
 
 def getTrack(camera):
     camera_model_type = ContentType.objects.get_for_model(camera)
-    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=camera.id, generic_resource_content_type=camera_model_type)
+    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=camera.pk, generic_resource_content_type=camera_model_type)
     if not tracks:
         track = TRACK_MODEL.get().objects.create(name=camera.name, 
-                                                 generic_resource=camera, 
-                                                 uuid=makeUuid())
+                                                 generic_resource=camera)
     else:
         track = tracks[0]
     return track

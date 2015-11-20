@@ -58,15 +58,15 @@ class AbstractImageSet(ServerIdModel):
     
     def __unicode__(self):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
-                % (self.id, self.name, self.shortName))
+                % (self.pk, self.name, self.shortName))
         
     def toMapDict(self):
         """
         Return a reduced dictionary that will be turned to JSON for rendering in a map
         """
         result = modelToDict(self)
-        result['id'] = self.id
-        result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.id})
+        result['id'] = self.pk
+        result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
         result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name
         result['author_name'] = self.author.username
