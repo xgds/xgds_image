@@ -138,12 +138,14 @@ function constructImageView(json) {
 	onUpdateImageInfo(imageViewTemplate);
 	onToggle(imageViewTemplate);
 	onDelete(imageViewTemplate);
-	bindLockItemBtnCallback(imageViewTemplate);
 	onImageNextOrPrev(imageViewTemplate);
-	// append the div to the container.
+	
+	// append the div to the container and packery.
 	var result = $container.append(imageViewTemplate);
 	$container.packery( 'appended', imageViewTemplate);
+	
 	makeChildrenResizable($container, imageViewTemplate);
+	imageViewTemplate.find(".pinDiv").click(function(event){clickPinFunction(event)});
 }
 
 function setSaveStatusMessage(handler, status, msg){
@@ -181,6 +183,7 @@ function setupTable(){
 	                               {"mData": "altitude"},
 	                               {"mData": "author_name"},
 	];
+	defaultOptions["scrollY"] = '200px';
 
 	if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
 		  theDataTable = $('#image_table').dataTable(defaultOptions);

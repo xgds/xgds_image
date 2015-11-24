@@ -7,15 +7,13 @@
 
 {% block jsInit %}
 {{ block.super }}
-
 $("#item_image_search").submit(function(event) {
 	doSearch(event);
 });
-
 {% endblock jsInit %}
 
 {% block firstPackery %}
-		<div class='item w2 lockAspect' id='item_image_search'>
+		<div class='item auto lockAspect noresize' id='item_image_search'>
 			<form  id="form-AbstractImageSet" action="" method="post">
 				{{ formset.management_form }}
 				{% csrf_token %}
@@ -26,7 +24,6 @@ $("#item_image_search").submit(function(event) {
 				{% endfor %}
 				<input type="submit" id="doSearch" class="small" value="Search"/> &nbsp;
 				<span class="alert" id="message"></span>
-			   </div>
 			</form>
 		</div>
 {% endblock firstPackery %}

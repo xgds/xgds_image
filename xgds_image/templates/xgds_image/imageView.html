@@ -1,12 +1,11 @@
 {% extends 'xgds_image/imageDashboardBase.html' %}
 
-{% block jsInit %}
-{{ block.super }}
-if (imageSetsArray.length > 0){
-	constructImageView(imageSetsArray[0]);
-	hideImageNextPrev();
-}
-{% endblock jsInit %}
+{% block otherJSInit %}
+	if (imageSetsArray.length > 0){
+		constructImageView(imageSetsArray[0]);
+		hideImageNextPrev();
+	}
+{% endblock otherJSInit %}
 
 {% block packery %}
 	<div id="container"> 
@@ -14,8 +13,8 @@ if (imageSetsArray.length > 0){
 		{% block firstPackery %}
 		{% endblock firstPackery %}
 		
-		<div id="map" class="item w2 freeAspect" data-isStamped="false">
-			<i class="icon-key"></i>
+		<div id="map" class="item w2 freeAspect startPinned" data-isStamped="false">
+			<i class="icon-lock pinDiv"></i>
 		</div>
 		<div id="layers" hidden></div>
 	</div> <!--  js packery container -->
