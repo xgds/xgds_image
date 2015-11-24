@@ -3,7 +3,7 @@ function initializePackery() {
     var $container = $('#container');
     $container.packery({
 	itemSelector: '.item',
-	gutter: 8
+	gutter: 10
     });
     makeResizable($container);
     bindLockItemBtnCallback($container);
@@ -103,4 +103,5 @@ function matchWidth(sourceDivID, destDivID) {
     var destDiv = $('#' + destDivID);
     destDiv.width(sourceDiv.width());
     $("#container").packery();
+    return destDiv;
 }

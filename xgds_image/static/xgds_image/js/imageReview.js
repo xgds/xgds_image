@@ -161,10 +161,17 @@ function setSaveStatusMessage(handler, status, msg){
 }
 
 
+function updateTableScrollY(divID, tableID) {
+    var divItem = $('#' + divID);
+    var parentHeight = divItem.height();
+    divItem.find('.dataTables_scrollBody').height(parentHeight-110);
+    theDataTable.fnAdjustColumnSizing();
+}
+
 /* 
  * Table View
  */
-function setupTable(){
+function setupTable(divID, tableID){
 	// initialize the image table with json of existing images.
 	defaultOptions["aaData"] = imageSetsArray;
 	defaultOptions["aoColumns"] = [
@@ -183,10 +190,24 @@ function setupTable(){
 	                               {"mData": "altitude"},
 	                               {"mData": "author_name"},
 	];
-	defaultOptions["scrollY"] = '200px';
+	defaultOptions["scrollY"] = 200;
 
-	if ( ! $.fn.DataTable.isDataTable( '#image_table' ) ) {
-		  theDataTable = $('#image_table').dataTable(defaultOptions);
+	if ( ! $.fn.DataTable.isDataTable( '#' + tableID ) ) {
+		  theDataTable = $('#' + tableID ).dataTable(defaultOptions);
 	}
+	
+	// handle resizing
+	var tableResizeTimeout;
+	$('#' + divID).resize(function() {
+	    // debounce
+	    if ( tableResizeTimeout ) {
+		clearTimeout( tableResizeTimeout );
+	    }
+
+	    tableResizeTimeout = setTimeout( function() {
+		updateTableScrollY(divID, tableID);
+	    }, 30 );
+	});
+	
 }
 

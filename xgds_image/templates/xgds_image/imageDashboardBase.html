@@ -35,7 +35,7 @@
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
     
-	setupTable();
+	setupTable('item_image_table', 'image_table');
 	appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
@@ -97,9 +97,9 @@
 		{% endblock firstPackery %}
 		
 		<!-- Image list table -->
-		<div class='item w2 lockAspect' id='item_image_table' data-isStamped="false">
+		<div class='item w2 freeAspect' id='item_image_table' data-isStamped="false">
 			<i class="icon-lock-open pinDiv"></i>
-			<div id="image_table_div"> 
+			<!-- <div id="image_table_div">  -->
 				<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
 					<thead class="table_header">
 						<tr>
@@ -116,8 +116,8 @@
 					<tbody>
 					</tbody>
 				</table>
-			</div>
-		</div>
+<!-- 			</div>
+ -->		</div>
 		
 		<div id="map" class="item w3 freeAspect" data-isStamped="false">
 			<i class="icon-lock-open pinDiv warning"></i>
