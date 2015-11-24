@@ -12,6 +12,11 @@ $("#item_image_search").submit(function(event) {
 });
 {% endblock jsInit %}
 
+{% block otherJSInit %}
+	matchWidth('item_image_search','map');
+    pinItem($("#map"));
+{% endblock otherJSInit %}
+
 {% block firstPackery %}
 		<div class='item auto lockAspect noresize' id='item_image_search'>
 			<form  id="form-AbstractImageSet" action="" method="post">

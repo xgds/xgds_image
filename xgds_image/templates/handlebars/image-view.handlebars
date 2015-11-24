@@ -19,16 +19,8 @@
 				{{ creation_time }}
 			</li>
 			<li class='summary'>
-				<label class='summary_label'>Latitude</label>
-				{{ lat }}
-			</li>
-			<li class='summary'>
-				<label class='summary_label'>Longitude</label>
-				{{ lon }}
-			</li>
-			<li class='summary'>
 				<label class='summary_label'>Altitude</label>
-				{{ altitude }}
+				{{#if altitude }}{{ altitude }}{{else}}&nbsp;{{/if}}
 			</li>
 			<li class='summary'>
 				<label class='summary_label'>Author</label>

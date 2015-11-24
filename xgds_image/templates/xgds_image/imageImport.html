@@ -5,6 +5,11 @@
     <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
  {% endblock cssExtras %}
 
+{% block otherJSInit %}
+	matchWidth('item_image_upload','map');
+    pinItem($("#map"));
+{% endblock otherJSInit %}
+
 
 {% block scripts %}
 {{block.super}}

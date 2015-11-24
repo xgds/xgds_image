@@ -3,7 +3,7 @@ function initializePackery() {
     var $container = $('#container');
     $container.packery({
 	itemSelector: '.item',
-	gutter: 10
+	gutter: 8
     });
     makeResizable($container);
     bindLockItemBtnCallback($container);
@@ -28,7 +28,7 @@ function makeChildrenResizable($container, $itemElems){
 	    });
 	}
 	if (el.hasClass("startPinned")) {
-	    pinItem($container, el, el.find(".pinDiv"));
+	    pinItem(el);
 	}
     })
     
@@ -49,8 +49,11 @@ function makeChildrenResizable($container, $itemElems){
     });
 }
 
-function pinItem(container, item, pinButton){
+function pinItem(item){
     // pin it -- not draggable or resizable
+    var pinButton = item.find(".pinDiv");
+    var container = $('#container');
+    
     item.draggable("disable");
     if (!item.hasClass("noresize")){
 	item.resizable("disable");
@@ -60,8 +63,11 @@ function pinItem(container, item, pinButton){
     $container.packery( 'stamp', item );
 }
 
-function unpinItem(container, item, pinButton){
+function unpinItem(item){
  // unpin it, make it draggable and resizable
+    var pinButton = item.find(".pinDiv");
+    var container = $('#container');
+
     item.draggable( "enable" );
     if (!item.hasClass("noresize")){
 	item.resizable("enable");
@@ -74,12 +80,11 @@ function unpinItem(container, item, pinButton){
 clickPinFunction = function(event) {
     var pinButton = $(event.target);
     var item = pinButton.closest(".item");
-    var $container = $('#container');
     
     if (pinButton.hasClass('icon-lock')) {
-	unpinItem($container, item, pinButton);
+	unpinItem(item);
     } else {
-	pinItem($container, item, pinButton);
+	pinItem(item);
     }
 }
 
@@ -90,4 +95,12 @@ function bindLockItemBtnCallback($container) {
     $(".pinDiv").click(function(event) {
 	clickPinFunction(event);
     });
+}
+
+function matchWidth(sourceDivID, destDivID) {
+    // set the destDiv's width to be the same as the sourceDiv's width
+    var sourceDiv = $('#' + sourceDivID);
+    var destDiv = $('#' + destDivID);
+    destDiv.width(sourceDiv.width());
+    $("#container").packery();
 }

@@ -51,7 +51,6 @@
 		dataUrl: "{{ settings.DATA_URL }}"
 	};
 	
-	
 	$(function(){
     	app.start(appOptions);
     	app.vent.on("mapSearch:drewFeatures", function(e) {
@@ -60,6 +59,7 @@
     	app.vent.trigger("mapSearch:found", imageSetsArray);
     	initializePackery();
     	{% block otherJSInit %}
+    	pinItem($("#map"));
 		{% endblock otherJSInit %}
 	});
 	
@@ -119,9 +119,10 @@
 			</div>
 		</div>
 		
-		<div id="map" class="item w2 freeAspect startPinned" data-isStamped="false">
-			<i class="icon-lock pinDiv warning"></i>
+		<div id="map" class="item w3 freeAspect" data-isStamped="false">
+			<i class="icon-lock-open pinDiv warning"></i>
 		</div>
+		
 		
 		<div id="layers" hidden></div>
 	</div> <!--  js packery container -->
