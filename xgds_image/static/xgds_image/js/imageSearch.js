@@ -16,12 +16,7 @@ function doSearch(event) {
             if (_.isUndefined(data) || data.length === 0){
                 setMessage("None found.");
             } else {
-            	//TODO: update contents of the search table.
-            	//TODO: update the map
-            	// update image sets array with data and refresh table
-//                this.searchResultsView.updateContents(this.selectedModel, data);
             	imageSetsArray = data;
-            	//
             	theDataTable.fnClearTable();
             	theDataTable.fnAddData(data);
                 setMessage("");

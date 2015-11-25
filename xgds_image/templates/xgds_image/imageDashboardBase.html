@@ -3,7 +3,7 @@
 
  {% block cssExtras %}
  {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/dashboard.css"></link>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamUtil/css/dashboard.css"></link>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
     
     <!--  map stuff -->
@@ -34,8 +34,23 @@
     });
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
-    
-	setupTable('item_image_table', 'image_table');
+    var aoColumns = [
+	                               {"mRender": function(data, type, full) {
+	                            	   return "<img src='"+full['thumbnail_image_url']+"' width='130'></img>"
+	                               }},
+	                               {"mRender":function(data, type, full){
+	                            	   var imageName = full['name'];
+	                            	   var jsonString = JSON.stringify(full);
+	                                   return "<a onclick='constructImageView(" + jsonString + ")'>"+ imageName +"</a>";
+	                               }},
+	                               {"mData": "camera_name"},
+	                               {"mData": "creation_time"},
+	                               {"mData": "lat"},
+	                               {"mData": "lon"},
+	                               {"mData": "altitude"},
+	                               {"mData": "author_name"},
+	];
+	setupTable('item_image_table', 'image_table', imageSetsArray, aoColumns);
 	appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
@@ -74,8 +89,8 @@
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}packery/dist/packery.pkgd.min.js" ></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/packem.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/packery_table.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/packem.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/packery_table.js"></script>
     
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
 	<!--  load handlebars -->

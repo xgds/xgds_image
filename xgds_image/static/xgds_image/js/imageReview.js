@@ -8,17 +8,6 @@ function stringContains(string, substring) {
 /*
  * Event binders
  */
-/**
- * Removes packery item upon delete button click.
- */
-function onDelete(template) {
-	template.find(".icon-cancel-circled").bind("click", function() {
-		// remove clicked element
-		$container.packery( 'remove', event.target.parentElement.parentElement );
-		// layout remaining item elements
-		$container.packery();
-	});	
-}
 
 /**
  * Toggles on additional information of the image when 'more info' button is clicked.
