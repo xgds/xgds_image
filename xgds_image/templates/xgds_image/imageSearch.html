@@ -19,6 +19,7 @@ $("#item_image_search").submit(function(event) {
 
 {% block firstPackery %}
 		<div class='item auto lockAspect noresize' id='item_image_search'>
+			<i class="icon-lock pinDiv"></i><br/>
 			<form  id="form-AbstractImageSet" action="" method="post">
 				{{ formset.management_form }}
 				{% csrf_token %}

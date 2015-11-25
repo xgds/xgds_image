@@ -57,6 +57,7 @@ Dropzone.options.imageDropZone = {
 			var json = responseText['json'];
 			var imageTable = $('#image_table'); 
 			theDataTable.fnAddData(json);	
+			imageSetsArray.push(json);
 			app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
 		});
 		

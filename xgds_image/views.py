@@ -32,6 +32,7 @@ from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile
 from geocamUtil.loader import getModelByName
+from geocamTrack.views import getTrackForResource, createTrackForResource
 
 from apps.geocamUtil.models.UuidField import makeUuid
 from apps.geocamUtil.loader import LazyGetModelByName
@@ -132,11 +133,9 @@ def updateImageInfo(request):
 
 
 def getTrack(camera):
-    camera_model_type = ContentType.objects.get_for_model(camera)
-    tracks = TRACK_MODEL.get().objects.filter(generic_resource_id=camera.pk, generic_resource_content_type=camera_model_type)
+    tracks = getTrackForResource(camera)
     if not tracks:
-        track = TRACK_MODEL.get().objects.create(name=camera.name, 
-                                                 generic_resource=camera)
+        track = createTrackForResource(camera, camera.name)
     else:
         track = tracks[0]
     return track
