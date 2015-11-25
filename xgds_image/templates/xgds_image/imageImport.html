@@ -18,7 +18,8 @@
 {% endblock scripts %}
 
 
-{% block firstPackery %}	
+{% block firstPackery %}
+	
 	<div class='item w2 lockAspect' id='item_image_upload' data-isStamped="false">
 		<div class="error-message upload-error"></div>
 		<i class="icon-lock pinDiv"></i><br/>
@@ -35,4 +36,5 @@
 			Import
 		</button>
 	</div>
+	{{ block.super }}
 {% endblock firstPackery %}

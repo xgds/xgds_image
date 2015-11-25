@@ -62,7 +62,6 @@ def getImageViewPage(request, imageSetID):
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     data = {'imageSetsJson': imageSetsJson,
             'templates': get_handlebars_templates(fullTemplateList),
-            'app': 'xgds_map_server/js/simpleMapApp.js',
             'errors': errors}
     return render_to_response("xgds_image/imageView.html", data,
                               context_instance=RequestContext(request))
@@ -75,7 +74,7 @@ def getImageImportPage(request):
     data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
             'form': UploadFileForm(),
-            'app': 'xgds_map_server/js/simpleMapApp.js'}
+            }
     return render_to_response("xgds_image/imageImport.html", data,
                               context_instance=RequestContext(request))
 
@@ -91,8 +90,7 @@ def getImageSearchPage(request):
     return render_to_response("xgds_image/imageSearch.html", 
                               {'imageSetsJson': "[]",
                                'templates': templates,
-                               'formset': theFormSet,
-                               'app': 'xgds_map_server/js/simpleMapApp.js'},
+                               'formset': theFormSet},
                               context_instance=RequestContext(request))
 
 
