@@ -13,7 +13,6 @@
 #CONDITIONS OF ANY KIND, either express or implied. See the License for the 
 #specific language governing permissions and limitations under the License.
 # __END_LICENSE__
-
 import datetime
 from PIL import Image, ExifTags
 from django.conf import settings

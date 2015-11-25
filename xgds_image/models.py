@@ -32,6 +32,8 @@ def getNewImageFileName(instance, filename):
 
 
 class Camera(AbstractResource):
+    serial = models.CharField(max_length=128, blank=True, null=True)
+    
     """
     Camera class
     """
@@ -66,6 +68,7 @@ class AbstractImageSet(ServerIdModel):
         """
         result = modelToDict(self)
         result['id'] = self.pk
+        result['description'] = self.description
         result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
         result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name

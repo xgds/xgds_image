@@ -13,12 +13,13 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 # __END_LICENSE__
-
+import pytz
 import json
 import traceback
 from datetime import datetime
-from django.conf import settings
+from dateutil.parser import parse as dateparser
 
+from django.conf import settings
 from django.forms.formsets import formset_factory
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render_to_response, get_object_or_404
@@ -26,23 +27,26 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, Ht
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
+
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile
+
 from geocamUtil.loader import getModelByName
-from geocamTrack.views import getTrackForResource, createTrackForResource
+from geocamUtil import TimeUtil
+from geocamUtil.models.UuidField import makeUuid
+from geocamUtil.loader import LazyGetModelByName
 
-from apps.geocamUtil.models.UuidField import makeUuid
-from apps.geocamUtil.loader import LazyGetModelByName
-
+from geocamTrack.views import getTrackForResource, createTrackForResource, getClosestPosition
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+GEOCAM_TRACK_RESOURCE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 
 
 def getImageViewPage(request, imageSetID):
@@ -70,6 +74,7 @@ def getImageImportPage(request):
     templates = get_handlebars_templates(fullTemplateList)
     data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
+            'form': UploadFileForm(),
             'app': 'xgds_map_server/js/simpleMapApp.js'}
     return render_to_response("xgds_image/imageImport.html", data,
                               context_instance=RequestContext(request))
@@ -132,10 +137,22 @@ def updateImageInfo(request):
                                 content_type='application/json')
 
 
-def getTrack(camera):
-    tracks = getTrackForResource(camera)
+def createCameraResource(camera):
+    ''' Create or retrieve resource instance for this exact camera
+    '''
+    name = camera.name
+    if camera.serial:
+        name = name + "_" +  camera.serial
+    try:
+        found = GEOCAM_TRACK_RESOURCE_MODEL.get().objects.get(name=name)
+        return found
+    except:
+        return GEOCAM_TRACK_RESOURCE_MODEL.get().objects.create(name=name)
+
+def getTrack(resource):
+    tracks = getTrackForResource(resource)
     if not tracks:
-        track = createTrackForResource(camera, camera.name)
+        track = createTrackForResource(resource, resource.name)
     else:
         track = tracks[0]
     return track
@@ -147,20 +164,29 @@ def getCameraObject(exif):
     existing one.
     '''
     cameraName = exif['Model']
-    cameras = CAMERA_MODEL.get().objects.filter(name = cameraName)
+    serial = None
+    if exif['BodySerialNumber']:
+        serial = str(exif['BodySerialNumber'])
+    cameras = CAMERA_MODEL.get().objects.filter(name=cameraName, serial=serial)
     if cameras.exists():
         return cameras[0]
     else: 
-        return CAMERA_MODEL.get().objects.create(name = cameraName)
+        return CAMERA_MODEL.get().objects.create(name = cameraName, serial=serial)
     
     
-def getPositionObject(exif, camera):
+def getPositionObject(exif, camera, resource):
     '''
     Given the image's exif data and a camera object, 
     creates a new position object that contains the lat and lon information.
     '''
+    if resource:
+        position = getClosestPosition(resource)
+        if position:
+            return position
+        
     try: # if there is GPS
-        track = getTrack(camera)
+        resource = createCameraResource(camera)
+        track = getTrack(resource)
         gpsLatLon = getLatLon(exif)
         gpsTimeStamp = getGPSDatetime(exif) #TODO: use the DatetimeOriginal and check that it is in uTC
         if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
@@ -169,6 +195,7 @@ def getPositionObject(exif, camera):
                                                            latitude = gpsLatLon[0], 
                                                            longitude= gpsLatLon[1])
             return position
+        
     except Exception:
         print 'no gps data for image not really an error'
         traceback.print_exc()
@@ -185,8 +212,14 @@ def saveImage(request):
             # create and save a single image obj
             uploadedFile = request.FILES['file']
             newImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
+            
+            form_tz = form.getTimezone()
+            resource = form.getResource()
             exifData = getExifData(newImage)
-            exifTime = datetime.datetime.strptime(str(exifData['DateTimeOriginal']),"%Y:%m:%d %H:%M:%S")
+            exifTime = dateparser(str(exifData['DateTimeOriginal']))
+            if form_tz != pytz.utc:
+                localized_time = form_tz.localize(exifTime)
+                exifTime = TimeUtil.timeZoneToUtc(localized_time)
             newImage.creation_time = exifTime
             
             # create a new image set instance           
@@ -195,7 +228,8 @@ def saveImage(request):
             fileName = uploadedFile.name
             newImageSet.name = fileName
             newImageSet.camera = getCameraObject(exifData)
-            position = getPositionObject(exifData, newImageSet.camera)
+            
+            position = getPositionObject(exifData, newImageSet.camera, resource)
             if position:
                 newImageSet.asset_position = position
             newImageSet.author = author

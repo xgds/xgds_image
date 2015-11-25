@@ -16,9 +16,9 @@
 
 from django import forms
 from models import SingleImage, ImageSet
-
+from geocamTrack.forms import AbstractImportTrackedForm
  
-class UploadFileForm(forms.ModelForm):
+class UploadFileForm(AbstractImportTrackedForm):
     class Meta:
         model = SingleImage
         fields = ['file']

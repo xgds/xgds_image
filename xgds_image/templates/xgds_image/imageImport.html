@@ -20,15 +20,19 @@
 
 {% block firstPackery %}	
 	<div class='item w2 lockAspect' id='item_image_upload' data-isStamped="false">
+		<div class="error-message upload-error"></div>
 		<i class="icon-lock pinDiv"></i><br/>
 		<!-- Dropzone image upload -->
+		
 		<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
 		enctype="multipart/form-data">
+		<table>
+    	{{ form.as_table }}
+    	</table>
 		{% csrf_token %}
 		</form>
 		<button id="submit-all" class="small">
 			Import
 		</button>
-		 <div class="error-message upload-error"></div>
 	</div>
 {% endblock firstPackery %}
