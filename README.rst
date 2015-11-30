@@ -1,5 +1,3 @@
-Fill me in
-
 .. o __BEGIN_LICENSE__
 .. o  Copyright (c) 2015, United States Government, as represented by the
 .. o  Administrator of the National Aeronautics and Space Administration.
@@ -15,3 +13,5 @@ Fill me in
 .. o  CONDITIONS OF ANY KIND, either express or implied. See the License for the
 .. o  specific language governing permissions and limitations under the License.
 .. o __END_LICENSE__
+
+xgds module to support import, search, review and map-inclusive rendering of still images.
