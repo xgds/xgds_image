@@ -23,7 +23,6 @@ from django.core.urlresolvers import reverse
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
-from geocamUtil.models.ServerIdModel import ServerIdModel
 from geocamTrack.models import AbstractResource
 
 
@@ -40,7 +39,7 @@ class Camera(AbstractResource):
     pass
 
 
-class AbstractImageSet(ServerIdModel):
+class AbstractImageSet(models.Model):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -112,7 +111,7 @@ class ImageSet(AbstractImageSet):
     pass
 
 
-class AbstractSingleImage(ServerIdModel):
+class AbstractSingleImage(models.Model):
     """ 
     An abstract image which may not necessarily have a location on a map
     """
