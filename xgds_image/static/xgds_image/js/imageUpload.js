@@ -33,7 +33,6 @@ Dropzone.options.imageDropZone = {
 		filesEnqueuedMessage = document.createElement("div");
 		filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
 		this.previewsContainer.appendChild(filesEnqueuedMessage);
-		
 		// process files when submit is clicked.
 		submitButton.addEventListener("click", function() {
 			imageDropZone.processQueue();  // Tell Dropzone to process all queued files.

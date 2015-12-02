@@ -22,8 +22,8 @@
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
     var aoColumns = [
-	                               {"mRender": function(data, type, full) {
-	                            	   return "<img src='"+full['thumbnail_image_url']+"' width='130'></img>"
+	                               {"width": "18%", "mRender": function(data, type, full) {
+	                            	   return "<img src='" + full['thumbnail_image_url'] + "'></img>"
 	                               }},
 	                               {"mRender":function(data, type, full){
 	                            	   var imageName = full['name'];

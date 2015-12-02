@@ -20,7 +20,7 @@ from django.conf import settings
 
 
 def createThumbnailFile(src):
-    size = 128, 128 
+    size = 250, 250 
     imgDir = settings.DATA_ROOT + settings.XGDS_IMAGE_DATA_SUBDIRECTORY
     im = Image.open(imgDir + src)
     im.thumbnail(size, Image.ANTIALIAS)
