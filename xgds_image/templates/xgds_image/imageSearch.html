@@ -14,12 +14,11 @@ $("#item_image_search").submit(function(event) {
 
 {% block otherJSInit %}
 	matchWidth('item_image_search','map');
-    pinItem($("#map"));
 {% endblock otherJSInit %}
 
 {% block firstPackery %}
 		<div class='item auto lockAspect noresize' id='item_image_search'>
-			<i class="icon-lock pinDiv"></i><br/>
+			<i class="icon-lock-open pinDiv"></i><br/>
 			<form  id="form-AbstractImageSet" action="" method="post">
 				{{ formset.management_form }}
 				{% csrf_token %}

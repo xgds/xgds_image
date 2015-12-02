@@ -1,11 +1,11 @@
 {% extends 'xgds_image/imageDashboardBase.html' %}
 
-{% block otherJSInit %}
+{% block prePackery %}
 	if (imageSetsArray.length > 0){
-		constructImageView(imageSetsArray[0]);
+		constructImageView(imageSetsArray[0], true);
 		hideImageNextPrev();
 	}
-{% endblock otherJSInit %}
+{% endblock prePackery %}
 
 {% block firstPackery %}
 {% endblock firstPackery %}

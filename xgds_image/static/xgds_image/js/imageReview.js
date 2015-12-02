@@ -130,7 +130,8 @@ function onImageNextOrPrev(template) {
 /*
  * Construct the image view item
  */
-function constructImageView(json) {
+function constructImageView(json, viewPage) {
+    	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
 	// append additional fields to json object to pass to handlebar
@@ -139,18 +140,28 @@ function constructImageView(json) {
 	// inject new fields into the precompiled template
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
-	// call backs
+
+	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
-	onToggle(imageViewTemplate);
-	onDelete(imageViewTemplate);
-	onImageNextOrPrev(imageViewTemplate);
+	
+	if (!viewPage){
+	    onToggle(imageViewTemplate);
+	    onDelete(imageViewTemplate);
+	    onImageNextOrPrev(imageViewTemplate);
+	}
 	
 	// append the div to the container and packery.
-	var result = $container.append(imageViewTemplate);
-	$container.packery( 'appended', imageViewTemplate);
-	
-	makeChildrenResizable($container, imageViewTemplate);
-	imageViewTemplate.find(".pinDiv").click(function(event){clickPinFunction(event)});
+	var newEl;
+	if (!viewPage){
+	    newEl = $container.append(imageViewTemplate);
+	} else {
+	    newEl = $container.prepend(imageViewTemplate);
+	}
+	if (!viewPage){
+	    newEl.find(".pinDiv").click(function(event){clickPinFunction(event)});
+	    $container.packery( 'appended', imageViewTemplate);
+	    makeChildrenResizable($container, imageViewTemplate);
+	}
 }
 
 function setSaveStatusMessage(handler, status, msg){

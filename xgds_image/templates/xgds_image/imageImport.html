@@ -7,7 +7,6 @@
 
 {% block otherJSInit %}
 	matchWidth('item_image_upload','map');
-    pinItem($("#map"));
 {% endblock otherJSInit %}
 
 
@@ -22,7 +21,7 @@
 	
 	<div class='item w2 lockAspect' id='item_image_upload' data-isStamped="false">
 		<div class="error-message upload-error"></div>
-		<i class="icon-lock pinDiv"></i><br/>
+		<i class="icon-lock-open pinDiv"></i><br/>
 		<!-- Dropzone image upload -->
 		
 		<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
