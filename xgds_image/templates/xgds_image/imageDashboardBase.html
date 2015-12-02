@@ -21,8 +21,7 @@
     });
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
-    var aoColumns = [
-	                               {"width": "18%", "mRender": function(data, type, full) {
+    var aoColumns = [			   {"width": "18%", "mRender": function(data, type, full) {
 	                            	   return "<img src='" + full['thumbnail_image_url'] + "'></img>"
 	                               }},
 	                               {"mRender":function(data, type, full){
@@ -62,6 +61,7 @@
 <!-- Image list table -->
 <div class='item w2 freeAspect' id='item_image_table' data-isStamped="false">
 	<i class="icon-lock-open pinDiv"></i>
+	<div class="ttip" data-tooltip="remove selected images"> <i class="icon-trash" id="delete_images"></i> </div>
 	<!-- <div id="image_table_div">  -->
 		<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
 			<thead class="table_header">

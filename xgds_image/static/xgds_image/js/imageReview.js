@@ -21,10 +21,37 @@ function stringContains(string, substring) {
 	return string.indexOf(substring) > -1;
 }
 
+/**
+ *  Selectable row in image table  
+ */
+/* Add a click handler for setting background color on click*/
+$('#image_table tbody').on( 'click', 'tr', function () {
+    $(this).toggleClass('selected');
+    if ($(this).hasClass('selected')) {
+    	$(this).css('background-color', 'grey');
+    } else {
+    	$(this).css('background-color', '');
+    }
+} );
+
+/* Add a click handler for the delete row */
+$('#delete_images').click( function() {
+//	alert( table.rows('.selected').data().length +' row(s) selected' );
+    var selectedRows = fnGetSelected( theDataTable );
+    for (var i = 0; i < selectedRows.length; i++) { 
+        theDataTable.fnDeleteRow(selectedRows[i]);
+    }
+} );
+
+/* Get the rows which are currently selected */
+function fnGetSelected( table ) {
+    return table.$('tr.selected');
+}
+
+
 /*
  * Event binders
  */
-
 /**
  * Toggles on additional information of the image when 'more info' button is clicked.
  */
