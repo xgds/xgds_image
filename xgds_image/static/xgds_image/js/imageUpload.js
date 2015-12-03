@@ -70,7 +70,7 @@ Dropzone.options.imageDropZone = {
 		
 		this.on("success", function(file, responseText, e) {
 			var json = responseText['json'];
-			theDataTable.fnAddData(json);	
+			theDataTable.fnAddData(json);
 			imageSetsArray.push(json);
 			app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
 		});

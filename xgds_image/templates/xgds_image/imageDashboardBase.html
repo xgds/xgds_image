@@ -21,6 +21,7 @@
     });
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
+    var deleteImagesUrl = "{% url 'xgds_delete_images' %}";
     var aoColumns = [			   {"width": "18%", "mRender": function(data, type, full) {
 	                            	   return "<img src='" + full['thumbnail_image_url'] + "'></img>"
 	                               }},

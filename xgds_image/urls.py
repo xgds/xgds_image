@@ -23,5 +23,6 @@ urlpatterns = patterns('',
                        (r'^import/', views.getImageImportPage, {}, 'xgds_image_import'),
                        (r'^search/', views.getImageSearchPage, {}, 'xgds_image_search'),
                        (r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
-                       (r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info')
+                       (r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
+                       (r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images')
                        )

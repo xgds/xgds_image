@@ -136,6 +136,18 @@ def updateImageInfo(request):
                                 content_type='application/json')
 
 
+def deleteImages(request):
+    if request.method == 'POST':
+        idList = request.POST.getlist('id[]')
+        for imageSetId in idList:
+            imageSet = IMAGE_SET_MODEL.get().objects.get(id=imageSetId)
+            imageSet.deleted = True
+            imageSet.save()
+        return HttpResponse(json.dumps({}), content_type = "application/json")
+    else: 
+        return HttpResponse(json.dumps({}), content_type = "application/json")
+    
+
 def createCameraResource(camera):
     ''' Create or retrieve resource instance for this exact camera
     '''

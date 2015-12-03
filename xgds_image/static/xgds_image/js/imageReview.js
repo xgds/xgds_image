@@ -36,8 +36,25 @@ $('#image_table tbody').on( 'click', 'tr', function () {
 
 /* Add a click handler for the delete row */
 $('#delete_images').click( function() {
-//	alert( table.rows('.selected').data().length +' row(s) selected' );
     var selectedRows = fnGetSelected( theDataTable );
+    // get a list containing just the id's of selected images
+    var selectedImageIdsList = jQuery.map(selectedRows, function(element) { return jQuery(element).attr('id'); });
+    var selectedImageIdsJson = {"id": selectedImageIdsList};
+	//delete selected images from db
+    var url = deleteImagesUrl;
+    $.ajax({
+		url: url,
+		type: "POST",
+		data: selectedImageIdsJson, // serializes the form's elements.
+		success: function(data) {
+			console.log("images successfully deleted");
+		},
+		error: function(request, status, error) {
+			console.log("error! ", error);
+		}
+	})
+	
+	// delete selected rows from datatable.
     for (var i = 0; i < selectedRows.length; i++) { 
         theDataTable.fnDeleteRow(selectedRows[i]);
     }
@@ -167,16 +184,13 @@ function constructImageView(json, viewPage) {
 	// inject new fields into the precompiled template
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
-
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
-	
 	if (!viewPage){
 	    onToggle(imageViewTemplate);
 	    onDelete(imageViewTemplate);
 	    onImageNextOrPrev(imageViewTemplate);
 	}
-	
 	// append the div to the container and packery.
 	var newEl;
 	if (!viewPage){
