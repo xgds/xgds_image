@@ -77,7 +77,7 @@ var ImageSet = {
         setupPopup: function(feature, imageJson) {
             var trString = "<tr><td>%s</td><td>%s</td></tr>";
             var formattedString = "<a href='%s' target='_blank'><img src='%s'></img></a><br/><table>";
-            for (j = 0; j< 8; j++){
+            for (j = 0; j< 8; j++) {
                 formattedString = formattedString + trString;
             }
             formattedString = formattedString + "</table>";
@@ -93,6 +93,5 @@ var ImageSet = {
                         ];
             var popupContents = vsprintf(formattedString, data);
             feature['popup'] = popupContents;
-        		
         }
 }

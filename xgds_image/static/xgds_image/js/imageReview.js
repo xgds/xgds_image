@@ -58,6 +58,7 @@ $('#delete_images').click( function() {
     for (var i = 0; i < selectedRows.length; i++) { 
         theDataTable.fnDeleteRow(selectedRows[i]);
     }
+	app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
 } );
 
 /* Get the rows which are currently selected */

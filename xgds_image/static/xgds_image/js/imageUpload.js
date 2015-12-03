@@ -43,7 +43,7 @@ Dropzone.options.imageDropZone = {
 			filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + 0;
 			// reset error msg (TODO: handle files that didn't failed on upload")
 			$(".upload-error").html("");
-		})
+		});
 		
 		this.on("addedfile", function(file) {
 			if (this.files.length == MAX_NUM_THUMBNAILS) {
