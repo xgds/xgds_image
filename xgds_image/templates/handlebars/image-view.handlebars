@@ -4,10 +4,12 @@
 		<i class="icon-lock-open pinDiv"></i>
 		<button class="small info btn prev-button"><i class="icon-left-dir"></i></button>
 		<div class="image-name" ><strong> {{ imageName }} </strong></div>
+		<div class ="loading-msg" id="loading-image-msg"> Loading image... </div>
 		<button class="small info btn next-button"><i class="icon-right-dir"></i></button>
 		<br>
 		<div class="image-wrapper"> 
-			<img class="display_image" src="{{ imagePath }}"></img>
+			<img class="loading-image" src="{{ STATIC_URL }}xgds_video/images/ipx.gif"></img>
+			<img class="display-image" src="{{ imagePath }}"></img>
 		</div>
 		<div id="image_overview">
 		<table>

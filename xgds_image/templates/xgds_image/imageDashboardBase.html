@@ -15,6 +15,7 @@
 	// initialize global javascript variables
 	<!--  parse image json -->
     var imageSetsJson = {{ imageSetsJson|safe }};
+    var STATIC_URL = {{ STATIC_URL }};
     var imageSetsArray = []; // stores JSON objects
     $(imageSetsJson).each(function() {
     	imageSetsArray.push(JSON.parse(this)); // parse json string
@@ -22,7 +23,7 @@
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
     var deleteImagesUrl = "{% url 'xgds_delete_images' %}";
-    var aoColumns = [			   {"width": "18%", "mRender": function(data, type, full) {
+    var aoColumns = [			   {"width": "20%", "mRender": function(data, type, full) {
 	                            	   return "<img src='" + full['thumbnail_image_url'] + "'></img>"
 	                               }},
 	                               {"mRender":function(data, type, full){

@@ -58,6 +58,7 @@ $('#delete_images').click( function() {
     for (var i = 0; i < selectedRows.length; i++) { 
         theDataTable.fnDeleteRow(selectedRows[i]);
     }
+    // re-render the map icons with only the non-deleted images.
 	app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
 } );
 
@@ -116,14 +117,13 @@ function onUpdateImageInfo(template) {
 /* 
  * Image next and previous button stuff
  */
-
 /**
  * Helper that finds index in imageSetsArray
  * of the currently displayed image in the imageView.
  */
 function getCurrentImageAndIndex(template) {
 	// get the img's name.
-	var currentImgUrl = template.find("img").attr('src');
+	var currentImgUrl = template.find(".display-image").attr('src');
 	var currentImgIndex = null;
 	// find the index of the current img
 	for (var i = 0; i < imageSetsArray.length; i++) {
@@ -141,12 +141,31 @@ function getCurrentImageAndIndex(template) {
 function updateImageView(template, index) {
 	if (index != null) {
 		var imageJson = imageSetsArray[index];
-		// update image name
-		template.find(".image-name strong").text(imageJson['name'])
-		// update image display
-		template.find('img').attr('src', imageJson['raw_image_url']);
-		// update image info 
-		
+		var mainImg = template.find(".display-image");
+		var placeholderImg = template.find(".loading-image");
+		/* show place holder and image loading message*/
+		// show loading msg
+		template.find("#loading-image-msg").show();
+		// hide image name
+		template.find(".image-name strong").hide();
+		// hide main image
+		mainImg.hide();
+		// show placeholder img
+		placeholderImg.show();
+		// load the next image
+		mainImg.attr('src', imageJson['raw_image_url']);
+		// show next image name, hide placeholder
+		mainImg.on('load', function() { // when main img is done loading
+		// load next img's name
+		template.find(".image-name strong").text(imageJson['name']);
+		// show next img name
+		template.find(".image-name strong").show();
+		// hide loading msg
+		template.find("#loading-image-msg").hide();
+		// show main img and hide place holder
+		mainImg.show();
+		placeholderImg.hide();
+		});
 	}
 }
 
@@ -156,7 +175,7 @@ function hideImageNextPrev() {
 }
 
 function onImageNextOrPrev(template) {
-	template.find('.prev-button').click(function(event) {
+	template.find('.next-button').click(function(event) {
 		// set the img src
 		var index = getCurrentImageAndIndex(template);
 		if (index != null) {
@@ -168,7 +187,7 @@ function onImageNextOrPrev(template) {
 			updateImageView(template, index);
 		}
 	});
-	template.find(".next-button").click(function(event) {
+	template.find(".prev-button").click(function(event) {
 		var index = getCurrentImageAndIndex(template);
 		if (index == (imageSetsArray.length - 1)) {
 			index = 0;
@@ -183,15 +202,18 @@ function onImageNextOrPrev(template) {
  * Construct the image view item
  */
 function constructImageView(json, viewPage) {
-    	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
+	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
+	json.STATIC_URL = STATIC_URL;
 	// inject new fields into the precompiled template
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
+	// hide the img loading msg
+	imageViewTemplate.find("#loading-image-msg").hide();
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
 	if (!viewPage){
@@ -206,11 +228,20 @@ function constructImageView(json, viewPage) {
 	} else {
 	    newEl = $container.prepend(imageViewTemplate);
 	}
+	// pin the packery elem.
 	if (!viewPage){
 	    newEl.find(".pinDiv").click(function(event){clickPinFunction(event)});
 	    $container.packery( 'appended', imageViewTemplate);
 	    makeChildrenResizable($container, imageViewTemplate);
 	}
+	// set the loading image to be displayed when main img is loading
+	imageViewTemplate.find(".display-image").load(function() {
+		var width = imageViewTemplate.find(".display-image").width();
+		var height = imageViewTemplate.find(".display-image").height();
+		imageViewTemplate.find(".loading-image").width(width);	
+		imageViewTemplate.find(".loading-image").height(height);
+		imageViewTemplate.find(".loading-image").hide();
+	});
 }
 
 function setSaveStatusMessage(handler, status, msg){

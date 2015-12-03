@@ -62,6 +62,7 @@ def getImageViewPage(request, imageSetID):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     data = {'imageSetsJson': imageSetsJson,
+            'STATIC_URL': settings.STATIC_URL,
             'templates': get_handlebars_templates(fullTemplateList),
             'errors': errors}
     return render_to_response("xgds_image/imageView.html", data,

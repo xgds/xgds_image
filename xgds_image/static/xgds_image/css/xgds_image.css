@@ -2,7 +2,7 @@
 	min-height: 250px;
 }
 
-img .display_image {
+img .display-image {
 	max-width: 100%;
 	max-height: 100%;
 	box-shadow: 4px 4px 2px #888;
@@ -46,6 +46,10 @@ br
 }
 
 .image-name {
+	display: inline-block;
+}
+
+.loading-msg {
 	display: inline-block;
 }
 
