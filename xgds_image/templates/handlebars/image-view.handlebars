@@ -9,26 +9,30 @@
 		<div class="image-wrapper"> 
 			<img class="display_image" src="{{ imagePath }}"></img>
 		</div>
-		<ul>
-			<li class='summary'>
-				<label class='summary_label'>Camera</label>
-				{{ camera_name }}
-			</li>
-			<li class='summary'>
-				<label class='summary_label'>Creation Time</label>
-				{{ creation_time }}
-			</li>
-			<li class='summary'>
-				<label class='summary_label'>Altitude</label>
-				{{#if altitude }}{{ altitude }}{{else}}&nbsp;{{/if}}
-			</li>
-			<li class='summary'>
-				<label class='summary_label'>Author</label>
-				{{ author_name }}
-			</li>
-		</ul>
-		<button class="small default btn" id="more_info_button"> More info </button>
+		<div id="image_overview">
+		<table>
+			<tr>
+				<td class="small">{{ author_name }}</td>
+				<td class="small">{{ creation_time }}</td>
+			</tr>
+			<tr>
+				<td colspan=2>{{ description }}</td>
+			</tr>
+		</table>
+		</div>
+		
 	</div> 
+	
+	<div id="image_tabs" class="tabs border small">
+	<ul class="nav nav-tabs tab-nav">
+	  <li role="presentation" class="active small"><a href="#" id="notes_tab">Notes</a></li>
+	  <li role="presentation" class="small"><a href="#" id="info_tab">Edit Info</a></li>
+	</ul>
+	</div>
+	
+	<div id="notes_content" class="tab-content active">
+		Here is test content for notes
+	</div>
 	
 	<div id="more_info_view">
 		<form action="/xgds_image/updateImageInfo/" id="more_info_form" method="post">
