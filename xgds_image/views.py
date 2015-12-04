@@ -76,6 +76,7 @@ def getImageImportPage(request):
     data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
             'form': UploadFileForm(),
+            'imageSetForm': ImageSetForm()
             }
     return render_to_response("xgds_image/imageImport.html", data,
                               context_instance=RequestContext(request))
@@ -95,7 +96,7 @@ def getImageSearchPage(request):
                                'formset': theFormSet},
                               context_instance=RequestContext(request))
 
-
+    
 def updateImageInfo(request):
     """
     Saves update image info entered by the user in the image view.
@@ -160,6 +161,7 @@ def createCameraResource(camera):
         return found
     except:
         return GEOCAM_TRACK_RESOURCE_MODEL.get().objects.create(name=name)
+
 
 def getTrack(resource):
     tracks = getTrackForResource(resource)

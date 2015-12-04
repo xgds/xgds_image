@@ -22,7 +22,7 @@ class UploadFileForm(AbstractImportTrackedForm):
     class Meta:
         model = SingleImage
         fields = ['file']
-     
+    
         
 class ImageSetForm(forms.ModelForm):
     latitude = forms.FloatField(required=False)
@@ -32,4 +32,5 @@ class ImageSetForm(forms.ModelForm):
     id= forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = ImageSet
-        fields = ['id', 'description']
+        fields = ['id', 'description', 'name']
+        

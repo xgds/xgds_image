@@ -15,9 +15,10 @@ br
 
 #image_view {
 	float: left;	
+	padding-bottom: 10px;
 }
  
-#more_info_view {
+#more-info-view {
 	margin-top: 10px;
 	display:none;
 } 

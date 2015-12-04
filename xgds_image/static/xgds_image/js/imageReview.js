@@ -85,17 +85,16 @@ function onToggle(template) {
 	    template.find("#more_info_view").hide();
 	    template.find("#notes_content").show();
 	});
-
 }
 
 /**
  * Saves image info to the db when user updates it and submits.
  */
 function onUpdateImageInfo(template) {
-	template.find("#more_info_view").find("#more_info_form").submit(function(event) {
+	template.find("#more-info-view").find("#more-info-form").submit(function(event) {
 		event.preventDefault(); 	// avoid to execute the actual submit of the form.
 		var url = updateImageUrl; // the script where you handle the form input.
-		var postData = $("#more_info_form").serialize();
+		var postData = $("#more-info-form").serialize();
 		$.ajax({
 			url: url,
 			type: "POST",
@@ -143,14 +142,9 @@ function updateImageView(template, index) {
 		var imageJson = imageSetsArray[index];
 		var mainImg = template.find(".display-image");
 		var placeholderImg = template.find(".loading-image");
-		/* show place holder and image loading message*/
-		// show loading msg
 		template.find("#loading-image-msg").show();
-		// hide image name
 		template.find(".image-name strong").hide();
-		// hide main image
 		mainImg.hide();
-		// show placeholder img
 		placeholderImg.show();
 		// load the next image
 		mainImg.attr('src', imageJson['raw_image_url']);
@@ -205,15 +199,18 @@ function constructImageView(json, viewPage) {
 	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
+	
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
 	json.STATIC_URL = STATIC_URL;
-	// inject new fields into the precompiled template
+	
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
+	
 	// hide the img loading msg
 	imageViewTemplate.find("#loading-image-msg").hide();
+	
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
 	if (!viewPage){
@@ -221,6 +218,7 @@ function constructImageView(json, viewPage) {
 	    onDelete(imageViewTemplate);
 	    onImageNextOrPrev(imageViewTemplate);
 	}
+	
 	// append the div to the container and packery.
 	var newEl;
 	if (!viewPage){
@@ -236,6 +234,7 @@ function constructImageView(json, viewPage) {
 	}
 	// set the loading image to be displayed when main img is loading
 	imageViewTemplate.find(".display-image").load(function() {
+		// set dimensions of loading image
 		var width = imageViewTemplate.find(".display-image").width();
 		var height = imageViewTemplate.find(".display-image").height();
 		imageViewTemplate.find(".loading-image").width(width);	
