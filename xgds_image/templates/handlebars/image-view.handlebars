@@ -23,7 +23,7 @@
 		</table>
 		</div>
 		
-	</div> i
+	</div>
 	
 	<div id="image_tabs" class="tabs border small">
 	<ul class="nav nav-tabs tab-nav">
@@ -38,6 +38,7 @@
 	
 	<div id="more_info_view">
 		<form action="/xgds_image/updateImageInfo/" id="more-info-form" method="post">
+			<input name="id" value="{{id}}" hidden id="id_id"></input>
 			<table>
 				<tr>
 					<th><label for="id_description">Description:</label></th>
@@ -58,7 +59,6 @@
 				<tr>
 					<th><label for="id_altitude">Altitude:</label></th>
 					<td><input id="id_altitude" name="altitude" step="any" type="number" value="{{altitude}}" />
-					<input id="id_id" name="id" type="hidden" /></td>
 				</tr>
 			</table>
 			<input class="medium info btn" type="submit" value="Save" />		

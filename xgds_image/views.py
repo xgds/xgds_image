@@ -102,7 +102,8 @@ def updateImageInfo(request):
     Saves update image info entered by the user in the image view.
     """
     if request.method == 'POST':
-        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=request.POST['id'])
+        imgId = request.POST['id']
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imgId)
         form = ImageSetForm(request.POST, instance = imageSet)
         if form.is_valid():
             latitude =  form.cleaned_data['latitude']

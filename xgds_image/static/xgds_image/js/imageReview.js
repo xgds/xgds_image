@@ -75,16 +75,16 @@ function fnGetSelected( table ) {
  * Toggles on additional information of the image when 'more info' button is clicked.
  */
 function onToggle(template) {
-	template.find("#info_tab").click({view: toggleView}, function(event) {
-	    event.preventDefault();
-	    template.find("#notes_content").hide();
-	    template.find("#more_info_view").show();
-	});
-	template.find("#notes_tab").click({view: toggleView}, function(event) {
-	    event.preventDefault();
-	    template.find("#more_info_view").hide();
-	    template.find("#notes_content").show();
-	});
+//	template.find("#info_tab").click({view: toggleView}, function(event) {
+//	    event.preventDefault();
+//	    template.find("#notes_content").hide();
+//	    template.find("#more_info_view").show();
+//	});
+//	template.find("#notes_tab").click({view: toggleView}, function(event) {
+//	    event.preventDefault();
+//	    template.find("#more_info_view").hide();
+//	    template.find("#notes_content").show();
+//	});
 }
 
 /**
