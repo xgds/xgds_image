@@ -210,6 +210,7 @@ function constructImageView(json, viewPage) {
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
+	json.imageUrl = json['view_url'];
 	json.STATIC_URL = STATIC_URL;
 	
 	var newDiv = compiledTemplate(json);
