@@ -150,16 +150,23 @@ function updateImageView(template, index) {
 		mainImg.attr('src', imageJson['raw_image_url']);
 		// show next image name, hide placeholder
 		mainImg.on('load', function() { // when main img is done loading
-		// load next img's name
-		template.find(".image-name strong").text(imageJson['name']);
-		// show next img name
-		template.find(".image-name strong").show();
-		// hide loading msg
-		template.find("#loading-image-msg").hide();
-		// show main img and hide place holder
-		mainImg.show();
-		placeholderImg.hide();
+			// load next img's name
+			template.find(".image-name strong").text(imageJson['name']);
+			// show next img name
+			template.find(".image-name strong").show();
+			// hide loading msg
+			template.find("#loading-image-msg").hide();
+			// show main img and hide place holder
+			mainImg.show();
+			placeholderImg.hide();
 		});
+		
+		template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
+		template.find('input[name="description"]').attr('value', imageJson['description']);
+		template.find('input[name="name"]').attr('value', imageJson['name']);
+		template.find('input[name="latitude"]').attr('value', imageJson['lat']);
+		template.find('input[name="longitude"]').attr('value', imageJson['lon']);
+		template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
 	}
 }
 
