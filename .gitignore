@@ -9,3 +9,4 @@
 /static/css/*.r*.css
 /xgds_image/build
 TEST
+/docs/_build
