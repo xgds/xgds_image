@@ -23,9 +23,52 @@ $("#item_image_search").submit(function(event) {
 				{{ formset.management_form }}
 				{% csrf_token %}
 				{% for form in formset %}
+				
+				<input type="hidden" name="{{form.prefix}}-{{form.deleted.name}}" id="{{form.deleted.auto_id}}" value="False">
+				{{ form.deleted_operator.as_hidden }} 
+				
 				<table>
-				{{ form.as_table }}
+				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.name.auto_id }}">{{ form.name.label }}</label></td>
+				    <td>{{ form.name_operator.as_hidden }}</td>
+				    <td colspan=3>{{ form.name }}</td>
+				  </tr>
+
+				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.shortName.auto_id }}">{{ form.shortName.label }}</label></td>
+				    <td>{{ form.shortName_operator.as_hidden }}</td>
+				    <td colspan=3>{{ form.shortName }}</td>
+				  </tr>
+
+				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.camera.auto_id }}">{{ form.camera.label }}</label></td>
+				    <td>{{ form.camera_operator.as_hidden }}</td>
+				    <td colspan=3>{{ form.camera }}</td>
+				  </tr>
+
+				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.author.auto_id }}">{{ form.author.label }}</label></td>
+				    <td>{{ form.author_operator.as_hidden }}</td>
+				    <td colspan=3>{{ form.author }}</td>
+				  </tr>
+
+				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.creation_time_lo.auto_id }}">Creation Time</label></td>
+				    <td>{{ form.creation_time_operator.as_hidden }}</td>
+				    <td>{{ form.creation_time_lo }}</td>
+				    <td><label for="{{ form.creation_time_lo.auto_id }}">up to</label></td>
+				    <td>{{ form.creation_time_hi }}</td>
+
+				  </tr>
+
+				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.description.auto_id }}">{{ form.description.label }}</label></td>
+				    <td>{{ form.description_operator.as_hidden }}</td>
+				    <td colspan=3>{{ form.description }}</td>
+				  </tr>
+
 				</table>
+				
 				{% endfor %}
 				<input type="submit" id="doSearch" class="small" value="Search"/> &nbsp;
 				<span class="alert" id="message"></span>
