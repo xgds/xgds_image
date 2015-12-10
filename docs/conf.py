@@ -51,7 +51,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'xgds_image'
 copyright = u'2015, xGDS (Tamar Cohen)'
-author = u'xGDS (Tamar Cohen)'
+author = u'xGDS (Tamar Cohen, Yeon-Jin Grace Lee)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
