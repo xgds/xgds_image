@@ -62,6 +62,7 @@ def getImageViewPage(request, imageSetID):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
     data = {'imageSetsJson': imageSetsJson,
+            'STATIC_URL': settings.STATIC_URL,
             'templates': get_handlebars_templates(fullTemplateList),
             'errors': errors}
     return render_to_response("xgds_image/imageView.html", data,
@@ -75,6 +76,7 @@ def getImageImportPage(request):
     data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
             'form': UploadFileForm(),
+            'imageSetForm': ImageSetForm()
             }
     return render_to_response("xgds_image/imageImport.html", data,
                               context_instance=RequestContext(request))
@@ -94,13 +96,14 @@ def getImageSearchPage(request):
                                'formset': theFormSet},
                               context_instance=RequestContext(request))
 
-
+    
 def updateImageInfo(request):
     """
     Saves update image info entered by the user in the image view.
     """
     if request.method == 'POST':
-        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=request.POST['id'])
+        imgId = request.POST['id']
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imgId)
         form = ImageSetForm(request.POST, instance = imageSet)
         if form.is_valid():
             latitude =  form.cleaned_data['latitude']
@@ -159,6 +162,7 @@ def createCameraResource(camera):
         return found
     except:
         return GEOCAM_TRACK_RESOURCE_MODEL.get().objects.create(name=name)
+
 
 def getTrack(resource):
     tracks = getTrackForResource(resource)

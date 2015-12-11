@@ -58,6 +58,7 @@ $('#delete_images').click( function() {
     for (var i = 0; i < selectedRows.length; i++) { 
         theDataTable.fnDeleteRow(selectedRows[i]);
     }
+    // re-render the map icons with only the non-deleted images.
 	app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
 } );
 
@@ -74,27 +75,26 @@ function fnGetSelected( table ) {
  * Toggles on additional information of the image when 'more info' button is clicked.
  */
 function onToggle(template) {
-	template.find("#info_tab").click({view: toggleView}, function(event) {
-	    event.preventDefault();
-	    template.find("#notes_content").hide();
-	    template.find("#more_info_view").show();
-	});
-	template.find("#notes_tab").click({view: toggleView}, function(event) {
-	    event.preventDefault();
-	    template.find("#more_info_view").hide();
-	    template.find("#notes_content").show();
-	});
-
+//	template.find("#info_tab").click({view: toggleView}, function(event) {
+//	    event.preventDefault();
+//	    template.find("#notes_content").hide();
+//	    template.find("#more_info_view").show();
+//	});
+//	template.find("#notes_tab").click({view: toggleView}, function(event) {
+//	    event.preventDefault();
+//	    template.find("#more_info_view").hide();
+//	    template.find("#notes_content").show();
+//	});
 }
 
 /**
  * Saves image info to the db when user updates it and submits.
  */
 function onUpdateImageInfo(template) {
-	template.find("#more_info_view").find("#more_info_form").submit(function(event) {
+	template.find("#more-info-view").find("#more-info-form").submit(function(event) {
 		event.preventDefault(); 	// avoid to execute the actual submit of the form.
 		var url = updateImageUrl; // the script where you handle the form input.
-		var postData = $("#more_info_form").serialize();
+		var postData = $("#more-info-form").serialize();
 		$.ajax({
 			url: url,
 			type: "POST",
@@ -116,14 +116,13 @@ function onUpdateImageInfo(template) {
 /* 
  * Image next and previous button stuff
  */
-
 /**
  * Helper that finds index in imageSetsArray
  * of the currently displayed image in the imageView.
  */
 function getCurrentImageAndIndex(template) {
 	// get the img's name.
-	var currentImgUrl = template.find("img").attr('src');
+	var currentImgUrl = template.find(".display-image").attr('src');
 	var currentImgIndex = null;
 	// find the index of the current img
 	for (var i = 0; i < imageSetsArray.length; i++) {
@@ -141,12 +140,33 @@ function getCurrentImageAndIndex(template) {
 function updateImageView(template, index) {
 	if (index != null) {
 		var imageJson = imageSetsArray[index];
-		// update image name
-		template.find(".image-name strong").text(imageJson['name'])
-		// update image display
-		template.find('img').attr('src', imageJson['raw_image_url']);
-		// update image info 
+		var mainImg = template.find(".display-image");
+		var placeholderImg = template.find(".loading-image");
+		template.find("#loading-image-msg").show();
+		template.find(".image-name strong").hide();
+		mainImg.hide();
+		placeholderImg.show();
+		// load the next image
+		mainImg.attr('src', imageJson['raw_image_url']);
+		// show next image name, hide placeholder
+		mainImg.on('load', function() { // when main img is done loading
+			// load next img's name
+			template.find(".image-name strong").text(imageJson['name']);
+			// show next img name
+			template.find(".image-name strong").show();
+			// hide loading msg
+			template.find("#loading-image-msg").hide();
+			// show main img and hide place holder
+			mainImg.show();
+			placeholderImg.hide();
+		});
 		
+		template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
+		template.find('input[name="description"]').attr('value', imageJson['description']);
+		template.find('input[name="name"]').attr('value', imageJson['name']);
+		template.find('input[name="latitude"]').attr('value', imageJson['lat']);
+		template.find('input[name="longitude"]').attr('value', imageJson['lon']);
+		template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
 	}
 }
 
@@ -156,7 +176,7 @@ function hideImageNextPrev() {
 }
 
 function onImageNextOrPrev(template) {
-	template.find('.prev-button').click(function(event) {
+	template.find('.next-button').click(function(event) {
 		// set the img src
 		var index = getCurrentImageAndIndex(template);
 		if (index != null) {
@@ -168,7 +188,7 @@ function onImageNextOrPrev(template) {
 			updateImageView(template, index);
 		}
 	});
-	template.find(".next-button").click(function(event) {
+	template.find(".prev-button").click(function(event) {
 		var index = getCurrentImageAndIndex(template);
 		if (index == (imageSetsArray.length - 1)) {
 			index = 0;
@@ -183,15 +203,22 @@ function onImageNextOrPrev(template) {
  * Construct the image view item
  */
 function constructImageView(json, viewPage) {
-    	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
+	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
+	
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
-	// inject new fields into the precompiled template
+	json.imageUrl = json['view_url'];
+	json.STATIC_URL = STATIC_URL;
+	
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
+	
+	// hide the img loading msg
+	imageViewTemplate.find("#loading-image-msg").hide();
+	
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
 	if (!viewPage){
@@ -199,6 +226,7 @@ function constructImageView(json, viewPage) {
 	    onDelete(imageViewTemplate);
 	    onImageNextOrPrev(imageViewTemplate);
 	}
+	
 	// append the div to the container and packery.
 	var newEl;
 	if (!viewPage){
@@ -206,11 +234,21 @@ function constructImageView(json, viewPage) {
 	} else {
 	    newEl = $container.prepend(imageViewTemplate);
 	}
+	// pin the packery elem.
 	if (!viewPage){
 	    newEl.find(".pinDiv").click(function(event){clickPinFunction(event)});
 	    $container.packery( 'appended', imageViewTemplate);
 	    makeChildrenResizable($container, imageViewTemplate);
 	}
+	// set the loading image to be displayed when main img is loading
+	imageViewTemplate.find(".display-image").load(function() {
+		// set dimensions of loading image
+		var width = imageViewTemplate.find(".display-image").width();
+		var height = imageViewTemplate.find(".display-image").height();
+		imageViewTemplate.find(".loading-image").width(width);	
+		imageViewTemplate.find(".loading-image").height(height);
+		imageViewTemplate.find(".loading-image").hide();
+	});
 }
 
 function setSaveStatusMessage(handler, status, msg){
