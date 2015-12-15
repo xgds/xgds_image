@@ -91,7 +91,7 @@ function onToggle(template) {
  * Saves image info to the db when user updates it and submits.
  */
 function onUpdateImageInfo(template) {
-	template.find("#more-info-view").find("#more-info-form").submit(function(event) {
+	$(template).find("#updateInfoSubmit").on('click', function(event) {
 		event.preventDefault(); 	// avoid to execute the actual submit of the form.
 		var url = updateImageUrl; // the script where you handle the form input.
 		var postData = $("#more-info-form").serialize();

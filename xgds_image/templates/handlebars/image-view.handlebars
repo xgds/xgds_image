@@ -36,7 +36,7 @@
 	<div id="notes_content" class="tab-content active"></div>
 	
 	<div id="more_info_view" hidden>
-		<form action="/xgds_image/updateImageInfo/" id="more-info-form" method="post">
+		<form action="#" id="more-info-form" method="post">
 			<input name="id" value="{{id}}" hidden id="id_id"/>
 			<table>
 				<tr>
@@ -60,7 +60,7 @@
 					<td><input id="id_altitude" name="altitude" step="any" type="number" value="{{altitude}}" />
 				</tr>
 			</table>
-			<input class="small info btn" type="submit" value="Save" />		
+			<input class="small info btn" type="submit" id="updateInfoSubmit" value="Save" />		
 			<label class="inline" id="message"></label>
 		</form>
 	</div>
