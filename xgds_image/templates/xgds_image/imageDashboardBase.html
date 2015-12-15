@@ -7,6 +7,7 @@
 
  {% block cssExtras %}
  {{ block.super }}
+    {% include "xgds_notes2/NoteCSS.html" %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
  {% endblock cssExtras %}
 
@@ -48,9 +49,10 @@
 
 {% block scripts %}
 {{block.super}}
+	{% include "xgds_notes2/NoteJS.html" %}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
-	<!--  load handlebars -->
+    <!--  load handlebars -->
 	{% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
 			{{template|safe}}
@@ -86,5 +88,6 @@
 
 {% block lastPackery %}
 {% include 'xgds_notes2/notes_input_include.html' %}
+{% include 'xgds_notes2/notes_table_small.html' %}
 {% endblock lastPackery %}
 		

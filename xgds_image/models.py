@@ -18,6 +18,7 @@ import datetime
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
@@ -67,6 +68,9 @@ class AbstractImageSet(models.Model):
         """
         result = modelToDict(self)
         result['id'] = self.pk
+        result['app_label'] = self._meta.app_label
+        result['model_type'] = self.__class__.__name__
+        
         result['description'] = self.description
         result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
         result['type'] = 'ImageSet'
@@ -83,10 +87,12 @@ class AbstractImageSet(models.Model):
             result['lat'] = self.asset_position.latitude
             result['lon'] = self.asset_position.longitude
             result['altitude'] = self.asset_position.altitude
+            result['position_id'] = self.asset_position.pk
         else:
             result['lat'] = ""
             result['lon'] = ""
             result['altitude'] = ""
+            result['position_id'] = ""
         return result
 
     def getRawImage(self):

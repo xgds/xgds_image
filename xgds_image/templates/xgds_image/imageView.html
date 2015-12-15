@@ -9,3 +9,9 @@
 
 {% block firstPackery %}
 {% endblock firstPackery %}
+
+{% block jsInit %}
+{{ block.super}}
+	initializeTags();
+	initializeInput();
+{% endblock jsInit %}

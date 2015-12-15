@@ -162,7 +162,7 @@ function updateImageView(template, index) {
 	});
 
 	template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
-	template.find('input[name="description"]').attr('value', imageJson['description']);
+	template.find('textarea[name="description"]').attr('value', imageJson['description']);
 	template.find('input[name="name"]').attr('value', imageJson['name']);
 	template.find('input[name="latitude"]').attr('value', imageJson['lat']);
 	template.find('input[name="longitude"]').attr('value', imageJson['lon']);
@@ -221,8 +221,9 @@ function constructImageView(json, viewPage) {
 	
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
+	onToggle(imageViewTemplate);
+	
 	if (!viewPage){
-	    onToggle(imageViewTemplate);
 	    onDelete(imageViewTemplate);
 	    onImageNextOrPrev(imageViewTemplate);
 	}
@@ -249,6 +250,23 @@ function constructImageView(json, viewPage) {
 		imageViewTemplate.find(".loading-image").height(height);
 		imageViewTemplate.find(".loading-image").hide();
 	});
+	
+	//add the notes if it does not exist
+	var notes_content_div = imageViewTemplate.find("#notes_content");
+	if ($(notes_content_div).is(':empty')){
+	    // the first time we want to fill it in
+	    var notes_list_div = $.find("#notes_list");
+	    var notes_input_div = $.find("#notes_input");
+	    $(notes_content_div).append($(notes_input_div));
+	    $(notes_content_div).append($(notes_list_div));
+	    $(notes_input_div).show();
+	    $(notes_list_div).show();
+	    initializeTags();
+	    initializeInput();
+//	    initializeNotesForm(false);
+	}
+	
+	initializeNotesReference(json['app_label'], json['model_type'], json['id'], json['creation_time']);
 }
 
 function setSaveStatusMessage(handler, status, msg){
