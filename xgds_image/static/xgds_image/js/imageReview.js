@@ -27,11 +27,6 @@ function stringContains(string, substring) {
 /* Add a click handler for setting background color on click*/
 $('#image_table tbody').on( 'click', 'tr', function () {
     $(this).toggleClass('selected');
-    if ($(this).hasClass('selected')) {
-    	$(this).css('background-color', 'grey');
-    } else {
-    	$(this).css('background-color', '');
-    }
 } );
 
 /* Add a click handler for the delete row */
@@ -184,6 +179,11 @@ function updateImageView(template, index, imageJson, keepingImage) {
     template.find('input[name="latitude"]').attr('value', imageJson['lat']);
     template.find('input[name="longitude"]').attr('value', imageJson['lon']);
     template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
+    
+    fnGetSelected(theDataTable).removeClass('selected');
+    var next = index + 1;
+    var identifier = 'tr#' + next;
+    theDataTable.find(identifier).addClass('selected');
 }
 
 function hideImageNextPrev() {
@@ -196,22 +196,22 @@ function onImageNextOrPrev(template) {
 		// set the img src
 		var index = getCurrentImageAndIndex(template);
 		if (index != null) {
-			if (index == 0) {
-				index = imageSetsArray.length -1;
-			} else {
-				index = index - 1;
-			}
-			updateImageView(template, index, null, false);
+		    index = index + 1;
+		    if (index == imageSetsArray.length){
+			index = 0;
+		    }
+		    updateImageView(template, index, null, false);
 		}
 	});
 	template.find(".prev-button").click(function(event) {
 		var index = getCurrentImageAndIndex(template);
-		if (index == (imageSetsArray.length - 1)) {
-			index = 0;
-		} else {
-			index = index + 1;
+		if (index != null) {
+		    index = index - 1;
+		    if (index < 0){
+			index = imageSetsArray.length - 1;
+		    }
+		    updateImageView(template, index, null, false);
 		}
-		updateImageView(template, index, null, false);
 	});
 }
 

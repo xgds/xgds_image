@@ -13,12 +13,10 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
-
 import datetime
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
@@ -71,7 +69,11 @@ class AbstractImageSet(models.Model, NoteMixin):
         result = modelToDict(self)
         result['id'] = self.pk
         result['app_label'] = self._meta.app_label
-        result['model_type'] = self.__class__.__name__
+        t = type(self)
+        if t._deferred:
+            t = t.__base__
+        
+        result['model_type'] = t._meta.object_name
         
         result['description'] = self.description
         result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
