@@ -263,10 +263,10 @@ function constructImageView(json, viewPage) {
 	    $(notes_list_div).show();
 	    initializeTags();
 	    initializeInput();
-//	    initializeNotesForm(false);
 	}
 	
 	initializeNotesReference(json['app_label'], json['model_type'], json['id'], json['creation_time']);
+	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', 'notes_list');
 }
 
 function setSaveStatusMessage(handler, status, msg){

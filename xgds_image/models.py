@@ -26,6 +26,7 @@ from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
 from geocamTrack.models import AbstractResource
 
+from xgds_notes2.models import NoteMixin
 
 def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
@@ -40,7 +41,7 @@ class Camera(AbstractResource):
     pass
 
 
-class AbstractImageSet(models.Model):
+class AbstractImageSet(models.Model, NoteMixin):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
