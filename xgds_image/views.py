@@ -36,6 +36,7 @@ from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile
 
 from geocamUtil.loader import getModelByName
+from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil import TimeUtil
 from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
@@ -127,10 +128,7 @@ def updateImageInfo(request):
                     pass
                 imageSet.asset_position.save()
             imageSet.save()
-            response_data={}
-            response_data['status'] = 'success'
-            response_data['message'] = 'Save successful!'
-            return HttpResponse(json.dumps(response_data),
+            return HttpResponse(json.dumps([imageSet.toMapDict()], cls=DatetimeJsonEncoder),
                 content_type="application/json"
             )
         else: 

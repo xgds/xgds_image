@@ -73,16 +73,20 @@ function fnGetSelected( table ) {
 /**
  * Toggles on additional information of the image when 'more info' button is clicked.
  */
-function onToggle(template) {
-	template.find("#info_tab").click(function(event) {
+function toggleEditInfo(template) {
+	template.find("#edit_info_button").click(function(event) {
 	    event.preventDefault();
-	    template.find("#notes_content").hide();
+	    template.find("#image_overview").hide();
 	    template.find("#more_info_view").show();
 	});
-	template.find("#notes_tab").click(function(event) {
+	template.find("#cancel_edit").click(function(event) {
 	    event.preventDefault();
 	    template.find("#more_info_view").hide();
-	    template.find("#notes_content").show();
+	    template.find("#image_overview").show();
+	});
+	template.find("#add_note_button").click(function(event) {
+	    event.preventDefault();
+	    template.find("#notes_input").show();
 	});
 }
 
@@ -100,11 +104,13 @@ function onUpdateImageInfo(template) {
 			data: postData, // serializes the form's elements.
 			success: function(data)
 			{
-				setSaveStatusMessage($('#message'), data['status'], data['message']);
-
+			    setSaveStatusMessage($('#message'), 'Saved','');
+			    updateImageView(template, undefined, data[0], true);
+			    template.find("#more_info_view").hide();
+			    template.find("#image_overview").show();
 			},
 			error: function(request, status, error) {
-				setSaveStatusMessage($('#message'), status, error);
+			    setSaveStatusMessage($('#message'), status, error);
 			}
 		});
 		return false; 
@@ -136,37 +142,48 @@ function getCurrentImageAndIndex(template) {
 /**
  * Update the image view with newly selected image.
  */
-function updateImageView(template, index) {
-    if (index != null) {
-	var imageJson = imageSetsArray[index];
+function updateImageView(template, index, imageJson, keepingImage) {
+    if (imageJson == null){
+	if (index != null) {
+	    var imageJson = imageSetsArray[index];
+	} else {
+	    return;
+	}
+    }
+    
+    if (!keepingImage){
 	var mainImg = template.find(".display-image");
 	var placeholderImg = template.find(".loading-image");
 	template.find("#loading-image-msg").show();
 	template.find(".image-name strong").hide();
 	mainImg.hide();
 	placeholderImg.show();
+	
 	// load the next image
 	mainImg.attr('src', imageJson['raw_image_url']);
-	// show next image name, hide placeholder
-	mainImg.on('load', function() { // when main img is done loading
-	    // load next img's name
-	    template.find(".image-name strong").text(imageJson['name']);
-	    // show next img name
-	    template.find(".image-name strong").show();
-	    // hide loading msg
-	    template.find("#loading-image-msg").hide();
-	    // show main img and hide place holder
-	    mainImg.show();
-	    placeholderImg.hide();
-	});
-
-	template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
-	template.find('textarea[name="description"]').attr('value', imageJson['description']);
-	template.find('input[name="name"]').attr('value', imageJson['name']);
-	template.find('input[name="latitude"]').attr('value', imageJson['lat']);
-	template.find('input[name="longitude"]').attr('value', imageJson['lon']);
-	template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
+        // show next image name, hide placeholder
+        mainImg.on('load', function() { // when main img is done loading
+        	// load next img's name
+        	template.find(".image-name strong").text(imageJson['name']);
+        	// show next img name
+        	template.find(".image-name strong").show();
+        	// hide loading msg
+        	template.find("#loading-image-msg").hide();
+        	// show main img and hide place holder
+        	mainImg.show();
+        	placeholderImg.hide();
+        });
+    } else {
+	template.find(".image-name strong").text(imageJson['name']);
     }
+
+    template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
+    template.find('#overview_description').text(imageJson['description']);
+    template.find('textarea[name="description"]').attr('value', imageJson['description']);
+    template.find('input[name="name"]').attr('value', imageJson['name']);
+    template.find('input[name="latitude"]').attr('value', imageJson['lat']);
+    template.find('input[name="longitude"]').attr('value', imageJson['lon']);
+    template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
 }
 
 function hideImageNextPrev() {
@@ -184,7 +201,7 @@ function onImageNextOrPrev(template) {
 			} else {
 				index = index - 1;
 			}
-			updateImageView(template, index);
+			updateImageView(template, index, null, false);
 		}
 	});
 	template.find(".prev-button").click(function(event) {
@@ -194,7 +211,7 @@ function onImageNextOrPrev(template) {
 		} else {
 			index = index + 1;
 		}
-		updateImageView(template, index);
+		updateImageView(template, index, null, false);
 	});
 }
 
@@ -220,7 +237,7 @@ function constructImageView(json, viewPage) {
 	
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
-	onToggle(imageViewTemplate);
+	toggleEditInfo(imageViewTemplate);
 	
 	if (!viewPage){
 	    onDelete(imageViewTemplate);
@@ -258,10 +275,7 @@ function constructImageView(json, viewPage) {
 	    var notes_input_div = $.find("#notes_input");
 	    $(notes_content_div).append($(notes_input_div));
 	    $(notes_content_div).append($(notes_list_div));
-	    $(notes_input_div).show();
 	    $(notes_list_div).show();
-	    initializeTags();
-	    initializeInput();
 	}
 	
 	initializeNotesReference(json['app_label'], json['model_type'], json['id'], json['creation_time']);
