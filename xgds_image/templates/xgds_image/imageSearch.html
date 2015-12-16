@@ -2,6 +2,7 @@
 
 {% block scripts %}
 {{block.super}}
+	<script language="javascript" type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageSearch.js"></script>
 {% endblock scripts %}
 
@@ -58,7 +59,14 @@ $("#item_image_search").submit(function(event) {
 				    <td>{{ form.creation_time_lo }}</td>
 				    <td><label for="{{ form.creation_time_lo.auto_id }}">up to</label></td>
 				    <td>{{ form.creation_time_hi }}</td>
-
+				  </tr>
+				  
+  				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.modification_time_lo.auto_id }}">Modification Time</label></td>
+				    <td>{{ form.modification_time_operator.as_hidden }}</td>
+				    <td>{{ form.modification_time_lo }}</td>
+				    <td><label for="{{ form.modification_time_lo.auto_id }}">up to</label></td>
+				    <td>{{ form.modification_time_hi }}</td>
 				  </tr>
 
 				  <tr>

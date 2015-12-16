@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
+
 function setMessage(message){
     $("#message").text(message);
 }
@@ -46,3 +47,30 @@ function doSearch(event) {
         }, this)
       });
 }
+
+// datetime picker
+$( "#id_form-0-creation_time_lo" ).datetimepicker({'controlType': 'select',
+	  'oneLine': true,
+	  'showTimezone': false,
+	  'timezone': '-0000'
+	 });
+
+
+$( "#id_form-0-creation_time_hi" ).datetimepicker({'controlType': 'select',
+	  'oneLine': true,
+	  'showTimezone': false,
+	  'timezone': '-0000'
+	 });
+
+$( "#id_form-0-modification_time_lo" ).datetimepicker({'controlType': 'select',
+	  'oneLine': true,
+	  'showTimezone': false,
+	  'timezone': '-0000'
+	 });
+
+
+$( "#id_form-0-modification_time_hi" ).datetimepicker({'controlType': 'select',
+	  'oneLine': true,
+	  'showTimezone': false,
+	  'timezone': '-0000'
+	 });

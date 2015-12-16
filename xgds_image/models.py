@@ -55,6 +55,7 @@ class AbstractImageSet(models.Model, NoteMixin):
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
     asset_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
+    modification_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     
     class Meta:
         abstract = True

@@ -65,8 +65,7 @@ $('#delete_images').click( function() {
 /* Get the rows which are currently selected */
 function fnGetSelected( table ) {
     return table.$('tr.selected');
-}
-
+}		  
 
 /*
  * Event binders
