@@ -55,6 +55,16 @@ class AbstractImageSet(models.Model, NoteMixin):
     asset_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
     modification_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
     
+    @property
+    def view_url(self):
+        return reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
+    
+    @property
+    def thumbnail_url(self):
+        thumbImage = self.getThumbnail()
+        if thumbImage:
+            return settings.DATA_URL + thumbImage.file.name
+        
     class Meta:
         abstract = True
     
@@ -76,7 +86,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['model_type'] = t._meta.object_name
         
         result['description'] = self.description
-        result['view_url'] = reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
+        result['view_url'] = self.view_url
         result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name
         result['author_name'] = self.author.username
@@ -86,7 +96,7 @@ class AbstractImageSet(models.Model, NoteMixin):
             result['raw_image_url'] = settings.DATA_URL + rawImage.file.name
         thumbImage = self.getThumbnail()
         if thumbImage:
-            result['thumbnail_image_url'] = settings.DATA_URL + thumbImage.file.name
+            result['thumbnail_image_url'] = self.thumbnail_url
         if self.asset_position:
             result['lat'] = self.asset_position.latitude
             result['lon'] = self.asset_position.longitude

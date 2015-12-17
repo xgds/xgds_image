@@ -24,14 +24,25 @@ function stringContains(string, substring) {
 /**
  *  Selectable row in image table  
  */
-/* Add a click handler for setting background color on click*/
-$('#image_table tbody').on( 'click', 'tr', function () {
-    $(this).toggleClass('selected');
-} );
+function handleImageSelection(theRow){
+    console.log('selected image ' + theRow.id);
+    var template = $('#image_view');
+    var newindex = parseInt(theRow.id) - 1;
+    if (template.length == 0){
+	// no view, construct it
+	constructImageView(imageSetsArray[newindex]);
+    } else {
+	updateImageView(template, newindex, null, false, false);
+    }
+}
+
+function setupTableSelection() {
+    connectSelectionCallback($("#image_table"), handleImageSelection, true);
+}
 
 /* Add a click handler for the delete row */
 $('#delete_images').click( function() {
-    var selectedRows = fnGetSelected( theDataTable );
+    var selectedRows = getSelectedRows( theDataTable );
     // get a list containing just the id's of selected images
     var selectedImageIdsList = jQuery.map(selectedRows, function(element) { return jQuery(element).attr('id'); });
     var selectedImageIdsJson = {"id": selectedImageIdsList};
@@ -57,18 +68,14 @@ $('#delete_images').click( function() {
 	app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
 } );
 
-/* Get the rows which are currently selected */
-function fnGetSelected( table ) {
-    return table.$('tr.selected');
-}		  
 
 /*
  * Event binders
  */
 /**
- * Toggles on additional information of the image when 'more info' button is clicked.
+ * Hook up edit info and add note buttons
  */
-function toggleEditInfo(template) {
+function activateButtons(template) {
 	template.find("#edit_info_button").click(function(event) {
 	    event.preventDefault();
 	    template.find("#image_overview").hide();
@@ -100,7 +107,7 @@ function onUpdateImageInfo(template) {
 			success: function(data)
 			{
 			    setSaveStatusMessage($('#message'), 'Saved','');
-			    updateImageView(template, undefined, data[0], true);
+			    updateImageView(template, undefined, data[0], true, true);
 			    template.find("#more_info_view").hide();
 			    template.find("#image_overview").show();
 			},
@@ -114,7 +121,7 @@ function onUpdateImageInfo(template) {
 
 
 /* 
- * Image next and previous button stuff
+ * Image next and previous button support
  */
 /**
  * Helper that finds index in imageSetsArray
@@ -137,13 +144,21 @@ function getCurrentImageAndIndex(template) {
 /**
  * Update the image view with newly selected image.
  */
-function updateImageView(template, index, imageJson, keepingImage) {
+function updateImageView(template, index, imageJson, keepingImage, keepingNotes) {
     if (imageJson == null){
 	if (index != null) {
-	    var imageJson = imageSetsArray[index];
+	    imageJson = imageSetsArray[index];
 	} else {
 	    return;
 	}
+    }
+    
+    if (!keepingNotes){
+	var tbl = template.find('table.notes_list')[0];
+	var dt = $(tbl).dataTable()
+	dt.fnClearTable();
+	initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
+	getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', dt);
     }
     
     if (!keepingImage){
@@ -172,6 +187,8 @@ function updateImageView(template, index, imageJson, keepingImage) {
 	template.find(".image-name strong").text(imageJson['name']);
     }
 
+    // update values
+    template.find('a#new-window-target').attr('href',imageJson['imageUrl']);
     template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
     template.find('#overview_description').text(imageJson['description']);
     template.find('textarea[name="description"]').attr('value', imageJson['description']);
@@ -180,10 +197,9 @@ function updateImageView(template, index, imageJson, keepingImage) {
     template.find('input[name="longitude"]').attr('value', imageJson['lon']);
     template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
     
-    fnGetSelected(theDataTable).removeClass('selected');
-    var next = index + 1;
-    var identifier = 'tr#' + next;
-    theDataTable.find(identifier).addClass('selected');
+    
+    // update table selection
+    ensureSelectedRow(theDataTable, index + 1);
 }
 
 function hideImageNextPrev() {
@@ -200,7 +216,8 @@ function onImageNextOrPrev(template) {
 		    if (index == imageSetsArray.length){
 			index = 0;
 		    }
-		    updateImageView(template, index, null, false);
+		    clearTableSelection(theDataTable);
+		    updateImageView(template, index, null, false, false);
 		}
 	});
 	template.find(".prev-button").click(function(event) {
@@ -210,7 +227,8 @@ function onImageNextOrPrev(template) {
 		    if (index < 0){
 			index = imageSetsArray.length - 1;
 		    }
-		    updateImageView(template, index, null, false);
+		    clearTableSelection(theDataTable);
+		    updateImageView(template, index, null, false, false);
 		}
 	});
 }
@@ -237,7 +255,7 @@ function constructImageView(json, viewPage) {
 	
 	// callbacks
 	onUpdateImageInfo(imageViewTemplate);
-	toggleEditInfo(imageViewTemplate);
+	activateButtons(imageViewTemplate);
 	
 	if (!viewPage){
 	    onDelete(imageViewTemplate);
@@ -269,17 +287,21 @@ function constructImageView(json, viewPage) {
 	
 	//add the notes if it does not exist
 	var notes_content_div = imageViewTemplate.find("#notes_content");
+	var notes_table = undefined;
 	if ($(notes_content_div).is(':empty')){
 	    // the first time we want to fill it in
-	    var notes_list_div = $.find("#notes_list");
+	    notes_table = $.find("#notes_list");
 	    var notes_input_div = $.find("#notes_input");
 	    $(notes_content_div).append($(notes_input_div));
-	    $(notes_content_div).append($(notes_list_div));
-	    $(notes_list_div).show();
+	    $(notes_content_div).append($(notes_table));
+	    $(notes_table).removeAttr('hidden');
+	    $(notes_table).show();
+	} else {
+	    notes_table = imageViewTemplate.find("#notes_list");
 	}
 	
-	initializeNotesReference(json['app_label'], json['model_type'], json['id'], json['creation_time']);
-	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', 'notes_list');
+	initializeNotesReference(imageViewTemplate, json['app_label'], json['model_type'], json['id'], json['creation_time']);
+	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', notes_table);
 }
 
 function setSaveStatusMessage(handler, status, msg){

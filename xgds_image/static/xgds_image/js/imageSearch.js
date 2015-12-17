@@ -49,28 +49,12 @@ function doSearch(event) {
 }
 
 // datetime picker
-$( "#id_form-0-creation_time_lo" ).datetimepicker({'controlType': 'select',
-	  'oneLine': true,
-	  'showTimezone': false,
-	  'timezone': '-0000'
-	 });
-
-
-$( "#id_form-0-creation_time_hi" ).datetimepicker({'controlType': 'select',
-	  'oneLine': true,
-	  'showTimezone': false,
-	  'timezone': '-0000'
-	 });
-
-$( "#id_form-0-modification_time_lo" ).datetimepicker({'controlType': 'select',
-	  'oneLine': true,
-	  'showTimezone': false,
-	  'timezone': '-0000'
-	 });
-
-
-$( "#id_form-0-modification_time_hi" ).datetimepicker({'controlType': 'select',
-	  'oneLine': true,
-	  'showTimezone': false,
-	  'timezone': '-0000'
-	 });
+var dateTimeOptions = {'controlType': 'select',
+	  	       'oneLine': true,
+	  	       'showTimezone': false,
+	  	       'timezone': '-0000'
+	 	       };
+$( "#id_form-0-creation_time_lo" ).datetimepicker(dateTimeOptions);
+$( "#id_form-0-creation_time_hi" ).datetimepicker(dateTimeOptions);
+$( "#id_form-0-modification_time_lo" ).datetimepicker(dateTimeOptions);
+$( "#id_form-0-modification_time_hi" ).datetimepicker(dateTimeOptions);
