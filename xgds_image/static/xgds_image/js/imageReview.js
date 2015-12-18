@@ -154,7 +154,7 @@ function updateImageView(template, index, imageJson, keepingImage, keepingNotes)
     }
     
     if (!keepingNotes){
-	var tbl = template.find('table.notes_list')[0];
+	var tbl = template.find('table#notes_list');
 	var dt = $(tbl).dataTable()
 	dt.fnClearTable();
 	initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
@@ -188,7 +188,7 @@ function updateImageView(template, index, imageJson, keepingImage, keepingNotes)
     }
 
     // update values
-    template.find('a#new-window-target').attr('href',imageJson['imageUrl']);
+    template.find('a#new-window-target').attr('href',imageJson['view_url']);
     template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
     template.find('#overview_description').text(imageJson['description']);
     template.find('textarea[name="description"]').attr('value', imageJson['description']);
@@ -290,18 +290,18 @@ function constructImageView(json, viewPage) {
 	var notes_table = undefined;
 	if ($(notes_content_div).is(':empty')){
 	    // the first time we want to fill it in
-	    notes_table = $.find("#notes_list");
+	    notes_table = $.find("table#notes_list");
 	    var notes_input_div = $.find("#notes_input");
 	    $(notes_content_div).append($(notes_input_div));
 	    $(notes_content_div).append($(notes_table));
 	    $(notes_table).removeAttr('hidden');
 	    $(notes_table).show();
 	} else {
-	    notes_table = imageViewTemplate.find("#notes_list");
+	    notes_table = imageViewTemplate.find("table#notes_list");
 	}
 	
 	initializeNotesReference(imageViewTemplate, json['app_label'], json['model_type'], json['id'], json['creation_time']);
-	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', notes_table);
+	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', $(notes_table));
 }
 
 function setSaveStatusMessage(handler, status, msg){
