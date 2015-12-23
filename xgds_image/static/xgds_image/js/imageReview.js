@@ -15,6 +15,7 @@
 //__END_LICENSE__
 
 var $container = $('#container'); 
+var inputNum = 0;
 
 function stringContains(string, substring) {
 	// checks that string contains substring
@@ -25,7 +26,6 @@ function stringContains(string, substring) {
  *  Selectable row in image table  
  */
 function handleImageSelection(theRow){
-    console.log('selected image ' + theRow.id);
     var template = $('#image_view');
     var newindex = parseInt(theRow.id) - 1;
     if (template.length == 0){
@@ -155,8 +155,10 @@ function updateImageView(template, index, imageJson, keepingImage, keepingNotes)
     
     if (!keepingNotes){
 	var tbl = template.find('table#notes_list');
-	var dt = $(tbl).dataTable()
-	dt.fnClearTable();
+	if ( $.fn.DataTable.isDataTable( tbl) ) {
+	    var dt = $(tbl).dataTable()
+	    dt.fnClearTable();
+	}
 	initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
 	getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', dt);
     }
@@ -292,10 +294,21 @@ function constructImageView(json, viewPage) {
 	    // the first time we want to fill it in
 	    notes_table = $.find("table#notes_list");
 	    var notes_input_div = $.find("#notes_input");
-	    $(notes_content_div).append($(notes_input_div));
-	    $(notes_content_div).append($(notes_table));
-	    $(notes_table).removeAttr('hidden');
-	    $(notes_table).show();
+	    var new_input_div = $(notes_input_div).clone().hide();
+	    $(notes_content_div).append(new_input_div);
+	    
+	    var new_table_div = $(notes_table);
+	    $(notes_content_div).append(new_table_div);
+	    $(new_table_div).removeAttr('hidden');
+	    $(new_table_div).show();
+	    
+	    initializeTags();
+	    var taginput = $(new_input_div).find('.taginput');
+	    initializeInput($(taginput)[0]);
+	    hookNoteSubmit();
+	    
+	    //TODO this is a hack, for some reason the tags input is there twice but only the second one is valid
+	    notes_content_div.find(".bootstrap-tagsinput")[0].remove();
 	} else {
 	    notes_table = imageViewTemplate.find("table#notes_list");
 	}
