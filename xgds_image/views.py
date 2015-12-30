@@ -171,15 +171,20 @@ def getTrack(resource):
     return track
 
 
+def getExifValue(exif, key):
+    try: 
+        return exif[key]
+    except: 
+        return None
+
+
 def getCameraObject(exif):
     '''
     Given image exif data, either creates a new camera object or returns an
     existing one.
     '''
-    cameraName = exif['Model']
-    serial = None
-    if exif['BodySerialNumber']:
-        serial = str(exif['BodySerialNumber'])
+    cameraName = getExifValue(exif, 'Model')
+    serial = getExifValue(exif, 'BodySerialNumber')
     cameras = CAMERA_MODEL.get().objects.filter(name=cameraName, serial=serial)
     if cameras.exists():
         return cameras[0]
@@ -229,8 +234,17 @@ def saveImage(request):
             form_tz = form.getTimezone()
             resource = form.getResource()
             exifData = getExifData(newImage)
-            exifTime = dateparser(str(exifData['DateTimeOriginal']))
-            if form_tz != pytz.utc:
+            # get exif time
+            exifTime  = None
+            
+            exifTime = getExifValue(exifData, 'DateTimeOriginal')
+            if not exifTime: 
+                exifTime = getExifValue(exifData, 'DateTime')
+
+            if exifTime:
+                exifTime = dateparser(str(exifTime))
+
+            if (form_tz != pytz.utc) and exifTime:
                 localized_time = form_tz.localize(exifTime)
                 exifTime = TimeUtil.timeZoneToUtc(localized_time)
             newImage.creation_time = exifTime
