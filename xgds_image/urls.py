@@ -18,11 +18,11 @@ from django.conf.urls import *
 from django.views.generic.base import TemplateView
 from xgds_image import views
 
-urlpatterns = patterns('',
-                       (r'^view/(?P<imageSetID>[\d]+)$', views.getImageViewPage, {}, 'xgds_image_view_image'),
-                       (r'^import/', views.getImageImportPage, {}, 'xgds_image_import'),
-                       (r'^search/', views.getImageSearchPage, {}, 'xgds_image_search'),
-                       (r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
-                       (r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
-                       (r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images')
-                       )
+urlpatterns = [
+    url(r'^view/(?P<imageSetID>[\d]+)$', views.getImageViewPage, {}, 'xgds_image_view_image'),
+    url(r'^import/', views.getImageImportPage, {}, 'xgds_image_import'),
+    url(r'^search/', views.getImageSearchPage, {}, 'xgds_image_search'),
+    url(r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
+    url(r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
+    url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images')
+    ]
