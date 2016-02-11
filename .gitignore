@@ -10,3 +10,4 @@
 /xgds_image/build
 TEST
 /docs/_build
+migrations/
