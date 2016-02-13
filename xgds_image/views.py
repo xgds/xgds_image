@@ -41,7 +41,7 @@ from geocamUtil import TimeUtil
 from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
-from geocamTrack.views import getTrackForResource, createTrackForResource, getClosestPosition
+from geocamTrack.views import getClosestPosition
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
@@ -114,11 +114,9 @@ def updateImageInfo(request):
             imageSet = form.save(commit = False)
             if (latitude or longitude or altitude):
                 if not imageSet.asset_position:            
-                    track = getTrack(imageSet.camera)
-                    imageSet.asset_position = POSITION_MODEL.get().objects.create(track = track, 
-                                                                            timestamp= imageSet.creation_time,
-                                                                            latitude = latitude, 
-                                                                            longitude= longitude)
+                    imageSet.asset_position = POSITION_MODEL.get().objects.create(timestamp= imageSet.creation_time,
+                                                                                  latitude = latitude, 
+                                                                                  longitude= longitude)
                 else:
                     imageSet.asset_position.latitude =  latitude
                     imageSet.asset_position.longitude =  longitude
@@ -162,15 +160,6 @@ def createCameraResource(camera):
         return GEOCAM_TRACK_RESOURCE_MODEL.get().objects.create(name=name)
 
 
-def getTrack(resource):
-    tracks = getTrackForResource(resource)
-    if not tracks:
-        track = createTrackForResource(resource, resource.name)
-    else:
-        track = tracks[0]
-    return track
-
-
 def getExifValue(exif, key):
     try: 
         return exif[key]
@@ -204,12 +193,10 @@ def getPositionObject(exif, camera, resource):
         
     try: # if there is GPS
         resource = createCameraResource(camera)
-        track = getTrack(resource)
         gpsLatLon = getLatLon(exif)
         gpsTimeStamp = getGPSDatetime(exif) #TODO: use the DatetimeOriginal and check that it is in uTC
         if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
-            position = POSITION_MODEL.get().objects.create(track = track, 
-                                                           timestamp= gpsTimeStamp,
+            position = POSITION_MODEL.get().objects.create(timestamp= gpsTimeStamp,
                                                            latitude = gpsLatLon[0], 
                                                            longitude= gpsLatLon[1])
             return position
