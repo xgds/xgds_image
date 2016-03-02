@@ -13,11 +13,12 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
-import datetime
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
@@ -49,11 +50,11 @@ class AbstractImageSet(models.Model, NoteMixin):
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
     camera = models.ForeignKey(settings.XGDS_IMAGE_CAMERA_MODEL)
     author = models.ForeignKey(User)
-    creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
     asset_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
-    modification_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
+    modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     
     @property
     def view_url(self):
@@ -136,7 +137,7 @@ class AbstractSingleImage(models.Model):
     An abstract image which may not necessarily have a location on a map
     """
     file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
-    creation_time = models.DateTimeField(blank=True, default=datetime.datetime.utcnow(), editable=False)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     raw = models.BooleanField(default=True)
     imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, null=True, related_name="images")
     thumbnail = models.BooleanField(default=False)
