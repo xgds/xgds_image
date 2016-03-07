@@ -32,7 +32,6 @@ def createThumbnailFile(src):
         pass  # image already exists.
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + dstFileName
 
-
 """
 Exif utility Functions
 referenced: https://gist.github.com/erans/983821
@@ -99,8 +98,9 @@ def getGPSDatetime(exifData):
         except:
             pass
         
-        gpsDateTime = GPSDate + " " + GPSTime
-        gpsDateTime = datetime.datetime.strptime(gpsDateTime,"%Y-%m-%d %H:%M:%S")
+        if GPSDate and GPSTime:
+            gpsDateTime = GPSDate + " " + GPSTime
+            gpsDateTime = datetime.datetime.strptime(gpsDateTime,"%Y-%m-%d %H:%M:%S")
     return gpsDateTime
 
 
@@ -127,3 +127,27 @@ def getLatLon(exifData):
                 lon = 0 - lon
 
     return lat, lon
+
+def getAltitude(exifData):
+    """Returns the heading, if available, from the provided exif_data (obtained through get_exif_data above)"""
+    altitude = None
+    if "GPSInfo" in exifData:        
+        gpsInfo = exifData["GPSInfo"]
+        altitude_tuple = getIfExists(gpsInfo, "GPSAltitude")
+        if altitude_tuple:
+            # no clue if this is right either
+            return altitude_tuple[0]
+    return altitude
+
+def getHeading(exifData):
+    """Returns the heading, if available, from the provided exif_data (obtained through get_exif_data above)"""
+    heading = None
+
+    if "GPSInfo" in exifData:        
+        gpsInfo = exifData["GPSInfo"]
+        heading_tuple = getIfExists(gpsInfo, "GPSImgDirection")
+        # no clue if this is right, totally guessing ...
+        if len(heading_tuple) == 2:
+            heading = int(heading_tuple[0])/int(heading_tuple[1])
+
+    return heading

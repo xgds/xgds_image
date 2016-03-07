@@ -61,7 +61,7 @@ var ImageSet = {
         constructMapElement:function(imageJson){
             var coords = transform([imageJson.lon, imageJson.lat]);
             var feature = new ol.Feature({
-                name: imageJson.creation_time,
+                name: imageJson.acquisition_time,
                 uuid: imageJson.id,
                 geometry: new ol.geom.Point(coords)
             });
@@ -83,7 +83,7 @@ var ImageSet = {
             var data = [imageJson.view_url,
                         imageJson.thumbnail_image_url,
                         "Note:", imageJson.description,
-                        "Time:", imageJson.creation_time,
+                        "Time:", imageJson.acquisition_time,
                         "Author:", imageJson.author_name,
                         "Camera:", imageJson.camera_name,
                         "Altitude:", imageJson.altitude + " m",

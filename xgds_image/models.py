@@ -53,8 +53,10 @@ class AbstractImageSet(models.Model, NoteMixin):
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
-    asset_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
+    track_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
+    exif_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="image_exif_set" )
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
+    acquisition_time = models.DateTimeField(editable=False)
     
     @property
     def view_url(self):
@@ -65,7 +67,16 @@ class AbstractImageSet(models.Model, NoteMixin):
         thumbImage = self.getThumbnail()
         if thumbImage:
             return settings.DATA_URL + thumbImage.file.name
-        
+    
+    def getAuthorName(self):
+        authorname = self.author.username
+        if self.author.first_name:
+            authorname = self.author.first_name
+            if self.author.last_name:
+                authorname = authorname + " " + self.author.last_name
+        return authorname
+    
+    
     class Meta:
         abstract = True
     
@@ -78,7 +89,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         Return a reduced dictionary that will be turned to JSON for rendering in a map
         """
         result = modelToDict(self)
-        result['id'] = self.pk
+        result['id'] = int(self.pk)
         result['app_label'] = self._meta.app_label
         t = type(self)
         if t._deferred:
@@ -90,24 +101,35 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['view_url'] = self.view_url
         result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name
-        result['author_name'] = self.author.username
+        result['author_name'] = self.getAuthorName()
         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+        result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         rawImage = self.getRawImage()
         if rawImage:
             result['raw_image_url'] = settings.DATA_URL + rawImage.file.name
         thumbImage = self.getThumbnail()
         if thumbImage:
             result['thumbnail_image_url'] = self.thumbnail_url
-        if self.asset_position:
-            result['lat'] = self.asset_position.latitude
-            result['lon'] = self.asset_position.longitude
-            result['altitude'] = self.asset_position.altitude
-            result['position_id'] = self.asset_position.pk
-        else:
+        if self.exif_position:
+            result['lat'] = self.exif_position.latitude
+            result['lon'] = self.exif_position.longitude
+            result['altitude'] = self.exif_position.altitude
+            result['position_id'] = self.exif_position.pk
+            if hasattr(self.exif_position, 'heading'):
+                result['heading'] = self.exif_position.heading
+        elif self.track_position:
+            result['lat'] = self.track_position.latitude
+            result['lon'] = self.track_position.longitude
+            result['altitude'] = self.track_position.altitude
+            result['position_id'] = self.track_position.pk
+            if hasattr(self.track_position, 'heading'):
+                result['heading'] = self.track_position.heading
+        else: 
             result['lat'] = ""
             result['lon'] = ""
             result['altitude'] = ""
             result['position_id'] = ""
+            result['heading'] = ""
         return result
 
     def getRawImage(self):

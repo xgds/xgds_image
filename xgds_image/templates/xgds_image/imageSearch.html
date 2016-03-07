@@ -54,6 +54,14 @@ $("#item_image_search").submit(function(event) {
 				  </tr>
 
 				  <tr>
+				    <td style="text-align:right;"><label for="{{ form.acquisition_time_lo.auto_id }}">Acquisition Time</label></td>
+				    <td>{{ form.acquisition_time_operator.as_hidden }}</td>
+				    <td>{{ form.acquisition_time_lo }}</td>
+				    <td><label for="{{ form.acquisition_time_lo.auto_id }}">up to</label></td>
+				    <td>{{ form.acquisition_time_hi }}</td>
+				  </tr>
+				  
+				  <tr>
 				    <td style="text-align:right;"><label for="{{ form.creation_time_lo.auto_id }}">Creation Time</label></td>
 				    <td>{{ form.creation_time_operator.as_hidden }}</td>
 				    <td>{{ form.creation_time_lo }}</td>
@@ -61,14 +69,6 @@ $("#item_image_search").submit(function(event) {
 				    <td>{{ form.creation_time_hi }}</td>
 				  </tr>
 				  
-  				  <tr>
-				    <td style="text-align:right;"><label for="{{ form.modification_time_lo.auto_id }}">Modification Time</label></td>
-				    <td>{{ form.modification_time_operator.as_hidden }}</td>
-				    <td>{{ form.modification_time_lo }}</td>
-				    <td><label for="{{ form.modification_time_lo.auto_id }}">up to</label></td>
-				    <td>{{ form.modification_time_hi }}</td>
-				  </tr>
-
 				  <tr>
 				    <td style="text-align:right;"><label for="{{ form.description.auto_id }}">{{ form.description.label }}</label></td>
 				    <td>{{ form.description_operator.as_hidden }}</td>

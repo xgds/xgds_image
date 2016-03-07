@@ -13,13 +13,13 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
-
 import pytz
 import json
 import traceback
 from datetime import datetime
 from dateutil.parser import parse as dateparser
 
+from django.utils import timezone
 from django.conf import settings
 from django.forms.formsets import formset_factory
 from django.contrib.contenttypes.models import ContentType
@@ -33,7 +33,7 @@ from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
-from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude
 
 from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
@@ -181,31 +181,37 @@ def getCameraObject(exif):
         return CAMERA_MODEL.get().objects.create(name = cameraName, serial=serial)
     
     
-def getPositionObject(exif, camera, resource):
+def buildExifPosition(exif, camera, resource, exifTime):
     '''
     Given the image's exif data and a camera object, 
     creates a new position object that contains the lat and lon information.
     '''
-    if resource:
-        position = getClosestPosition(resource)
-        if position:
-            return position
+    gpsLatLon = getLatLon(exif)
+    gpsTimeStamp = getGPSDatetime(exif) #TODO: use the DatetimeOriginal and check that it is in uTC
+    if gpsTimeStamp:
+        gpsTimeStamp.replace(tzinfo=exif.tzinfo)
+        gpsTimeStamp = TimeUtil.timeZoneToUtc(gpsTimeStamp)
+    else:
+        gpsTimeStamp = exifTime
+    
+    if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
+        #TODO this requires that the position model has heading and altitude ...
+        position = POSITION_MODEL.get().objects.create(serverTimestamp=timezone.now(),
+                                                       timestamp= gpsTimeStamp,
+                                                       latitude = gpsLatLon[0], 
+                                                       longitude= gpsLatLon[1],
+                                                       heading= getHeading(exif),
+                                                       altitude=getAltitude(exif))
+        return position
         
-    try: # if there is GPS
-        resource = createCameraResource(camera)
-        gpsLatLon = getLatLon(exif)
-        gpsTimeStamp = getGPSDatetime(exif) #TODO: use the DatetimeOriginal and check that it is in uTC
-        if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
-            position = POSITION_MODEL.get().objects.create(timestamp= gpsTimeStamp,
-                                                           latitude = gpsLatLon[0], 
-                                                           longitude= gpsLatLon[1])
-            return position
-        
-    except Exception:
-        print 'no gps data for image not really an error'
-        traceback.print_exc()
-        return None
+    return None
 
+
+def getTrackPosition(timestamp, resource):
+    '''
+    Look up and return the closest tracked position if there is one.
+    '''
+    return getClosestPosition(timestamp=timestamp, resource=resource)
 
 def saveImage(request):
     """
@@ -229,23 +235,25 @@ def saveImage(request):
                 exifTime = getExifValue(exifData, 'DateTime')
 
             if exifTime:
-                exifTime = dateparser(str(exifTime))
+                exifTime = datetime.strptime(str(exifTime), '%Y:%m:%d %H:%M:%S')
 
             if (form_tz != pytz.utc) and exifTime:
                 localized_time = form_tz.localize(exifTime)
                 exifTime = TimeUtil.timeZoneToUtc(localized_time)
-            newImage.creation_time = exifTime
+            else:
+                exifTime = exifTime.replace(tzinfo=pytz.utc)
             
             # create a new image set instance           
             author = request.user  # set user as image author
             newImageSet = IMAGE_SET_MODEL.get()()
+            newImageSet.acquisition_time = exifTime
             fileName = uploadedFile.name
             newImageSet.name = fileName
             newImageSet.camera = getCameraObject(exifData)
             
-            position = getPositionObject(exifData, newImageSet.camera, resource)
-            if position:
-                newImageSet.asset_position = position
+            newImageSet.track_position = getTrackPosition(exifTime, resource)
+            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, resource, exifTime)
+            
             newImageSet.author = author
             newImageSet.save()
             
