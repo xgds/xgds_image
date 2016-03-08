@@ -189,22 +189,22 @@ def getCameraObject(exif):
         return CAMERA_MODEL.get().objects.create(name = cameraName, serial=serial)
     
     
-def buildExifPosition(exif, camera, resource, exifTime):
+def buildExifPosition(exif, camera, resource, exifTime, form_tz):
     '''
     Given the image's exif data and a camera object, 
     creates a new position object that contains the lat and lon information.
     '''
     gpsLatLon = getLatLon(exif)
-    gpsTimeStamp = getGPSDatetime(exif) #TODO: use the DatetimeOriginal and check that it is in uTC
+    gpsTimeStamp = getGPSDatetime(exif)
     if gpsTimeStamp:
-        gpsTimeStamp.replace(tzinfo=exif.tzinfo)
+        gpsTimeStamp = form_tz.localize(gpsTimeStamp)
         gpsTimeStamp = TimeUtil.timeZoneToUtc(gpsTimeStamp)
     else:
         gpsTimeStamp = exifTime
     
     if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
         #TODO this requires that the position model has heading and altitude ...
-        position = POSITION_MODEL.get().objects.create(serverTimestamp=timezone.now(),
+        position = POSITION_MODEL.get().objects.create(serverTimestamp=gpsTimeStamp,
                                                        timestamp= gpsTimeStamp,
                                                        latitude = gpsLatLon[0], 
                                                        longitude= gpsLatLon[1],
@@ -261,7 +261,7 @@ def saveImage(request):
             newImageSet.camera = getCameraObject(exifData)
             
             newImageSet.track_position = getTrackPosition(exifTime, resource)
-            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, resource, exifTime)
+            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, resource, exifTime, form_tz)
             
             newImageSet.author = author
             newImageSet.save()

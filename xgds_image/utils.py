@@ -78,30 +78,27 @@ def convertToDegrees(value):
 
 
 def getGPSDatetime(exifData):
-    gpsDateTime = None
+    result = None
     if "GPSInfo" in exifData:
         gpsInfo = exifData['GPSInfo']
         GPSDate = ""
         GPSTime = ""
+        
         try: 
             GPSDate = gpsInfo['GPSDateStamp']
-            GPSDate = datetime.datetime.strptime(GPSDate,"%Y:%m:%d")
-            GPSDate = datetime.datetime.strftime(GPSDate, "%Y-%m-%d")
+            theday = datetime.datetime.strptime(GPSDate,"%Y:%m:%d")
         except:
             pass
         try:
             GPSTime = gpsInfo['GPSTimeStamp']
-            GPSTimeH = GPSTime[0][0]
-            GPSTimeM = GPSTime[1][0]
-            GPSTimeS = GPSTime[2][0] / 1000
-            GPSTime = str(GPSTimeH) + ':' + str(GPSTimeM) + ':' + str(GPSTimeS)
+            h = GPSTime[0][0]
+            m = GPSTime[1][0]
+            s = GPSTime[2][0]/GPSTime[2][1]
+            result = datetime.datetime.combine(theday, datetime.time(hour=h, minute=m, second=int(s)))
         except:
             pass
         
-        if GPSDate and GPSTime:
-            gpsDateTime = GPSDate + " " + GPSTime
-            gpsDateTime = datetime.datetime.strptime(gpsDateTime,"%Y-%m-%d %H:%M:%S")
-    return gpsDateTime
+    return result
 
 
 def getLatLon(exifData):
