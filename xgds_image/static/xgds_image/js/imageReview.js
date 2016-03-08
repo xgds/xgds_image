@@ -27,7 +27,7 @@ function stringContains(string, substring) {
  */
 function handleImageSelection(theRow){
     var template = $('#image_view');
-    var newindex = parseInt(theRow.id) - 1;
+    var newindex = $(theRow).index();
     if (template.length == 0){
 	// no view, construct it
 	constructImageView(imageSetsArray[newindex]);
@@ -176,7 +176,7 @@ function updateImageView(template, index, imageJson, keepingImage, keepingNotes)
 	    var dt = $(tbl).dataTable()
 	    dt.fnClearTable();
 	}
-	initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
+	initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
 	getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', dt);
     }
     
