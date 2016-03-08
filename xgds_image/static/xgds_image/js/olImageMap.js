@@ -84,9 +84,10 @@ var ImageSet = {
                         imageJson.thumbnail_image_url,
                         "Note:", imageJson.description,
                         "Time:", imageJson.acquisition_time,
-                        "Author:", imageJson.author_name,
+                        "Author:", imageJson.author,
                         "Camera:", imageJson.camera_name,
                         "Altitude:", imageJson.altitude + " m",
+                        "Heading", imageJson.heading,
                         "Lat:", imageJson.lat,
                         "Lon:", imageJson.lon
                         ];

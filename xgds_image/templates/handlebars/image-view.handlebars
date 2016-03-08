@@ -17,8 +17,8 @@
 			<button id="edit_info_button" class="small float_button">Edit Info</button>
 			<table>
 				<tr>
-					<td class="small">{{ author_name }}</td>
-					<td class="small">{{ creation_time }}</td>
+					<td class="small">{{ author }}</td>
+					<td class="small">{{ acquisition_time }}</td>
 				</tr>
 				<tr>
 					<td colspan=2 id="overview_description">{{ description }}</td>
@@ -28,6 +28,7 @@
 		<div id="more_info_view" hidden>
 			<form action="#" id="more-info-form" method="post">
 				<input name="id" value="{{id}}" hidden id="id_id"/>
+				<input name="changed_position" value=0 hidden id="id_changed_position"/>
 				<table>
 					<tr>
 						<th><label for="id_name">Name:</label></th>
@@ -48,6 +49,10 @@
 					<tr>
 						<th><label for="id_altitude">Altitude:</label></th>
 						<td><input id="id_altitude" name="altitude" step="any" type="number" value="{{altitude}}" />
+					</tr>
+					<tr>
+						<th><label for="id_heading">Heading:</label></th>
+						<td><input id="id_heading" name="heading" step="any" type="number" value="{{heading}}" />
 					</tr>
 				</table>
 				<button id="cancel_edit" value="Cancel" class="small" >Cancel</button>		

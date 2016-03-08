@@ -55,8 +55,10 @@ class AbstractImageSet(models.Model, NoteMixin):
     description = models.CharField(max_length=128, blank=True)
     track_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
     exif_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="image_exif_set" )
+    user_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="image_user_set" )
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     acquisition_time = models.DateTimeField(editable=False)
+    acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE)
     
     @property
     def view_url(self):
@@ -83,6 +85,52 @@ class AbstractImageSet(models.Model, NoteMixin):
     def __unicode__(self):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
                 % (self.pk, self.name, self.shortName))
+    
+    def getPositionDict(self):
+        ''' override if you want to change the logic for how the positions are prioritized in JSON.
+        Right now exif_position is from the camera, track_position is from the track, and user_position stores any hand edits.
+        track provides lat lon and altitude, exif provides heading, and user trumps all.
+        '''
+        result = {}
+        result['altitude'] = ""
+        result['heading'] = ""
+
+        if self.user_position:
+            result['lat'] = self.user_position.latitude
+            result['lon'] = self.user_position.longitude
+            if hasattr(self.user_position, 'altitude'):
+                result['altitude'] = self.user_position.altitude
+            result['position_id'] = self.user_position.pk
+            if hasattr(self.user_position, 'heading'):
+                result['heading'] = self.user_position.heading
+            return result
+        
+        result['position_id'] = ""
+        if self.track_position:
+            result['lat'] = self.track_position.latitude
+            result['lon'] = self.track_position.longitude
+            if self.track_position.altitude:
+                result['altitude'] = self.track_position.altitude
+            if self.exif_position:
+                if hasattr(self.exif_position, 'heading'):
+                    result['heading'] = self.exif_position.heading
+                elif hasattr(self.track_position, 'heading'):
+                    result['heading'] = self.track_position.heading
+                if result['altitude'] == '' and hasattr(self.exif_position, 'altitude'):
+                    result['altitude'] = self.track_position.altitude
+            return result
+        elif self.exif_position:
+            result['lat'] = self.exif_position.latitude
+            result['lon'] = self.exif_position.longitude
+            if hasattr(self.exif_position, 'altitude'):
+                result['altitude'] = self.exif_position.altitude
+            if hasattr(self.exif_position, 'heading'):
+                result['heading'] = self.exif_position.heading
+        else: 
+            result['lat'] = ""
+            result['lon'] = ""
+            
+        return result
         
     def toMapDict(self):
         """
@@ -101,35 +149,18 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['view_url'] = self.view_url
         result['type'] = 'ImageSet'
         result['camera_name'] = self.camera.name
-        result['author_name'] = self.getAuthorName()
+        result['author'] = self.getAuthorName()
         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+        result['acquisition_timezone'] = self.acquisition_timezone
         rawImage = self.getRawImage()
         if rawImage:
             result['raw_image_url'] = settings.DATA_URL + rawImage.file.name
         thumbImage = self.getThumbnail()
         if thumbImage:
             result['thumbnail_image_url'] = self.thumbnail_url
-        if self.exif_position:
-            result['lat'] = self.exif_position.latitude
-            result['lon'] = self.exif_position.longitude
-            result['altitude'] = self.exif_position.altitude
-            result['position_id'] = self.exif_position.pk
-            if hasattr(self.exif_position, 'heading'):
-                result['heading'] = self.exif_position.heading
-        elif self.track_position:
-            result['lat'] = self.track_position.latitude
-            result['lon'] = self.track_position.longitude
-            result['altitude'] = self.track_position.altitude
-            result['position_id'] = self.track_position.pk
-            if hasattr(self.track_position, 'heading'):
-                result['heading'] = self.track_position.heading
-        else: 
-            result['lat'] = ""
-            result['lon'] = ""
-            result['altitude'] = ""
-            result['position_id'] = ""
-            result['heading'] = ""
+        
+        result.update(self.getPositionDict())
         return result
 
     def getRawImage(self):

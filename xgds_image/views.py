@@ -97,7 +97,6 @@ def getImageSearchPage(request):
                                'formset': theFormSet},
                               context_instance=RequestContext(request))
 
-    
 def updateImageInfo(request):
     """
     Saves update image info entered by the user in the image view.
@@ -107,24 +106,33 @@ def updateImageInfo(request):
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imgId)
         form = ImageSetForm(request.POST, instance = imageSet)
         if form.is_valid():
-            latitude =  form.cleaned_data['latitude']
-            longitude =  form.cleaned_data['longitude']
-            altitude =  form.cleaned_data['altitude']
-#             imageSet.description = form.cleaned_data['description']
             imageSet = form.save(commit = False)
-            if (latitude or longitude or altitude):
-                if not imageSet.asset_position:            
-                    imageSet.asset_position = POSITION_MODEL.get().objects.create(timestamp= imageSet.creation_time,
-                                                                                  latitude = latitude, 
-                                                                                  longitude= longitude)
-                else:
-                    imageSet.asset_position.latitude =  latitude
-                    imageSet.asset_position.longitude =  longitude
+
+            changed_position = request.POST['changed_position']
+            if int(changed_position) == 1:
+                latitude =  form.cleaned_data['latitude']
+                longitude =  form.cleaned_data['longitude']
+                altitude =  form.cleaned_data['altitude']
+                heading =  form.cleaned_data['heading']
+                if (latitude or longitude or altitude or heading):
+                    if not imageSet.user_position:            
+                        imageSet.user_position = POSITION_MODEL.get().objects.create(timestamp= imageSet.acquisition_time,
+                                                                                     serverTimestamp = imageSet.acquisition_time,
+                                                                                     latitude = latitude, 
+                                                                                     longitude= longitude)
+                    else:
+                        imageSet.user_position.latitude =  latitude
+                        imageSet.user_position.longitude =  longitude
                 try:
-                    imageSet.asset_position.altitude = altitude
+                    imageSet.user_position.altitude = altitude
                 except:
                     pass
-                imageSet.asset_position.save()
+                try:
+                    imageSet.user_position.heading = heading
+                except:
+                    pass
+                imageSet.user_position.save()
+#             imageSet.description = form.cleaned_data['description']
             imageSet.save()
             return HttpResponse(json.dumps([imageSet.toMapDict()], cls=DatetimeJsonEncoder),
                 content_type="application/json"
@@ -247,6 +255,7 @@ def saveImage(request):
             author = request.user  # set user as image author
             newImageSet = IMAGE_SET_MODEL.get()()
             newImageSet.acquisition_time = exifTime
+            newImageSet.acquisition_timezone = form.getTimezoneName()
             fileName = uploadedFile.name
             newImageSet.name = fileName
             newImageSet.camera = getCameraObject(exifData)

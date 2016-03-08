@@ -92,6 +92,23 @@ function activateButtons(template) {
 	});
 }
 
+
+function setChangedPosition(value, template) {
+	$(template).find('#id_changed_position').attr('value', value);
+}
+
+
+/**
+ * Set the changed_position to true if the user edits any of the position fields.
+ * @param template
+ */
+function hookEditingPosition(template) {
+	$(template).find("#id_latitude").change(function() {setChangedPosition(1, template)});
+	$(template).find("#id_longitude").change(function() {setChangedPosition(1, template)});
+	$(template).find("#id_altitude").change(function() {setChangedPosition(1, template)});
+	$(template).find("#id_heading").change(function() {setChangedPosition(1, template)});
+}
+
 /**
  * Saves image info to the db when user updates it and submits.
  */
@@ -191,14 +208,15 @@ function updateImageView(template, index, imageJson, keepingImage, keepingNotes)
 
     // update values
     template.find('a#new-window-target').attr('href',imageJson['view_url']);
-    template.find('input[name="id"]:hidden').attr('value', imageJson['id']);
+    template.find('#id_id').attr('value', imageJson['id']);
     template.find('#overview_description').text(imageJson['description']);
     template.find('textarea[name="description"]').attr('value', imageJson['description']);
     template.find('input[name="name"]').attr('value', imageJson['name']);
     template.find('input[name="latitude"]').attr('value', imageJson['lat']);
     template.find('input[name="longitude"]').attr('value', imageJson['lon']);
     template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
-    
+    template.find('input[name="heading"]').attr('value', imageJson['heading']);
+    template.find('#id_changed_position').attr('value', 0);
     
     // update table selection
     ensureSelectedRow(theDataTable, index + 1);
@@ -248,6 +266,7 @@ function constructImageView(json, viewPage) {
 	json.imagePath = json['raw_image_url'];
 	json.imageUrl = json['view_url'];
 	json.STATIC_URL = STATIC_URL;
+	json.acquisition_time = getLocalTimeString(json['acquisition_time'], json['acquisition_timezone']);
 	
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
@@ -256,6 +275,7 @@ function constructImageView(json, viewPage) {
 	imageViewTemplate.find("#loading-image-msg").hide();
 	
 	// callbacks
+	hookEditingPosition(imageViewTemplate);
 	onUpdateImageInfo(imageViewTemplate);
 	activateButtons(imageViewTemplate);
 	
@@ -286,6 +306,7 @@ function constructImageView(json, viewPage) {
 		imageViewTemplate.find(".loading-image").height(height);
 		imageViewTemplate.find(".loading-image").hide();
 	});
+	setChangedPosition(0, imageViewTemplate);
 	
 	//add the notes if it does not exist
 	var notes_content_div = imageViewTemplate.find("#notes_content");
