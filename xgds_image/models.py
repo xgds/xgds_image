@@ -23,6 +23,7 @@ from django.utils import timezone
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
+from geocamUtil.UserUtil import getUserName
 from geocamTrack.models import AbstractResource
 
 from xgds_notes2.models import NoteMixin
@@ -48,17 +49,18 @@ class AbstractImageSet(models.Model, NoteMixin):
     """
     name = models.CharField(max_length=128, blank=True, null=True, help_text="human-readable image set name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
-    camera = models.ForeignKey(settings.XGDS_IMAGE_CAMERA_MODEL)
+    camera = models.ForeignKey(settings.XGDS_IMAGE_CAMERA_MODEL, null=True, blank=True)
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
     track_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
-    exif_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="image_exif_set" )
-    user_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="image_user_set" )
+    exif_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
+    user_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     acquisition_time = models.DateTimeField(editable=False)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE)
+    resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL, null=True, blank=True)
     
     @property
     def view_url(self):
@@ -70,15 +72,10 @@ class AbstractImageSet(models.Model, NoteMixin):
         if thumbImage:
             return settings.DATA_URL + thumbImage.file.name
     
-    def getAuthorName(self):
-        authorname = self.author.username
-        if self.author.first_name:
-            authorname = self.author.first_name
-            if self.author.last_name:
-                authorname = authorname + " " + self.author.last_name
-        return authorname
-    
-    
+    def finish_initialization(self, request):
+        ''' during construction, if you have extra data to fill in you can override this method'''
+        pass
+        
     class Meta:
         abstract = True
     
@@ -100,7 +97,6 @@ class AbstractImageSet(models.Model, NoteMixin):
             result['lon'] = self.user_position.longitude
             if hasattr(self.user_position, 'altitude'):
                 result['altitude'] = self.user_position.altitude
-            result['position_id'] = self.user_position.pk
             if hasattr(self.user_position, 'heading'):
                 result['heading'] = self.user_position.heading
             return result
@@ -148,8 +144,11 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['description'] = self.description
         result['view_url'] = self.view_url
         result['type'] = 'ImageSet'
-        result['camera_name'] = self.camera.name
-        result['author'] = self.getAuthorName()
+        if self.camera:
+            result['camera_name'] = self.camera.name
+        else:
+            result['camera_name'] = ''
+        result['author'] = getUserName(self.author)
         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         result['acquisition_timezone'] = self.acquisition_timezone

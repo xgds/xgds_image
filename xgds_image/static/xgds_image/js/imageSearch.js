@@ -22,7 +22,7 @@ function setMessage(message){
 function doSearch(event) {
     var theForm = this.$("#form-AbstractImageSet");
     var postData = theForm.serializeArray();
-    postData.push({'name':'modelClass', 'value':'xgds_image.ImageSet'});
+    postData.push({'name':'modelClass', 'value': imageModel});
     setMessage("Searching..."); //set message (TODO) 
     event.preventDefault();
     $.ajax({

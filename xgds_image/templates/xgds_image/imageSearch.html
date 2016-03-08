@@ -8,6 +8,7 @@
 
 {% block jsInit %}
 {{ block.super }}
+imageModel = '{{settings.XGDS_IMAGE_IMAGE_SET_MODEL}}';
 $("#item_image_search").submit(function(event) {
 	doSearch(event);
 });

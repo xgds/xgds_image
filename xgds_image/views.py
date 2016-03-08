@@ -33,7 +33,7 @@ from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_map_server.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
-from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue
 
 from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
@@ -42,6 +42,7 @@ from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.views import getClosestPosition
+
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
@@ -168,25 +169,20 @@ def createCameraResource(camera):
         return GEOCAM_TRACK_RESOURCE_MODEL.get().objects.create(name=name)
 
 
-def getExifValue(exif, key):
-    try: 
-        return exif[key]
-    except: 
-        return None
-
-
 def getCameraObject(exif):
     '''
     Given image exif data, either creates a new camera object or returns an
     existing one.
     '''
     cameraName = getExifValue(exif, 'Model')
-    serial = getExifValue(exif, 'BodySerialNumber')
-    cameras = CAMERA_MODEL.get().objects.filter(name=cameraName, serial=serial)
-    if cameras.exists():
-        return cameras[0]
-    else: 
-        return CAMERA_MODEL.get().objects.create(name = cameraName, serial=serial)
+    if cameraName:
+        serial = getExifValue(exif, 'BodySerialNumber')
+        cameras = CAMERA_MODEL.get().objects.filter(name=cameraName, serial=serial)
+        if cameras.exists():
+            return cameras[0]
+        else: 
+            return CAMERA_MODEL.get().objects.create(name = cameraName, serial=serial)
+    return None
     
     
 def buildExifPosition(exif, camera, resource, exifTime, form_tz):
@@ -235,21 +231,24 @@ def saveImage(request):
             form_tz = form.getTimezone()
             resource = form.getResource()
             exifData = getExifData(newImage)
+            
             # get exif time
             exifTime  = None
-            
-            exifTime = getExifValue(exifData, 'DateTimeOriginal')
-            if not exifTime: 
-                exifTime = getExifValue(exifData, 'DateTime')
+            exifTimeString = getExifValue(exifData, 'DateTimeOriginal')
+            if not exifTimeString: 
+                exifTimeString = getExifValue(exifData, 'DateTime')
 
-            if exifTime:
-                exifTime = datetime.strptime(str(exifTime), '%Y:%m:%d %H:%M:%S')
-
-            if (form_tz != pytz.utc) and exifTime:
-                localized_time = form_tz.localize(exifTime)
-                exifTime = TimeUtil.timeZoneToUtc(localized_time)
+            if exifTimeString:
+                exifTime = datetime.strptime(str(exifTimeString), '%Y:%m:%d %H:%M:%S')
+                if (form_tz != pytz.utc) and exifTime:
+                    localized_time = form_tz.localize(exifTime)
+                    exifTime = TimeUtil.timeZoneToUtc(localized_time)
+                else:
+                    exifTime = exifTime.replace(tzinfo=pytz.utc)
             else:
-                exifTime = exifTime.replace(tzinfo=pytz.utc)
+                #TODO fix need to get the last modified time of the file from the file and use that.
+                exifTime = datetime.now(pytz.utc)
+
             
             # create a new image set instance           
             author = request.user  # set user as image author
@@ -264,6 +263,8 @@ def saveImage(request):
             newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, resource, exifTime, form_tz)
             
             newImageSet.author = author
+            newImageSet.resource = resource
+            newImageSet.finish_initialization(request)
             newImageSet.save()
             
             # link the "image set" to "image".

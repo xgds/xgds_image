@@ -18,6 +18,11 @@ import datetime
 from PIL import Image, ExifTags
 from django.conf import settings
 
+def getExifValue(exif, key):
+    try: 
+        return exif[key]
+    except: 
+        return None
 
 def createThumbnailFile(src):
     size = 250, 250 
@@ -39,17 +44,21 @@ referenced: https://gist.github.com/erans/983821
 def getExifData(imageModelInstance):
     pilImageObj = Image.open(imageModelInstance.file)
     exifData = {}
-    for tag,value in pilImageObj._getexif().items():
-        decoded = ExifTags.TAGS.get(tag, tag)
-        if tag in ExifTags.TAGS:
-            if decoded == "GPSInfo":
-                gpsData = {}
-                for t in value:
-                    gpsDecoded = ExifTags.GPSTAGS.get(t, t)
-                    gpsData[gpsDecoded] = value[t]
-                exifData[decoded] = gpsData
-            else: 
-                exifData[ExifTags.TAGS[tag]] = value
+    try: 
+        pilExif = pilImageObj._getexif()
+        for tag,value in pilExif.items():
+            decoded = ExifTags.TAGS.get(tag, tag)
+            if tag in ExifTags.TAGS:
+                if decoded == "GPSInfo":
+                    gpsData = {}
+                    for t in value:
+                        gpsDecoded = ExifTags.GPSTAGS.get(t, t)
+                        gpsData[gpsDecoded] = value[t]
+                    exifData[decoded] = gpsData
+                else: 
+                    exifData[ExifTags.TAGS[tag]] = value
+    except: 
+        pass
     return exifData
 
 
