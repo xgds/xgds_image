@@ -246,8 +246,21 @@ def saveImage(request):
                 else:
                     exifTime = exifTime.replace(tzinfo=pytz.utc)
             else:
-                #TODO fix need to get the last modified time of the file from the file and use that.
-                exifTime = datetime.now(pytz.utc)
+                # read the time from the last modified time that we pushed in from imageUpload.js
+                modtimesString = request.META['HTTP_LASTMOD']
+                if modtimesString:
+                    modtime = None
+                    theImages = modtimesString.split(',')
+                    for i in theImages:
+                        k,v = i.split('||')
+                        if k == str(uploadedFile.name):
+                            modtime = datetime.fromtimestamp(int(v)/1000)
+                            break
+                    if modtime:
+                        localized_time = form_tz.localize(modtime)
+                        exifTime = TimeUtil.timeZoneToUtc(localized_time)
+            if not exifTime:
+                    exifTime = datetime.now(pytz.utc)
 
             
             # create a new image set instance           

@@ -19,6 +19,7 @@
  */
 var MAX_NUM_THUMBNAILS = 5;
 var filesEnqueuedIcon = null;
+var lastModDate = [];
 
 Dropzone.options.imageDropZone = {
 	// Prevents Dropzone from uploading dropped files immediately
@@ -35,6 +36,7 @@ Dropzone.options.imageDropZone = {
 		this.previewsContainer.appendChild(filesEnqueuedMessage);
 		// process files when submit is clicked.
 		submitButton.addEventListener("click", function() {
+			imageDropZone.options.headers = { 'lastMod': lastModDate},
 			imageDropZone.processQueue();  // Tell Dropzone to process all queued files.
 		});
 		
@@ -46,6 +48,7 @@ Dropzone.options.imageDropZone = {
 		});
 		
 		this.on("addedfile", function(file) {
+			lastModDate.push(file.name + "||" + file.lastModified);
 			if (this.files.length == MAX_NUM_THUMBNAILS) {
 				filesEnqueuedIcon = file;
 			}
@@ -66,6 +69,7 @@ Dropzone.options.imageDropZone = {
 		this.on("complete", function(file) {
 			// automatically remove a file when it’s finished uploading
 			this.removeFile(file); 
+			this.lastModDate = [];
 		});
 		
 		this.on("success", function(file, responseText, e) {
