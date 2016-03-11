@@ -40,11 +40,11 @@ class Camera(geocamTrackModels.AbstractResource):
     """
     pass
 
-DEFAULT_CAMERA_FIELD = models.ForeignKey(Camera, null=True, blank=True)
-DEFAULT_TRACK_POSITION_FIELD = models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True )
-DEFAULT_EXIF_POSITION_FIELD = models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
-DEFAULT_USER_POSITION_FIELD = models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
-DEFAULT_RESOURCE_FIELD = models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
+DEFAULT_CAMERA_FIELD = lambda: models.ForeignKey(Camera, null=True, blank=True)
+DEFAULT_TRACK_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True )
+DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
+DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
+DEFAULT_RESOURCE_FIELD = lambda: models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
 
 class AbstractImageSet(models.Model, NoteMixin):
     """
@@ -54,18 +54,18 @@ class AbstractImageSet(models.Model, NoteMixin):
     """
     name = models.CharField(max_length=128, blank=True, null=True, help_text="human-readable image set name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
-    camera = 'set this to DEFAULT_CAMERA_FIELD or similar in derived classes'
+    camera = 'set this to DEFAULT_CAMERA_FIELD() or similar in derived classes'
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
-    track_position = 'set this to DEFAULT_TRACK_POSITION_FIELD or similar in derived classes'
-    exif_position = 'set this to DEFAULT_EXIF_POSITION_FIELD or similar in derived classes'
-    user_position = 'set this to DEFAULT_USER_POSITION_FIELD or similar in derived classes'
+    track_position = 'set this to DEFAULT_TRACK_POSITION_FIELD() or similar in derived classes'
+    exif_position = 'set this to DEFAULT_EXIF_POSITION_FIELD() or similar in derived classes'
+    user_position = 'set this to DEFAULT_USER_POSITION_FIELD() or similar in derived classes'
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     acquisition_time = models.DateTimeField(editable=False, default=timezone.now)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE)
-    resource = 'set this to DEFAULT_RESOURCE_FIELD or similar in derived classes'
+    resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     
     @property
     def view_url(self):
@@ -187,14 +187,14 @@ class AbstractImageSet(models.Model, NoteMixin):
 
 class ImageSet(AbstractImageSet):
     # set foreign key fields from parent model to point to correct types
-    camera = DEFAULT_CAMERA_FIELD
-    track_position = DEFAULT_TRACK_POSITION_FIELD
-    exif_position = DEFAULT_EXIF_POSITION_FIELD
-    user_position = DEFAULT_USER_POSITION_FIELD
-    resource = DEFAULT_RESOURCE_FIELD
+    camera = DEFAULT_CAMERA_FIELD()
+    track_position = DEFAULT_TRACK_POSITION_FIELD()
+    exif_position = DEFAULT_EXIF_POSITION_FIELD()
+    user_position = DEFAULT_USER_POSITION_FIELD()
+    resource = DEFAULT_RESOURCE_FIELD()
 
 
-DEFAULT_IMAGE_SET_FIELD = models.ForeignKey(ImageSet, null=True, related_name="images")
+DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey(ImageSet, null=True, related_name="images")
 
 class AbstractSingleImage(models.Model):
     """ 
@@ -203,7 +203,7 @@ class AbstractSingleImage(models.Model):
     file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     raw = models.BooleanField(default=True)
-    imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD or similar in derived models'
+    imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
     thumbnail = models.BooleanField(default=False)
        
     class Meta:
@@ -216,7 +216,7 @@ class SingleImage(AbstractSingleImage):
     """
 
     # set foreign key fields from parent model to point to correct types
-    imageSet = DEFAULT_IMAGE_SET_FIELD
+    imageSet = DEFAULT_IMAGE_SET_FIELD()
 
     def toMapDict(self):
         """
