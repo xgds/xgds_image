@@ -24,7 +24,7 @@ from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
 from geocamUtil.UserUtil import getUserName
-from geocamTrack.models import AbstractResource
+from geocamTrack import models as geocamTrackModels
 
 from xgds_notes2.models import NoteMixin
 
@@ -32,7 +32,7 @@ def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
-class Camera(AbstractResource):
+class Camera(geocamTrackModels.AbstractResource):
     serial = models.CharField(max_length=128, blank=True, null=True)
     
     """
@@ -40,6 +40,11 @@ class Camera(AbstractResource):
     """
     pass
 
+DEFAULT_CAMERA_FIELD = models.ForeignKey(Camera, null=True, blank=True)
+DEFAULT_TRACK_POSITION_FIELD = models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True )
+DEFAULT_EXIF_POSITION_FIELD = models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
+DEFAULT_USER_POSITION_FIELD = models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
+DEFAULT_RESOURCE_FIELD = models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
 
 class AbstractImageSet(models.Model, NoteMixin):
     """
@@ -49,18 +54,18 @@ class AbstractImageSet(models.Model, NoteMixin):
     """
     name = models.CharField(max_length=128, blank=True, null=True, help_text="human-readable image set name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
-    camera = models.ForeignKey(settings.XGDS_IMAGE_CAMERA_MODEL, null=True, blank=True)
+    camera = 'set this to DEFAULT_CAMERA_FIELD or similar in derived classes'
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
-    track_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
-    exif_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
-    user_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
+    track_position = 'set this to DEFAULT_TRACK_POSITION_FIELD or similar in derived classes'
+    exif_position = 'set this to DEFAULT_EXIF_POSITION_FIELD or similar in derived classes'
+    user_position = 'set this to DEFAULT_USER_POSITION_FIELD or similar in derived classes'
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     acquisition_time = models.DateTimeField(editable=False, default=timezone.now)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE)
-    resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL, null=True, blank=True)
+    resource = 'set this to DEFAULT_RESOURCE_FIELD or similar in derived classes'
     
     @property
     def view_url(self):
@@ -181,8 +186,15 @@ class AbstractImageSet(models.Model, NoteMixin):
 
 
 class ImageSet(AbstractImageSet):
-    pass
+    # set foreign key fields from parent model to point to correct types
+    camera = DEFAULT_CAMERA_FIELD
+    track_position = DEFAULT_TRACK_POSITION_FIELD
+    exif_position = DEFAULT_EXIF_POSITION_FIELD
+    user_position = DEFAULT_USER_POSITION_FIELD
+    resource = DEFAULT_RESOURCE_FIELD
 
+
+DEFAULT_IMAGE_SET_FIELD = models.ForeignKey(ImageSet, null=True, related_name="images")
 
 class AbstractSingleImage(models.Model):
     """ 
@@ -191,7 +203,7 @@ class AbstractSingleImage(models.Model):
     file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     raw = models.BooleanField(default=True)
-    imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, null=True, related_name="images")
+    imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD or similar in derived models'
     thumbnail = models.BooleanField(default=False)
        
     class Meta:
@@ -202,6 +214,10 @@ class AbstractSingleImage(models.Model):
 class SingleImage(AbstractSingleImage):
     """ This can be used for screenshots or non geolocated images 
     """
+
+    # set foreign key fields from parent model to point to correct types
+    imageSet = DEFAULT_IMAGE_SET_FIELD
+
     def toMapDict(self):
         """
         Return a reduced dictionary that will be turned to JSON
