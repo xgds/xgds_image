@@ -109,7 +109,6 @@ def updateImageInfo(request):
         form = ImageSetForm(request.POST, instance = imageSet)
         if form.is_valid():
             imageSet = form.save(commit = False)
-
             changed_position = request.POST['changed_position']
             if int(changed_position) == 1:
                 latitude =  form.cleaned_data['latitude']
