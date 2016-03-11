@@ -206,6 +206,13 @@ class AbstractSingleImage(models.Model):
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
     thumbnail = models.BooleanField(default=False)
        
+    def toMapDict(self):
+        """
+        Return a reduced dictionary that will be turned to JSON
+        """
+        result = modelToDict(self)
+        return result
+    
     class Meta:
         abstract = True
 
@@ -218,9 +225,4 @@ class SingleImage(AbstractSingleImage):
     # set foreign key fields from parent model to point to correct types
     imageSet = DEFAULT_IMAGE_SET_FIELD()
 
-    def toMapDict(self):
-        """
-        Return a reduced dictionary that will be turned to JSON
-        """
-        result = modelToDict(self)
-        return result
+

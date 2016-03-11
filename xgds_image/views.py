@@ -15,6 +15,7 @@
 #__END_LICENSE__
 import pytz
 import json
+import os
 import traceback
 from datetime import datetime
 from dateutil.parser import parse as dateparser
@@ -261,8 +262,6 @@ def saveImage(request):
                         exifTime = TimeUtil.timeZoneToUtc(localized_time)
             if not exifTime:
                     exifTime = datetime.now(pytz.utc)
-
-            
             # create a new image set instance           
             author = request.user  # set user as image author
             newImageSet = IMAGE_SET_MODEL.get()()
@@ -285,7 +284,7 @@ def saveImage(request):
             newImage.save()
             
             # create a thumbnail
-            thumbnailFile = createThumbnailFile(fileName)
+            thumbnailFile = createThumbnailFile(os.path.basename(newImage.file.name))
             SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailFile, 
                                                     raw = False, 
                                                     thumbnail = True,
