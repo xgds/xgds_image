@@ -58,7 +58,7 @@ class AbstractImageSet(models.Model, NoteMixin):
     exif_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
     user_position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
-    acquisition_time = models.DateTimeField(editable=False)
+    acquisition_time = models.DateTimeField(editable=False, default=timezone.now)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE)
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL, null=True, blank=True)
     
