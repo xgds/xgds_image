@@ -42,7 +42,7 @@ from geocamUtil import TimeUtil
 from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
-from geocamTrack.views import getClosestPosition
+from geocamTrack.utils import getClosestPosition
 
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
