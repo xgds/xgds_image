@@ -35,9 +35,12 @@ Don't try to get the value of FOO from django.conf.settings.  That
 settings object will not know about the default value!
 """
 import os
+from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
 
-XGDS_IMAGE_BOWER_INSTALLED_APPS = ('dropzone',
-                                   'packery')
+BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
+BOWER_INSTALLED_APPS += ['dropzone',
+                         'packery'
+                         ]
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
 
@@ -47,3 +50,11 @@ XGDS_IMAGE_HANDLEBARS_DIR = [os.path.join('xgds_image', 'templates', 'handlebars
 XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
 XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
 XGDS_IMAGE_CAMERA_MODEL = 'xgds_image.Camera'
+
+XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
+XGDS_MAP_SERVER_JS_MAP['ImageSet'] = {'ol': 'xgds_image/js/olImageMap.js',
+                                      'model': XGDS_IMAGE_IMAGE_SET_MODEL,
+                                      'hiddenColumns': []}
+
+XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
+XGDS_DATA_IMPORTS["Images"] = '/xgds_image/import'
