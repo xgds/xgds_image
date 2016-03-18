@@ -14,6 +14,7 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+from django.conf import settings
 from django.conf.urls import *
 from django.views.generic.base import TemplateView
 from xgds_image import views
@@ -24,5 +25,5 @@ urlpatterns = [
     url(r'^search/', views.getImageSearchPage, {}, 'xgds_image_search'),
     url(r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
     url(r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
-    url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images')
+    url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images'),
     ]
