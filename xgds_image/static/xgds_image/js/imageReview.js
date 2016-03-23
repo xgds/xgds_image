@@ -66,6 +66,7 @@ $('#delete_images').click( function() {
     }
     // re-render the map icons with only the non-deleted images.
 	app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
+	app.vent.trigger('mapSearch:fit');
 } );
 
 
