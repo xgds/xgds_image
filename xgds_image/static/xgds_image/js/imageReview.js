@@ -65,8 +65,7 @@ $('#delete_images').click( function() {
         theDataTable.fnDeleteRow(selectedRows[i]);
     }
     // re-render the map icons with only the non-deleted images.
-	app.vent.trigger("mapSearch:found", theDataTable.fnGetData());
-	app.vent.trigger('mapSearch:fit');
+    showOnMap(theDataTable.fnGetData());
 } );
 
 
