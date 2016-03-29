@@ -47,7 +47,7 @@
 {% endblock jsInitPreApp %}
 
 {% block otherJSInit %}
-	app.vent.trigger("mapSearch:found", imageSetsArray);
+	showOnMap(imageSetsArray);
 {% endblock otherJSInit %}
 
 {% block scripts %}

@@ -315,7 +315,8 @@ function constructImageView(json, viewPage) {
 	    // the first time we want to fill it in
 	    notes_table = $.find("table#notes_list");
 	    var notes_input_div = $.find("#notes_input");
-	    var new_input_div = $(notes_input_div).clone().hide();
+
+	    var new_input_div = $(notes_input_div).hide();
 	    $(notes_content_div).append(new_input_div);
 	    
 	    var new_table_div = $(notes_table);
@@ -323,13 +324,10 @@ function constructImageView(json, viewPage) {
 	    $(new_table_div).removeAttr('hidden');
 	    $(new_table_div).show();
 	    
-	    initializeTags();
 	    var taginput = $(new_input_div).find('.taginput');
-	    initializeInput($(taginput)[0]);
+	    initializeInput(taginput);
 	    hookNoteSubmit();
 	    
-	    //TODO this is a hack, for some reason the tags input is there twice but only the second one is valid
-	    notes_content_div.find(".bootstrap-tagsinput")[0].remove();
 	} else {
 	    notes_table = imageViewTemplate.find("table#notes_list");
 	}
