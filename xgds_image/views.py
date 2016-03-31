@@ -32,7 +32,7 @@ from django.core.urlresolvers import reverse
 
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
-from xgds_map_server.views import get_handlebars_templates
+from xdgs_core.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue
 
@@ -43,6 +43,7 @@ from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
+from apps.xgds_image.defaultSettings import XGDS_IMAGE_IMAGE_SET_MODEL
 
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
@@ -52,6 +53,8 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 GEOCAM_TRACK_RESOURCE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 
+XGDS_IMAGE_TEMPLATE_LIST = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+XGDS_IMAGE_TEMPLATE_LIST = XGDS_IMAGE_TEMPLATE_LIST + settings.XGDS_CORE_TEMPLATE_DIRS[settings.XGDS_IMAGE_IMAGE_SET_MODEL][0]
 
 def getImageViewPage(request, imageSetID):
     errors = None
@@ -61,21 +64,17 @@ def getImageViewPage(request, imageSetID):
     except:
         imageSetsJson = []
         errors = "Image not found."
-        
-    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
-    fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
+
     data = {'imageSetsJson': imageSetsJson,
             'STATIC_URL': settings.STATIC_URL,
-            'templates': get_handlebars_templates(fullTemplateList),
+            'templates': get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST),
             'errors': errors}
     return render_to_response("xgds_image/imageView.html", data,
                               context_instance=RequestContext(request))
     
 def getImageImportPage(request):
     # map plus image templates for now
-    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
-    fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
-    templates = get_handlebars_templates(fullTemplateList)
+    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST)
     data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
             'form': UploadFileForm(),
@@ -86,9 +85,7 @@ def getImageImportPage(request):
 
     
 def getImageSearchPage(request):
-    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
-    fullTemplateList.append(settings.XGDS_IMAGE_HANDLEBARS_DIR[0])
-    templates = get_handlebars_templates(fullTemplateList)
+    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST)
     # search stuff
     theForm = SpecializedForm(SearchForm, IMAGE_SET_MODEL.get())
     theFormSetMaker = formset_factory(theForm, extra=0)
