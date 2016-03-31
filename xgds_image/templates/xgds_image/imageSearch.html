@@ -1,8 +1,16 @@
 {% extends 'xgds_image/imageDashboardBase.html' %}
 
+{% block cssExtras %}
+{{ block.super }}
+<style type="text/css" title="currentStyle">
+	@import url('{{EXTERNAL_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css');
+</style>
+{% endblock cssExtras %}
+
 {% block scripts %}
 {{block.super}}
 	<script language="javascript" type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageSearch.js"></script>
 {% endblock scripts %}
 
@@ -12,6 +20,10 @@ imageModel = '{{settings.XGDS_IMAGE_IMAGE_SET_MODEL}}';
 $("#item_image_search").submit(function(event) {
 	doSearch(event);
 });
+	addDateTimePicker('id_form-0-creation_time_lo', defaultTimeZone, true);
+	addDateTimePicker('id_form-0-creation_time_hi', defaultTimeZone, true);
+	addDateTimePicker('id_form-0-acquisition_time_lo', defaultTimeZone, true);
+	addDateTimePicker('id_form-0-acquisition_time_hi', defaultTimeZone, true);
 {% endblock jsInit %}
 
 {% block otherJSInit %}

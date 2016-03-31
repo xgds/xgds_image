@@ -7,6 +7,7 @@
  {% block cssExtras %}
  {{ block.super }}
     {% include "xgds_notes2/NoteCSS.html" %}
+    {% include "xgds_notes2/NoteTableCSS.html" %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
  {% endblock cssExtras %}
 
@@ -53,6 +54,7 @@
 {% block scripts %}
 {{block.super}}
 	{% include "xgds_notes2/NoteJS.html" %}
+	{% include "xgds_notes2/NoteTableJS.html" %}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
     <!--  load handlebars -->
