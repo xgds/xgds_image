@@ -280,22 +280,20 @@ function constructImageView(json, viewPage) {
 	activateButtons(imageViewTemplate);
 	
 	if (!viewPage){
-	    onDelete(imageViewTemplate);
+		bindDeleteButtonCallback(imageViewTemplate);
 	    onImageNextOrPrev(imageViewTemplate);
 	}
 	
-	// append the div to the container and packery.
+	// append the div to the container and gridstack.
 	var newEl;
 	if (!viewPage){
 	    newEl = $container.append(imageViewTemplate);
 	} else {
 	    newEl = $container.prepend(imageViewTemplate);
 	}
-	// pin the packery elem.
+	// add the element to the dashboard
 	if (!viewPage){
-	    newEl.find(".pinDiv").click(function(event){clickPinFunction(event)});
-	    $container.packery( 'appended', imageViewTemplate);
-	    makeChildrenResizable($container, imageViewTemplate);
+		addItem(imageViewTemplate, 3, 3, 3, 2);
 	}
 	// set the loading image to be displayed when main img is loading
 	imageViewTemplate.find(".display-image").load(function() {

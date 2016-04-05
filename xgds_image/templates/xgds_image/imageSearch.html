@@ -26,12 +26,12 @@ $("#item_image_search").submit(function(event) {
 	addDateTimePicker('id_form-0-acquisition_time_hi', defaultTimeZone, true);
 {% endblock jsInit %}
 
-{% block otherJSInit %}
-	matchWidth('item_image_search','map');
-{% endblock otherJSInit %}
-
-{% block firstPackery %}
-		<div class='item auto lockAspect noresize' id='item_image_search'>
+{% block preMap %}
+{{ block.super }}
+<div class="grid-stack-item" id='item_image_search'
+        data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2">
+            <div class="grid-stack-item-content">
 			<i class="icon-lock-open pinDiv"></i><br/>
 			<form  id="form-AbstractImageSet" action="" method="post">
 				{{ formset.management_form }}
@@ -95,4 +95,5 @@ $("#item_image_search").submit(function(event) {
 				<span class="alert" id="message"></span>
 			</form>
 		</div>
-{% endblock firstPackery %}
+		</div>
+{% endblock preMap %}

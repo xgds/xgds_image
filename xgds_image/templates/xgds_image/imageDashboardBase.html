@@ -64,9 +64,12 @@
 {% endblock scripts %}
 
 
-{% block firstPackery %}
+{% block preMap %}
 <!-- Image list table -->
-<div class='item w2 freeAspect' id='item_image_table' data-isStamped="false">
+<div class="grid-stack-item" id='item_image_table'
+        data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2">
+            <div class="grid-stack-item-content">
 	<i class="icon-lock-open pinDiv"></i>
 	<div class="ttip" data-tooltip="remove selected images"> <i class="icon-trash" id="delete_images"></i> </div>
 		<table cellpadding="0" cellspacing="0" border="0"  id="image_table">
@@ -86,10 +89,11 @@
 			</tbody>
 		</table>
 </div>
-{% endblock firstPackery %}
+</div>
+{% endblock preMap %}
 
-{% block lastPackery %}
+{% block postMap %}
 {% include 'xgds_notes2/notes_input_include.html' %}
 {% include 'xgds_notes2/notes_table_small.html' %}
-{% endblock lastPackery %}
+{% endblock postMap %}
 		

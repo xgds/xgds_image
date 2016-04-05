@@ -1,14 +1,14 @@
 {% extends 'xgds_image/imageDashboardBase.html' %}
 
-{% block prePackery %}
+{% block preLayout %}
 	if (imageSetsArray.length > 0){
 		constructImageView(imageSetsArray[0], true);
 		hideImageNextPrev();
 	}
-{% endblock prePackery %}
+{% endblock preLayout %}
 
-{% block firstPackery %}
-{% endblock firstPackery %}
+{% block preMap %}
+{% endblock preMap %}
 
 {% block jsInit %}
 {{ block.super}}

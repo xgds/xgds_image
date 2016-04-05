@@ -39,7 +39,6 @@ from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
 
 BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
 BOWER_INSTALLED_APPS += ['dropzone',
-                         'packery'
                          ]
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
