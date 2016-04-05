@@ -65,14 +65,14 @@ def getImageViewPage(request, imageSetID):
 
     data = {'imageSetsJson': imageSetsJson,
             'STATIC_URL': settings.STATIC_URL,
-            'templates': get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST),
+            'templates': get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST'),
             'errors': errors}
     return render_to_response("xgds_image/imageView.html", data,
                               context_instance=RequestContext(request))
     
 def getImageImportPage(request):
     # map plus image templates for now
-    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST)
+    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
     data = {'imageSetsJson': [], #imageSetsJson,
             'templates': templates,
             'form': UploadFileForm(),
@@ -83,7 +83,7 @@ def getImageImportPage(request):
 
     
 def getImageSearchPage(request):
-    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST)
+    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
     # search stuff
     theForm = SpecializedForm(SearchForm, IMAGE_SET_MODEL.get())
     theFormSetMaker = formset_factory(theForm, extra=0)
