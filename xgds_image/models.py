@@ -156,7 +156,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['author'] = getUserName(self.author)
         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-        result['acquisition_timezone'] = self.acquisition_timezone
+        result['timezone'] = self.acquisition_timezone
         rawImage = self.getRawImage()
         if rawImage:
             result['raw_image_url'] = settings.DATA_URL + rawImage.file.name

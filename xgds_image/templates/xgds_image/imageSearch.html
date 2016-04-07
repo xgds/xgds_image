@@ -30,7 +30,7 @@ $("#item_image_search").submit(function(event) {
 {{ block.super }}
 <div class="grid-stack-item" id='item_image_search'
         data-gs-x="0" data-gs-y="0"
-        data-gs-width="3" data-gs-height="2">
+        data-gs-width="2" data-gs-height="2">
             <div class="grid-stack-item-content">
 			<i class="icon-lock-open pinDiv"></i><br/>
 			<form  id="form-AbstractImageSet" action="" method="post">
@@ -97,3 +97,15 @@ $("#item_image_search").submit(function(event) {
 		</div>
 		</div>
 {% endblock preMap %}
+
+{% block map %}
+		<div id="map-gridstack-item" class="grid-stack-item" 
+		data-gs-x="2" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2" >
+			<i class="icon-lock-open pinDiv warning"></i>
+			{% if settings.XGDS_SITEFRAMES|length > 1 %}	
+        		{{selectSiteFrameForm}}
+        	{% endif %}
+			<div class="grid-stack-item-content" id="map"></div>
+		</div>
+		{% endblock map %}

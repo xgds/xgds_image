@@ -53,7 +53,9 @@ XGDS_CORE_TEMPLATE_DIRS[XGDS_IMAGE_IMAGE_SET_MODEL] = [os.path.join('xgds_image'
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP['ImageSet'] = {'ol': 'xgds_image/js/olImageMap.js',
                                       'model': XGDS_IMAGE_IMAGE_SET_MODEL,
-                                      'hiddenColumns': []}
+                                      'columns': ['acquisition_time', 'timezone', 'name', 'author', 'thumbnail_image_url'],
+                                      'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''] 
+                                      }
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS["Images"] = '/xgds_image/import'
