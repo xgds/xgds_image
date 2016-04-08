@@ -1,5 +1,5 @@
 {% extends 'xgds_image/imageDashboardBase.html' %}
-
+{% load siteFrames %}
 {% block cssExtras %}
 {{ block.super }}
 <style type="text/css" title="currentStyle">
@@ -103,9 +103,7 @@ $("#item_image_search").submit(function(event) {
 		data-gs-x="2" data-gs-y="0"
         data-gs-width="3" data-gs-height="2" >
 			<i class="icon-lock-open pinDiv warning"></i>
-			{% if settings.XGDS_SITEFRAMES|length > 1 %}	
-        		{{selectSiteFrameForm}}
-        	{% endif %}
+			{% siteframe_form %}
 			<div class="grid-stack-item-content" id="map"></div>
 		</div>
 		{% endblock map %}
