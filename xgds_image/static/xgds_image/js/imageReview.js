@@ -224,6 +224,7 @@ function updateImageView(template, index, imageJson, keepingImage, keepingNotes)
 function hideImageNextPrev() {
    $('.prev-button').hide();
    $('.next-button').hide();
+   $('#new-window-btn').hide();
 }
 
 function onImageNextOrPrev(template) {
@@ -331,6 +332,21 @@ function constructImageView(json, viewPage) {
 	
 	initializeNotesReference(imageViewTemplate, json['app_label'], json['model_type'], json['id'], json['creation_time']);
 	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', $(notes_table));
+	
+	// set the gridstack image height
+	 $('.image_view_outer').attr('data-gs-height', '4');
+	 
+	// image viewer
+	 var imageUrl = json['raw_image_url'];
+	 var prefixUrl = STATIC_URL + '/openseadragon/built-openseadragon/openseadragon/images/';
+	 viewer = OpenSeadragon({
+	     id: "display-image",
+	     prefixUrl: prefixUrl,
+	     tileSources: {
+	    	 type: 'image',
+	    	 url: imageUrl 
+	     }
+	 });
 }
 
 function setSaveStatusMessage(handler, status, msg){
@@ -344,4 +360,6 @@ function setSaveStatusMessage(handler, status, msg){
 		handler.fadeOut().empty();
 	}, 5000);
 }
+
+
 

@@ -1,4 +1,5 @@
-<div class="grid-stack-item lockAspect"
+<div class="grid-stack-item lockAspect image_view_outer"
+		data-gs-width="3" data-gs-height="4"
          id="item_{{ imageName }}">
         <div class="grid-stack-item-content" id="image_view">
 		<i class="icon-cancel-circled"></i>
@@ -11,7 +12,7 @@
 		<br>
 		<div class="image-wrapper"> 
 			<img class="loading-image" src="{{ STATIC_URL }}xgds_video/images/ipx.gif"></img>
-			<img class="display-image" src="{{ imagePath }}"></img>
+			<div id="display-image" style="width: 800px; height: 600px;"></div>
 		</div>
 		<div id="image_overview">
 			<button id="add_note_button" class="small float_button">Add Note</button>
@@ -65,4 +66,5 @@
 		<strong>Notes</strong>
 		<div id="notes_content" class="tab-content active"></div>
 	</div>
+	
 </div>
