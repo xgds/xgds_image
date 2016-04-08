@@ -17,7 +17,7 @@
 /*
  * Image drag and drop upload
  */
-var MAX_NUM_THUMBNAILS = 5;
+var MAX_NUM_THUMBNAILS = 4;
 var filesEnqueuedIcon = null;
 var lastModDate = [];
 
