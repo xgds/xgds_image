@@ -25,14 +25,13 @@ function stringContains(string, substring) {
 /**
  *  Selectable row in image table  
  */
-function handleImageSelection(theRow){
+function handleImageSelection(index, data){
     var template = $('#image_view');
-    var newindex = $(theRow).index();
     if (template.length == 0){
 	// no view, construct it
-	constructImageView(imageSetsArray[newindex]);
+    	constructImageView(data);
     } else {
-	updateImageView(template, newindex, null, false, false);
+    	updateImageView(template, index, null, false, false);
     }
 }
 
