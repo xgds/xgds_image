@@ -55,7 +55,8 @@ XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP['ImageSet'] = {'ol': 'xgds_image/js/olImageMap.js',
                                       'model': XGDS_IMAGE_IMAGE_SET_MODEL,
                                       'columns': ['acquisition_time', 'timezone', 'name', 'author', 'thumbnail_image_url'],
-                                      'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''] 
+                                      'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
+                                      'viewHandlebars': 'handlebars/image-view.handlebars'
                                       }
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
