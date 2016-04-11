@@ -25,19 +25,21 @@ function stringContains(string, substring) {
 /**
  *  Selectable row in image table  
  */
-function handleImageSelection(index, data){
-    var template = $('#image_view');
-    if (template.length == 0){
-	// no view, construct it
-    	constructImageView(data);
+function handleImageSelection(theRow){
+    var newindex = $(theRow).index();
+    var $template = $(document.getElementById('image_view'));
+    if ($template) {
+    	updateImageView($template, newindex, null, false, false);
     } else {
-    	updateImageView(template, index, null, false, false);
+    	constructImageView(imageSetsArray[newindex]);
     }
 }
+
 
 function setupTableSelection() {
     connectSelectionCallback($("#image_table"), handleImageSelection, true);
 }
+
 
 /* Add a click handler for the delete row */
 $('#delete_images').click( function() {
@@ -144,81 +146,60 @@ function onUpdateImageInfo(template) {
  * of the currently displayed image in the imageView.
  */
 function getCurrentImageAndIndex(template) {
-	// get the img's name.
-	var currentImgUrl = template.find(".display-image").attr('src');
-	var currentImgIndex = null;
-	// find the index of the current img
-	for (var i = 0; i < imageSetsArray.length; i++) {
-		if (imageSetsArray[i]['raw_image_url'] == currentImgUrl) {
-			currentImgIndex = i;
+	var currentImageName = template.attr('id');
+	var currentImageIndex = null;
+	for (var i=0; i< imageSetsArray.length; i++) {
+		if (imageSetsArray[i]['name'] == currentImageName) {
+			currentImageIndex = i;
 			break;
 		}
 	}
-	return currentImgIndex;
+	return currentImageIndex;
 }
 
 /**
  * Update the image view with newly selected image.
  */
 function updateImageView(template, index, imageJson, keepingImage, keepingNotes) {
-    if (imageJson == null){
-	if (index != null) {
-	    imageJson = imageSetsArray[index];
-	} else {
-	    return;
+	if (imageJson == null){
+		if (index != null) {
+			imageJson = imageSetsArray[index];
+		} else {
+			return;
+		}
 	}
-    }
-    
-    if (!keepingNotes){
-	var tbl = template.find('table#notes_list');
-	if ( $.fn.DataTable.isDataTable( tbl) ) {
-	    var dt = $(tbl).dataTable()
-	    dt.fnClearTable();
-	}
-	initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
-	getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', dt);
-    }
-    
-    if (!keepingImage){
-	var mainImg = template.find(".display-image");
-	var placeholderImg = template.find(".loading-image");
-	template.find("#loading-image-msg").show();
-	template.find(".image-name strong").hide();
-	mainImg.hide();
-	placeholderImg.show();
-	
-	// load the next image
-	mainImg.attr('src', imageJson['raw_image_url']);
-        // show next image name, hide placeholder
-        mainImg.on('load', function() { // when main img is done loading
-        	// load next img's name
-        	template.find(".image-name strong").text(imageJson['name']);
-        	// show next img name
-        	template.find(".image-name strong").show();
-        	// hide loading msg
-        	template.find("#loading-image-msg").hide();
-        	// show main img and hide place holder
-        	mainImg.show();
-        	placeholderImg.hide();
-        });
-    } else {
-	template.find(".image-name strong").text(imageJson['name']);
-    }
 
-    // update values
-    template.find('a#new-window-target').attr('href',imageJson['view_url']);
-    template.find('#id_id').attr('value', imageJson['id']);
-    template.find('#overview_description').text(imageJson['description']);
-    template.find('textarea[name="description"]').attr('value', imageJson['description']);
-    template.find('input[name="name"]').attr('value', imageJson['name']);
-    template.find('input[name="latitude"]').attr('value', imageJson['lat']);
-    template.find('input[name="longitude"]').attr('value', imageJson['lon']);
-    template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
-    template.find('input[name="heading"]').attr('value', imageJson['heading']);
-    template.find('#id_changed_position').attr('value', 0);
-    
-    // update table selection
-    ensureSelectedRow(theDataTable, index + 1);
+	if (!keepingNotes){
+		var tbl = template.find('table#notes_list');
+		if ( $.fn.DataTable.isDataTable( tbl) ) {
+			var dt = $(tbl).dataTable()
+			dt.fnClearTable();
+		}
+		initializeNotesReference(template, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
+		getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', dt);
+	}
+
+	if (!keepingImage){
+		template.attr('id', imageJson['name']);
+    	// load new image into OpenSeadragon viewer
+		viewer.open({type: 'image', url: imageJson['raw_image_url']});
+    }
+	template.find(".image-name strong").text(imageJson['name']);
+	
+	// update values
+	template.find('a#new-window-target').attr('href',imageJson['view_url']);
+	template.find('#id_id').attr('value', imageJson['id']);
+	template.find('#overview_description').text(imageJson['description']);
+	template.find('textarea[name="description"]').attr('value', imageJson['description']);
+	template.find('input[name="name"]').attr('value', imageJson['name']);
+	template.find('input[name="latitude"]').attr('value', imageJson['lat']);
+	template.find('input[name="longitude"]').attr('value', imageJson['lon']);
+	template.find('input[name="altitude"]').attr('value', imageJson['altitude']);
+	template.find('input[name="heading"]').attr('value', imageJson['heading']);
+	template.find('#id_changed_position').attr('value', 0);
+
+	// update table selection
+	ensureSelectedRow(theDataTable, index + 1);
 }
 
 function hideImageNextPrev() {
@@ -234,7 +215,7 @@ function onImageNextOrPrev(template) {
 		if (index != null) {
 		    index = index + 1;
 		    if (index == imageSetsArray.length){
-			index = 0;
+		    	index = 0;
 		    }
 		    clearTableSelection(theDataTable);
 		    updateImageView(template, index, null, false, false);
@@ -260,94 +241,95 @@ function constructImageView(json, viewPage) {
 	viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
 	var rawTemplate = $('#template-image-view').html();
 	var compiledTemplate = Handlebars.compile(rawTemplate);
-	
+
 	// append additional fields to json object to pass to handlebar
 	json.imageName = json['name'];
 	json.imagePath = json['raw_image_url'];
 	json.imageUrl = json['view_url'];
 	json.STATIC_URL = STATIC_URL;
 	json.acquisition_time = getLocalTimeString(json['acquisition_time'], json['acquisition_timezone']);
-	
+
 	var newDiv = compiledTemplate(json);
 	var imageViewTemplate = $(newDiv);
-	
-	// hide the img loading msg
-	imageViewTemplate.find("#loading-image-msg").hide();
-	
+
 	// callbacks
 	hookEditingPosition(imageViewTemplate);
 	onUpdateImageInfo(imageViewTemplate);
 	activateButtons(imageViewTemplate);
-	
+
 	if (!viewPage){
 		bindDeleteButtonCallback(imageViewTemplate);
-	    onImageNextOrPrev(imageViewTemplate);
+		onImageNextOrPrev(imageViewTemplate);
 	}
-	
+
 	// append the div to the container and gridstack.
 	var newEl;
 	if (!viewPage){
-	    newEl = $container.append(imageViewTemplate);
+		newEl = $container.append(imageViewTemplate);
 	} else {
-	    newEl = $container.prepend(imageViewTemplate);
+		newEl = $container.prepend(imageViewTemplate);
 	}
 	// add the element to the dashboard
 	if (!viewPage){
 		addItem(imageViewTemplate, 3, 3, 3, 2);
 	}
-	// set the loading image to be displayed when main img is loading
-	imageViewTemplate.find(".display-image").load(function() {
-		// set dimensions of loading image
-		var width = imageViewTemplate.find(".display-image").width();
-		var height = imageViewTemplate.find(".display-image").height();
-		imageViewTemplate.find(".loading-image").width(width);	
-		imageViewTemplate.find(".loading-image").height(height);
-		imageViewTemplate.find(".loading-image").hide();
-	});
-	setChangedPosition(0, imageViewTemplate);
-	
+
+//	// set the loading image to be displayed when main img is loading
+//	imageViewTemplate.find(".display-image").load(function() {
+//	// set dimensions of loading image
+//	var width = imageViewTemplate.find(".display-image").width();
+//	var height = imageViewTemplate.find(".display-image").height();
+//	imageViewTemplate.find(".loading-image").width(width);	
+//	imageViewTemplate.find(".loading-image").height(height);
+//	imageViewTemplate.find(".loading-image").hide();
+//	});
+//	setChangedPosition(0, imageViewTemplate);
+
 	//add the notes if it does not exist
 	var notes_content_div = imageViewTemplate.find("#notes_content");
 	var notes_table = undefined;
 	if ($(notes_content_div).is(':empty')){
-	    // the first time we want to fill it in
-	    notes_table = $.find("table#notes_list");
-	    var notes_input_div = $.find("#notes_input");
+		// the first time we want to fill it in
+		notes_table = $.find("table#notes_list");
+		var notes_input_div = $.find("#notes_input");
 
-	    var new_input_div = $(notes_input_div).hide();
-	    $(notes_content_div).append(new_input_div);
-	    
-	    var new_table_div = $(notes_table);
-	    $(notes_content_div).append(new_table_div);
-	    $(new_table_div).removeAttr('hidden');
-	    $(new_table_div).show();
-	    
-	    var taginput = $(new_input_div).find('.taginput');
-	    initializeInput(taginput);
-	    hookNoteSubmit();
-	    
+		var new_input_div = $(notes_input_div).hide();
+		$(notes_content_div).append(new_input_div);
+
+		var new_table_div = $(notes_table);
+		$(notes_content_div).append(new_table_div);
+		$(new_table_div).removeAttr('hidden');
+		$(new_table_div).show();
+
+		var taginput = $(new_input_div).find('.taginput');
+		initializeInput(taginput);
+		hookNoteSubmit();
+
 	} else {
-	    notes_table = imageViewTemplate.find("table#notes_list");
+		notes_table = imageViewTemplate.find("table#notes_list");
 	}
-	
+
 	initializeNotesReference(imageViewTemplate, json['app_label'], json['model_type'], json['id'], json['creation_time']);
 	getNotesForObject(json['app_label'], json['model_type'], json['id'], 'notes_content', $(notes_table));
-	
+
 	// set the gridstack image height
-	 $('.image_view_outer').attr('data-gs-height', '4');
-	 
+	$('.image_view_outer').attr('data-gs-height', '4');
+
+	// build tile sources for openseadragon viewer
+	var imageUrl = json['raw_image_url'];
+
 	// image viewer
-	 var imageUrl = json['raw_image_url'];
-	 var prefixUrl = STATIC_URL + '/openseadragon/built-openseadragon/openseadragon/images/';
-	 viewer = OpenSeadragon({
-	     id: "display-image",
-	     prefixUrl: prefixUrl,
-	     tileSources: {
-	    	 type: 'image',
-	    	 url: imageUrl 
-	     }
-	 });
+	var prefixUrl = STATIC_URL + '/openseadragon/built-openseadragon/openseadragon/images/';
+	viewer = OpenSeadragon({
+		id: "display-image",
+		prefixUrl: prefixUrl,
+		tileSources: {
+			type: 'image',
+			url: imageUrl
+		}
+	});
 }
+
 
 function setSaveStatusMessage(handler, status, msg){
 	if (status == 'success') {
