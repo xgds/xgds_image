@@ -62,7 +62,7 @@ var ImageSet = {
             var coords = transform([imageJson.lon, imageJson.lat]);
             var feature = new ol.Feature({
                 name: imageJson.acquisition_time,
-                uuid: imageJson.id,
+                uuid: imageJson.pk,
                 geometry: new ol.geom.Point(coords)
             });
             feature.setStyle(this.getStyles(imageJson));

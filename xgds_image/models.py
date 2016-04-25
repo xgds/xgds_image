@@ -138,7 +138,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         Return a reduced dictionary that will be turned to JSON for rendering in a map
         """
         result = modelToDict(self)
-        result['id'] = int(self.pk)
+        result['pk'] = int(self.pk)
         result['app_label'] = self._meta.app_label
         t = type(self)
         if t._deferred:
