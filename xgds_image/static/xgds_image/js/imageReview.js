@@ -263,25 +263,32 @@ $.extend(xgds_image,{
 		}
 	},
 	setupImageViewer: function(imageJson){
-		if (this.viewer == undefined){
-			// build tile sources for openseadragon image viewer
-			var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-			this.viewer = OpenSeadragon({
-				id: "display-image",
-				prefixUrl: prefixUrl,
-				tileSources: {
-					type: 'image',
-					url: imageJson.raw_image_url
-				}
-			});
+		
+		if (this.viewer != undefined){
+			this.viewer.destroy();
+			this.viewer = null;
 		}
+		// build tile sources for openseadragon image viewer
+		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+		this.viewer = OpenSeadragon({
+			id: "display-image",
+			prefixUrl: prefixUrl,
+			tileSources: {
+				type: 'image',
+				url: imageJson.raw_image_url
+			}
+		});
+		
 	},
 	loadImageInViewer: function(imageJson){
+		this.setupImageViewer(imageJson);
+		return;
     	// load new image into OpenSeadragon viewer
 		if (this.viewer == undefined){
 			this.setupImageViewer(imageJson);
 		} else {
-			this.viewer.open({type: 'image', url: imageJson['raw_image_url']});
+			this.viewer.open({type: 'image', 
+							  url: imageJson.raw_image_url});
 		}
 	},
 	setSaveStatusMessage: function(handler, status, msg){
