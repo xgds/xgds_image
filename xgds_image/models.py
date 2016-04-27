@@ -143,7 +143,6 @@ class AbstractImageSet(models.Model, NoteMixin):
         t = type(self)
         if t._deferred:
             t = t.__base__
-        
         result['model_type'] = t._meta.object_name
         
         result['description'] = self.description

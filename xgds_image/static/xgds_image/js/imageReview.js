@@ -145,12 +145,8 @@ $.extend(xgds_image,{
 
 		if (!keepingNotes){
 			var tbl = el.find('table#notes_list');
-			if ( $.fn.DataTable.isDataTable( tbl) ) {
-				var dt = $(tbl).dataTable()
-				dt.fnClearTable();
-			}
 			initializeNotesReference(el, imageJson['app_label'], imageJson['model_type'], imageJson['pk'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
-			getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['pk'], 'notes_content', dt);
+			getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['pk'], 'notes_content', tbl);
 		}
 		
 		var newContent = this.compiledTemplate(imageJson);
