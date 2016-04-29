@@ -43,6 +43,17 @@ class ImageSetForm(forms.ModelForm):
         model = ImageSet
         fields = ['id', 'description', 'name']
         
+    def __init__(self, *args, **kwargs):
+        super(ImageSetForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            positionDict = self.instance.getPositionDict()
+            self.fields['latitude'].initial = positionDict['lat']
+            self.fields['longitude'].initial = positionDict['lon']
+            if 'altitude' in positionDict:
+                self.fields['altitude'].initial = positionDict['altitude']
+            if 'heading' in positionDict:
+                self.fields['heading'].initial = positionDict['heading']
+        
     def clean(self):
         """
         Checks that both lat and lon are entered (or both are empty)
