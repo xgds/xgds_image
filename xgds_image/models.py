@@ -52,7 +52,7 @@ class AbstractImageSet(models.Model, NoteMixin):
     Set includes the raw image and any resized images.
     Contains utility functions to fetch different sized images.
     """
-    name = models.CharField(max_length=128, blank=True, null=True, help_text="human-readable image set name")
+    name = models.CharField(max_length=128, blank=True, null=True, help_text="Legible " + settings.XGDS_IMAGE_IMAGE_SET_MONIKER + " name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
     camera = 'set this to DEFAULT_CAMERA_FIELD() or similar in derived classes'
     author = models.ForeignKey(User)
@@ -68,8 +68,20 @@ class AbstractImageSet(models.Model, NoteMixin):
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     
     @property
+    def modelAppLabel(self):
+        return self._meta.app_label
+    
+    @property
+    def modelTypeName(self):
+        t = type(self)
+        if t._deferred:
+            t = t.__base__
+        return t._meta.object_name
+
+    @property
     def view_url(self):
-        return reverse('xgds_image_view_image', kwargs={'imageSetID':self.pk})
+        return reverse('search_map_single_object', kwargs={'modelPK':self.pk,
+                                                           'modelName': 'ImageSet'})
     
     @property
     def thumbnail_url(self):
@@ -139,11 +151,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         """
         result = modelToDict(self)
         result['pk'] = int(self.pk)
-        result['app_label'] = self._meta.app_label
-        t = type(self)
-        if t._deferred:
-            t = t.__base__
-        result['model_type'] = t._meta.object_name
+        result['app_label'] = self.modelAppLabel
         
         result['description'] = self.description
         result['view_url'] = self.view_url

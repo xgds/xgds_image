@@ -21,6 +21,7 @@ from xgds_image import views
 
 urlpatterns = [
     url(r'^view/(?P<imageSetID>[\d]+)$', views.getImageViewPage, {}, 'xgds_image_view_image'),
+    url(r'^edit/(?P<imageSetID>[\d]+)$', views.editImage, {}, 'xgds_image_edit_image'),
     url(r'^import/', views.getImageImportPage, {}, 'xgds_image_import'),
     url(r'^search/', views.getImageSearchPage, {}, 'xgds_image_search'),
     url(r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),

@@ -1,0 +1,114 @@
+{% extends 'dashboard_base.html' %}
+
+{% load json_dumps %}
+
+{% block cssExtras %}
+ {{ block.super }}
+ {% include "xgds_notes2/NoteCSS.html" %}
+ {% endblock cssExtras %}
+
+{% block scripts %}
+{{block.super}}
+	{% include "xgds_notes2/NoteJS.html" %}
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
+	{% for template_name, template in templates.items %}
+		<script type="text/handlebars" id="template-{{template_name}}">
+			{{template|safe}}
+		</script>
+	{% endfor %}
+{% endblock scripts %}
+
+{% block jsInit %} 
+{{ block.super }}
+
+// initialize the notes when the window is ready
+$(document).ready(function() {
+	{% if form.instance %}
+	{% with imageJson=form.instance.toMapDict|json_dumps|safe %}
+		xgds_image.setupImageViewer({{imageJson}});
+		showOnMap([{{imageJson}}]);
+	{% endwith %}
+	{% endif %}
+	
+	// show existing notes
+	var container = $('#notes_content');
+	setupNotesUI();
+	initializeNotesReference(container, '{{form.instance.modelAppLabel}}', '{{form.instance.modelTypeName}}', '{{form.instance.pk }}', '{{form.instance.acquisition_time|date:"Y-m-d H:i:s"}}' + ' UTC', '{{form.instance.acquisition_timezone}}');
+	getNotesForObject('{{form.instance.modelAppLabel}}', '{{form.instance.modelTypeName}}', '{{form.instance.pk }}', 'notes_content', container.find('table#notes_list'));
+
+});
+{% endblock jsInit %} 
+
+
+{% block preDashboard %}
+{% if messages %}
+<div class="error-message upload-error">
+	<ul class="messages">
+	    {% for message in messages %}
+	    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+	    {% endfor %}
+	</ul>
+</div>
+{% endif  %}
+{% endblock preDashboard %}
+
+
+{% block preMap %} 
+<div class="grid-stack-item" id='item_image_create'
+        data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="5">
+            <div class="grid-stack-item-content">
+	
+	<div><strong> Editing {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER }} </strong></div>
+	{% if form.errors %}
+    <ol>
+    {% for error in form.errors %}
+        <li><strong>{{ error|escape }}</strong></li>
+    {% endfor %}
+    </ol>
+	{% endif %}
+	<form id="updateImageForm" action="{% url 'xgds_image_edit_image' form.instance.pk %}" method="post" enctype="multipart/form-data">
+		<input type=hidden name=imageSetId value="{{ form.instance.pk }}">
+		<table>
+			{{ form.as_table }}
+		</table>
+		{% csrf_token %}
+		<div id="IMAGE-edit-button-group">
+			<a href="{% url 'search_map_single_object' 'ImageSet' form.instance.pk %}" class="mybutton small">Cancel</a>
+			<input class="mybutton small" id="IMAGE-info-submit" type="submit" value="Save"/>
+		</div>
+	</form>
+	
+	<div class="image-wrapper"> 
+			<img class="loading-image"></img>
+			<div id="display-image" style="width: 600px; height: 400px;"></div>
+		</div>
+	
+	</div>
+</div>
+
+
+{% endblock preMap %}
+
+{% block postMap %}
+<div id="notes-gridstack-item" class="grid-stack-item" 
+		data-gs-x="3" data-gs-y="3"
+        data-gs-width="3" data-gs-height="1" >
+        <div class="grid-stack-item-content" id="notes-gridstack-item-content" >
+				<i class="icon-lock-open pinDiv warning"></i>
+				
+				<div id="notesDiv">
+				<strong>Notes</strong>
+					<div id="notes_content" class="tab-content active">
+					{% include 'xgds_notes2/notes_input_include.html' %}
+					{% include 'xgds_notes2/notes_table_small.html' %}
+					</div>
+				</div>
+		</div>
+</div> 
+{% endblock postMap %}
+
+
+

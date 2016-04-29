@@ -22,6 +22,8 @@ from dateutil.parser import parse as dateparser
 
 from django.utils import timezone
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.forms.formsets import formset_factory
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render_to_response, get_object_or_404
@@ -93,6 +95,34 @@ def getImageSearchPage(request):
                                'templates': templates,
                                'formset': theFormSet},
                               context_instance=RequestContext(request))
+
+@login_required 
+def editImage(request, imageSetID):
+    imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imageSetID)
+    if request.POST:
+        form = ImageSetForm(request.POST, instance=imageSet)
+        if form.is_valid():
+            form.save()
+            if form.errors:
+                for key, msg in form.errors.items():
+                    if key == 'warning':
+                        messages.warning(request, msg)
+                    elif key == 'error': 
+                        messages.error(request, msg)
+            else:
+                messages.success(request, settings.XGDS_IMAGE_IMAGE_SET_MONIKER + ' successfully updated.')
+            return HttpResponseRedirect(reverse('search_map_single_object', kwargs={'modelPK':imageSetID,
+                                                                                    'modelName':'ImageSet'}))
+        else: 
+            messages.error(request, 'The form is not valid')
+            return render_to_response('xgds_image/imageEdit.html',
+                                      RequestContext(request, {'form': form}))
+    elif request.method == "GET":
+        form = ImageSetForm(instance=imageSet)
+        return render_to_response('xgds_image/imageEdit.html',
+                                  RequestContext(request, {'form': form,
+                                                           'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')}))                
+
 
 def updateImageInfo(request):
     """

@@ -2,7 +2,7 @@
 	<div class="image-name" ><strong> {{ name }} </strong></div>
 
 		<div id="image_overview">
-			<button id="edit_info_button" class="small float_button">Edit</button>
+			<button id="edit_info_button" class="small float_button" onClick="window.open('/xgds_image/edit/{{pk}}', '_blank');">Edit</button>
 			<table>
 				<tr>
 					<td class="small">{{ author }}</td>
@@ -15,42 +15,6 @@
 		</div>
 		<div class="image-wrapper"> 
 			<img class="loading-image"></img>
-			<div id="display-image" style="width: 800px; height: 600px;"></div>
+			<div id="display-image" style="width: 600px; height: 400px;"></div>
 		</div>
-		<div id="more_info_view" hidden>
-			<form action="#" id="more-info-form" method="post">
-				<input name="id" value="{{pk}}" hidden id="id_id"/>
-				<input name="changed_position" value=0 hidden id="id_changed_position"/>
-				<table>
-					<tr>
-						<th><label for="id_name">Name:</label></th>
-						<td><input id="id_name" maxlength="128" name="name" type="text" value="{{name}}"/></td>
-					</tr>
-					<tr>
-						<th><label for="id_description">Description:</label></th>
-						<td><textarea rows="4" cols="50" id="id_description" maxlength="128" name="description" >{{description}}</textarea></td>
-					</tr>
-					<tr>
-						<th><label for="id_latitude">Latitude:</label></th>
-						<td><input id="id_latitude" name="latitude" step="any" type="number" value="{{lat}}"/></td>
-					</tr>
-					<tr>
-						<th><label for="id_longitude">Longitude:</label></th>
-						<td><input id="id_longitude" name="longitude" step="any" type="number" value="{{lon}}"/></td>
-					</tr>
-					<tr>
-						<th><label for="id_altitude">Altitude:</label></th>
-						<td><input id="id_altitude" name="altitude" step="any" type="number" value="{{altitude}}" />
-					</tr>
-					<tr>
-						<th><label for="id_heading">Heading:</label></th>
-						<td><input id="id_heading" name="heading" step="any" type="number" value="{{heading}}" />
-					</tr>
-				</table>
-				<button id="cancel_edit" value="Cancel" class="small" >Cancel</button>		
-				<input class="small info btn" type="submit" id="updateInfoSubmit" value="Save" />		
-				<label class="inline" id="message"></label>
-			</form>
-		</div> <!-- more_info_view -->
-		
 </div>
