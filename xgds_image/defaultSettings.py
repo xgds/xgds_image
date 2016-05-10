@@ -67,12 +67,5 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
                                                         'event_timezone_field': 'acquisition_timezone'
                                                         } 
 
-XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olImageMap.js',
-                                                        'model': XGDS_IMAGE_IMAGE_SET_MODEL,
-                                                        'columns': ['acquisition_time', 'timezone', 'name', 'author', 'thumbnail_image_url'],
-                                                        'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
-                                                        'viewHandlebars': 'handlebars/image-view.handlebars'
-                                                        }
-
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS[XGDS_IMAGE_IMAGE_SET_MONIKER + 's'] = '/xgds_image/import'
