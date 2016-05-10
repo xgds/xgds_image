@@ -81,7 +81,7 @@ class AbstractImageSet(models.Model, NoteMixin):
     @property
     def view_url(self):
         return reverse('search_map_single_object', kwargs={'modelPK':self.pk,
-                                                           'modelName': 'ImageSet'})
+                                                           'modelName': settings.XGDS_IMAGE_IMAGE_SET_MONIKER})
     
     @property
     def thumbnail_url(self):
@@ -152,6 +152,10 @@ class AbstractImageSet(models.Model, NoteMixin):
         result = modelToDict(self)
         result['pk'] = int(self.pk)
         result['app_label'] = self.modelAppLabel
+        t = type(self)
+        if t._deferred:
+            t = t.__base__
+        result['model_type'] = t._meta.object_name
         
         result['description'] = self.description
         result['view_url'] = self.view_url
