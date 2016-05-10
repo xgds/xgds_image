@@ -54,12 +54,25 @@ XGDS_CORE_TEMPLATE_DIRS = getOrCreateDict('XGDS_CORE_TEMPLATE_DIRS')
 XGDS_CORE_TEMPLATE_DIRS[XGDS_IMAGE_IMAGE_SET_MODEL] = [os.path.join('xgds_image', 'templates', 'handlebars')]
 
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
-XGDS_MAP_SERVER_JS_MAP['ImageSet'] = {'ol': 'xgds_image/js/olImageMap.js',
-                                      'model': XGDS_IMAGE_IMAGE_SET_MODEL,
-                                      'columns': ['acquisition_time', 'timezone', 'name', 'author', 'thumbnail_image_url'],
-                                      'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
-                                      'viewHandlebars': 'handlebars/image-view.handlebars'
-                                      }
+XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olImageMap.js',
+                                                        'model': XGDS_IMAGE_IMAGE_SET_MODEL,
+                                                        'columns': ['acquisition_time', 'timezone', 'name', 'author', 'thumbnail_image_url'],
+                                                        'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
+                                                        'viewHandlebars': 'xgds_image/templates/handlebars/image-view2.handlebars',
+                                                        'viewJS': ['/static/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js',
+                                                                   '/static/xgds_image/js/imageReview.js' ],
+                                                        'viewCss': ['/static/xgds_image/css/xgds_image.css'],
+                                                        'viewInitMethods': ['xgds_image.setupImageViewer'],
+                                                        'event_time_field': 'acquisition_time',
+                                                        'event_timezone_field': 'acquisition_timezone'
+                                                        } 
+
+XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olImageMap.js',
+                                                        'model': XGDS_IMAGE_IMAGE_SET_MODEL,
+                                                        'columns': ['acquisition_time', 'timezone', 'name', 'author', 'thumbnail_image_url'],
+                                                        'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
+                                                        'viewHandlebars': 'handlebars/image-view.handlebars'
+                                                        }
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS[XGDS_IMAGE_IMAGE_SET_MONIKER + 's'] = '/xgds_image/import'
