@@ -145,8 +145,8 @@ $.extend(xgds_image,{
 
 		if (!keepingNotes){
 			var tbl = el.find('table#notes_list');
-			initializeNotesReference(el, imageJson['app_label'], imageJson['model_type'], imageJson['pk'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
-			getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['pk'], 'notes_content', tbl);
+			xgds_notes.initializeNotesReference(el, imageJson['app_label'], imageJson['model_type'], imageJson['pk'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
+			xgds_notes.getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['pk'], 'notes_content', tbl);
 		}
 		
 		var newContent = this.compiledTemplate(imageJson);
@@ -243,14 +243,14 @@ $.extend(xgds_image,{
 
 				var taginput = $(new_input_div).find('.taginput');
 				initializeInput(taginput);
-				hookNoteSubmit();
+				xgds_notes.hookNoteSubmit();
 
 			} else {
 				notes_table = imageViewTemplate.find("table#notes_list");
 			}
 
-			initializeNotesReference(imageViewTemplate, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
-			getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', $(notes_table));
+			xgds_notes.initializeNotesReference(imageViewTemplate, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
+			xgds_notes.getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', $(notes_table));
 
 			// set the gridstack image height
 			$('.image_view_outer').attr('data-gs-height', '4');
