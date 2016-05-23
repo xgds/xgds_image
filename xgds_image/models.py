@@ -78,20 +78,16 @@ class AbstractImageSet(models.Model, NoteMixin):
             t = t.__base__
         return t._meta.object_name
 
-    @property
     def thumbnail_time_url(self, event_time):
         return self.thumbnail_url()
 
-    @property
     def view_time_url(self, event_time):
         return self.view_url()
     
-    @property
     def view_url(self):
         return reverse('search_map_single_object', kwargs={'modelPK':self.pk,
                                                            'modelName': settings.XGDS_IMAGE_IMAGE_SET_MONIKER})
     
-    @property
     def thumbnail_url(self):
         thumbImage = self.getThumbnail()
         if thumbImage:
@@ -166,7 +162,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['model_type'] = t._meta.object_name
         
         result['description'] = self.description
-        result['view_url'] = self.view_url
+        result['view_url'] = self.view_url()
         result['type'] = 'ImageSet'
         if self.camera:
             result['camera_name'] = self.camera.name
@@ -181,7 +177,7 @@ class AbstractImageSet(models.Model, NoteMixin):
             result['raw_image_url'] = settings.DATA_URL + rawImage.file.name
         thumbImage = self.getThumbnail()
         if thumbImage:
-            result['thumbnail_image_url'] = self.thumbnail_url
+            result['thumbnail_image_url'] = self.thumbnail_url()
         
         result.update(self.getPositionDict())
         return result
