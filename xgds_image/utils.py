@@ -14,9 +14,12 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+import os
 import datetime
+from io import BytesIO
 from PIL import Image, ExifTags
 from django.conf import settings
+from django.core.files import File
 
 def getExifValue(exif, key):
     try: 
@@ -24,18 +27,21 @@ def getExifValue(exif, key):
     except: 
         return None
 
+"""
+Returns a file object containing the thumbnail image. It is the 
+caller's responsibility to save it or do whatever else they wanna do...
+"""
 def createThumbnailFile(src):
     size = 250, 250 
-    imgDir = settings.DATA_ROOT + settings.XGDS_IMAGE_DATA_SUBDIRECTORY
-    im = Image.open(imgDir + src)
+    im = Image.open(src)
     im.thumbnail(size, Image.ANTIALIAS)
-    dstFileName = 'thumbnail_' + src
-    dst = imgDir + dstFileName
-    try: 
-        im.save(dst)
-    except: 
-        pass  # image already exists.
-    return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + dstFileName
+    srcName, srcExt = os.path.splitext(os.path.basename(src.name))
+    dstFileName = '%s_thumbnail%s' % (srcName, srcExt)
+    dstBytes = BytesIO()
+    im.save(dstBytes, "JPEG")
+    thumbFile = File(dstBytes)
+    thumbFile.name = dstFileName
+    return File(thumbFile)
 
 """
 Exif utility Functions

@@ -308,8 +308,8 @@ def saveImage(request):
             newImage.save()
             
             # create a thumbnail
-            thumbnailFile = createThumbnailFile(os.path.basename(newImage.file.name))
-            SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailFile, 
+            thumbnailStream = createThumbnailFile(newImage.file)
+            SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailStream, 
                                                     raw = False, 
                                                     thumbnail = True,
                                                     imageSet = newImageSet)

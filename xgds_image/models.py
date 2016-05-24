@@ -27,6 +27,7 @@ from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
 from xgds_notes2.models import NoteMixin
+from xgds_core.couchDbStorage import CouchDbStorage
 
 def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
@@ -91,7 +92,7 @@ class AbstractImageSet(models.Model, NoteMixin):
     def thumbnail_url(self):
         thumbImage = self.getThumbnail()
         if thumbImage:
-            return settings.DATA_URL + thumbImage.file.name
+            return thumbImage.file.url
     
     def finish_initialization(self, request):
         ''' during construction, if you have extra data to fill in you can override this method'''
@@ -174,7 +175,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         result['timezone'] = self.acquisition_timezone
         rawImage = self.getRawImage()
         if rawImage:
-            result['raw_image_url'] = settings.DATA_URL + rawImage.file.name
+            result['raw_image_url'] = rawImage.file.url
         thumbImage = self.getThumbnail()
         if thumbImage:
             result['thumbnail_image_url'] = self.thumbnail_url()
@@ -211,11 +212,14 @@ class ImageSet(AbstractImageSet):
 
 DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey(ImageSet, null=True, related_name="images")
 
+couchStore = CouchDbStorage()
+
 class AbstractSingleImage(models.Model):
     """ 
     An abstract image which may not necessarily have a location on a map
     """
-    file = models.ImageField(upload_to=getNewImageFileName, max_length=255)
+    file = models.ImageField(upload_to=getNewImageFileName,
+                             max_length=255, storage=couchStore)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
     raw = models.BooleanField(default=True)
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
@@ -230,7 +234,10 @@ class AbstractSingleImage(models.Model):
     
     class Meta:
         abstract = True
+        ordering = ['-creation_time']
 
+    def __unicode__(self):
+        return self.file.name
         
 
 class SingleImage(AbstractSingleImage):
