@@ -57,7 +57,7 @@ $.extend(xgds_image,{
 		    el.find("#more_info_view").hide();
 		    el.find("#image_overview").show();
 		});
-		el.find("#add_note_button").click(function(event) {
+		el.find(".add_note_button").click(function(event) {
 		    event.preventDefault();
 		    el.find("#notes_input").show();
 		});
