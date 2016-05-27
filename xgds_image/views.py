@@ -75,7 +75,7 @@ def getImageViewPage(request, imageSetID):
 def getImageImportPage(request):
     # map plus image templates for now
     templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
-    data = {'imageSetsJson': [], #imageSetsJson,
+    data = {'imageSetsJson': [],
             'templates': templates,
             'form': UploadFileForm(),
             'imageSetForm': ImageSetForm()
