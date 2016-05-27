@@ -3,11 +3,9 @@
         "pk": 20000,
         "model": "auth.User",
         "fields": {
-            "password": "camera",
             "username": "camera",
             "first_name": "Some",
-            "last_name": "Camera",
-            "is_active": 1
+            "last_name": "Camera"
         }
     }
 ]
