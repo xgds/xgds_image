@@ -26,6 +26,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.formsets import formset_factory
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import User
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.template import RequestContext
@@ -286,8 +287,17 @@ def saveImage(request):
                         exifTime = TimeUtil.timeZoneToUtc(localized_time)
             if not exifTime:
                     exifTime = datetime.now(pytz.utc)
-            # create a new image set instance           
-            author = request.user  # set user as image author
+            # create a new image set instance       
+            
+            if request.user:    
+                author = request.user  # set user as image author
+            elif 'username' in request.POST:
+                try:
+                    username = str(request.POST['username'])
+                    author = User.objects.get(username=username)
+                except:
+                    author = User.objects.get(username='camera')
+                
             newImageSet = IMAGE_SET_MODEL.get()()
             newImageSet.acquisition_time = exifTime
             newImageSet.acquisition_timezone = form.getTimezoneName()
