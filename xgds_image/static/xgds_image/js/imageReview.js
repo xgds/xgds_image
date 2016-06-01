@@ -144,7 +144,7 @@ $.extend(xgds_image,{
 		}
 
 		if (!keepingNotes){
-			var tbl = el.find('table#notes_list');
+			var tbl = el.find('table.notes_list');
 			xgds_notes.initializeNotesReference(el, imageJson['app_label'], imageJson['model_type'], imageJson['pk'], imageJson['acquisition_time'], imageJson['acquisition_timezone']);
 			xgds_notes.getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['pk'], 'notes_content', tbl);
 		}
@@ -230,7 +230,7 @@ $.extend(xgds_image,{
 			var notes_table = undefined;
 			if ($(notes_content_div).is(':empty')){
 				// the first time we want to fill it in
-				notes_table = $.find("table#notes_list");
+				notes_table = $.find("table.notes_list");
 				var notes_input_div = $.find("#notes_input");
 
 				var new_input_div = $(notes_input_div).hide();
@@ -246,7 +246,7 @@ $.extend(xgds_image,{
 				xgds_notes.hookNoteSubmit();
 
 			} else {
-				notes_table = imageViewTemplate.find("table#notes_list");
+				notes_table = imageViewTemplate.find("table.notes_list");
 			}
 
 			xgds_notes.initializeNotesReference(imageViewTemplate, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
