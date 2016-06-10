@@ -289,7 +289,7 @@ def saveImage(request):
                     exifTime = datetime.now(pytz.utc)
             # create a new image set instance       
             
-            if request.user:    
+            if request.user.is_authenticated():    
                 author = request.user  # set user as image author
             elif 'username' in request.POST:
                 try:
@@ -328,4 +328,4 @@ def saveImage(request):
             return HttpResponse(json.dumps({'success': 'true', 'json': newImageSet.toMapDict()}), 
                                 content_type='application/json')
         else: 
-            return HttpResponse(json.dumps({'error': 'Imported image is not valid'}), content_type='application/json')  
+            return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
