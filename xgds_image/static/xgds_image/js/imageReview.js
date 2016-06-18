@@ -18,32 +18,32 @@ var xgds_image = xgds_image || {};
 $.extend(xgds_image,{
 	hookDelete: function() {
 		// Add a click handler for the delete row 
-		$('#delete_images').click( function() {
-		    var selectedRows = getSelectedRows( theDataTable );
-		    // get a list containing just the id's of selected images
-		    var selectedImageIdsList = jQuery.map(selectedRows, function(element) { return jQuery(element).attr('pk'); });
-		    var selectedImageIdsJson = {"pk": selectedImageIdsList};
-			//delete selected images from db
-		    var url = deleteImagesUrl;
-		    $.ajax({
-				url: url,
-				type: "POST",
-				data: selectedImageIdsJson, // serializes the form's elements.
-				success: function(data) {
-					console.log("images successfully deleted");
-				},
-				error: function(request, status, error) {
-					console.log("error! ", error);
-				}
-			})
-			
-			// delete selected rows from datatable.
-		    for (var i = 0; i < selectedRows.length; i++) { 
-		        theDataTable.fnDeleteRow(selectedRows[i]);
-		    }
-		    // re-render the map icons with only the non-deleted images.
-		    showOnMap(theDataTable.fnGetData());
-		} );
+//		$('#delete_images').click( function() {
+//		    var selectedRows = getSelectedRows( theDataTable );
+//		    // get a list containing just the id's of selected images
+//		    var selectedImageIdsList = jQuery.map(selectedRows, function(element) { return jQuery(element).attr('pk'); });
+//		    var selectedImageIdsJson = {"pk": selectedImageIdsList};
+//			//delete selected images from db
+//		    var url = deleteImagesUrl;
+//		    $.ajax({
+//				url: url,
+//				type: "POST",
+//				data: selectedImageIdsJson, // serializes the form's elements.
+//				success: function(data) {
+//					console.log("images successfully deleted");
+//				},
+//				error: function(request, status, error) {
+//					console.log("error! ", error);
+//				}
+//			})
+//			
+//			// delete selected rows from datatable.
+//		    for (var i = 0; i < selectedRows.length; i++) { 
+//		        theDataTable.fnDeleteRow(selectedRows[i]);
+//		    }
+//		    // re-render the map icons with only the non-deleted images.
+//		    showOnMap(theDataTable.fnGetData());
+//		} );
 	},
 	activateButtons: function(el) {
 		// Hook up edit info and add note buttons
@@ -242,7 +242,7 @@ $.extend(xgds_image,{
 				$(new_table_div).show();
 
 				var taginput = $(new_input_div).find('.taginput');
-				initializeInput(taginput);
+				xgds_notes.initializeInput(taginput);
 				xgds_notes.hookNoteSubmit();
 
 			} else {

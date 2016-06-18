@@ -79,7 +79,7 @@ class ImageSetForm(forms.ModelForm):
         if (('latitude' in self.changed_data) and ('longitude' in self.changed_data)) or ('altitude' in self.changed_data):
             if instance.user_position is None:
                 instance.user_position = LOCATION_MODEL.get().objects.create(serverTimestamp = datetime.datetime.now(pytz.utc),
-                                                                             timestamp = instance.collection_time,
+                                                                             timestamp = instance.acquisition_time,
                                                                              latitude = self.cleaned_data['latitude'],
                                                                              longitude = self.cleaned_data['longitude'], 
                                                                              altitude = self.cleaned_data['altitude'])
