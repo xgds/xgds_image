@@ -71,20 +71,9 @@ import couchdb
 couchServer = couchdb.Server()
 couchDatabase = couchServer[settings.COUCHDB_FILESTORE_NAME]
 
-<<<<<<< HEAD
 class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
     def save(self, destination):
         """Save descriptor file."""
-=======
-
-
-class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
-    def save(self, destination):
-        """Save descriptor file."""
-        #TODO: write the dzi to couch
-#         file = open(destination, "w")
-        
->>>>>>> finally saves dzi and tiles into couchdb. dzi looks empty - need to debug
         doc = xml.dom.minidom.Document()
         image = doc.createElementNS(deepzoom.NS_DEEPZOOM, "Image")
         image.setAttribute("xmlns", deepzoom.NS_DEEPZOOM)
@@ -105,12 +94,6 @@ class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
                                 "creation_time": datetime.utcnow().isoformat()}
         newDoc = couchDatabase[full_file_name]
         couchDatabase.put_attachment(newDoc, descriptor, filename=f)
-<<<<<<< HEAD
-=======
-        
-#         file.write(descriptor)
-#         file.close()
->>>>>>> finally saves dzi and tiles into couchdb. dzi looks empty - need to debug
 
 
 class DeepZoomImageCreator(deepzoom.ImageCreator):
@@ -130,15 +113,8 @@ class DeepZoomImageCreator(deepzoom.ImageCreator):
         image_files = os.path.join(dir_name, "%s_files" % image_name)
 
         # Create tiles
-<<<<<<< HEAD
         levels = self.descriptor.num_levels   # autocalculated from deepzoom DZIDescriptor -- set this in siteSettings
         for level in range(levels):
-=======
-        levels = self.descriptor.num_levels   # 12 total levels
-        #FOR TESTING
-        for level in range(levels):
-            print "CURRENTLY AT LEVEL %d" % level
->>>>>>> finally saves dzi and tiles into couchdb. dzi looks empty - need to debug
             level_dir = os.path.join(image_files, str(level))
             level_image = self.get_image(level)
             for (column, row) in self.tiles(level):
@@ -155,15 +131,10 @@ class DeepZoomImageCreator(deepzoom.ImageCreator):
                 tile.save(myIo, format='JPEG')
                 tileBytesIO = myIo.getvalue()
                 # basename and name are for convenience so we can look it up later.
-<<<<<<< HEAD
-=======
-                print "WRITING TO COUCH"
->>>>>>> finally saves dzi and tiles into couchdb. dzi looks empty - need to debug
                 couchDatabase[full_tile_name] = {"category":"xgds_image", "basename": tile_name,  "name": tile_path,
                              "creation_time": datetime.utcnow().isoformat() }
                 newDoc = couchDatabase[full_tile_name]
                 couchDatabase.put_attachment(newDoc, tileBytesIO, filename=tile_name)
-                print "WROTE ATTACHEMENT"
         self.descriptor.save(destination)
     
 
@@ -210,10 +181,6 @@ class DeepZoomTiles(DeepZoom):
         dz_filename = self.slug + ".dzi"
         dz_relative_filepath = os.path.join(dz_deepzoom_root, self.slug)
         dz_couch_destination = os.path.join(dz_relative_filepath, dz_filename)
-<<<<<<< HEAD
-=======
-#         dz_absolute_filename = os.path.join(media_root, dz_relative_filename)
->>>>>>> finally saves dzi and tiles into couchdb. dzi looks empty - need to debug
         
         # getting the associated image
         assoc_image_name = self.associated_image.split('/')[-1]
@@ -436,23 +403,10 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         rawImage = self.getRawImage()
         if rawImage:
             result['raw_image_url'] = rawImage.file.url
-<<<<<<< HEAD
         result['thumbnail_image_url'] = self.thumbnail_image_url        
         result['deepzoom_file_url'] = self.deepzoom_file_url
         if not result['deepzoom_file_url']:
             result['deepzoom_file_url'] = ''
-=======
-        thumbImage = self.getThumbnail()
-        if thumbImage:
-            result['thumbnail_image_url'] = self.thumbnail_url()
-        if self.associated_deepzoom:
-            deepzoomSlug = self.associated_deepzoom.slug
-            filename = self.name.split('.')[0]
-            deepzoomSlug = filename + "_deepzoom_" + str(self.id)
-            deepzoomFileName = deepzoomSlug + '/' + deepzoomSlug + '.dzi'
-            result['deepzoom_file'] = deepzoomFileName
-            
->>>>>>> finally saves dzi and tiles into couchdb. dzi looks empty - need to debug
         result.update(self.getPositionDict())
         return result
 
