@@ -53,7 +53,7 @@ class AbstractImageSet(models.Model, NoteMixin):
     Set includes the raw image and any resized images.
     Contains utility functions to fetch different sized images.
     """
-    name = models.CharField(max_length=128, blank=True, null=True, help_text="Legible " + settings.XGDS_IMAGE_IMAGE_SET_MONIKER + " name")
+    name = models.CharField(max_length=128, default='', blank=True, null=True, help_text="Legible " + settings.XGDS_IMAGE_IMAGE_SET_MONIKER + " name")
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
     camera = 'set this to DEFAULT_CAMERA_FIELD() or similar in derived classes'
     author = models.ForeignKey(User)
@@ -69,22 +69,52 @@ class AbstractImageSet(models.Model, NoteMixin):
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     
     @property
-    def modelAppLabel(self):
+    def app_label(self):
         return self._meta.app_label
     
     @property
-    def modelTypeName(self):
+    def type(self):
+        return 'ImageSet'
+
+    @property
+    def model_type(self):
         t = type(self)
         if t._deferred:
             t = t.__base__
         return t._meta.object_name
 
+    @property
+    def raw_image_url(self):
+        rawImage = self.getRawImage()
+        if rawImage:
+            return rawImage.file.url
+        return None
+    
+    @property
+    def camera_name(self):
+        if self.camera:
+            return self.camera.name
+        return None
+
+    @property
+    def author_name(self):
+        return getUserName(self.author)
+
+    @property
+    def timezone(self):
+        return self.acquisition_timezone
+
+    @property
+    def thumbnail_image_url(self):
+        return self.thumbnail_url()
+
     def thumbnail_time_url(self, event_time):
         return self.thumbnail_url()
 
     def view_time_url(self, event_time):
-        return self.view_url()
+        return self.view_url
     
+    @property
     def view_url(self):
         return reverse('search_map_single_object', kwargs={'modelPK':self.pk,
                                                            'modelName': settings.XGDS_IMAGE_IMAGE_SET_MONIKER})
@@ -105,6 +135,48 @@ class AbstractImageSet(models.Model, NoteMixin):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
                 % (self.pk, self.name, self.shortName))
     
+    @property
+    def lat(self):
+        position = self.getPosition()
+        if position:
+            return position.latitude
+        
+    @property
+    def lon(self):
+        position = self.getPosition()
+        if position:
+            return position.longitude
+
+    @property
+    def altitude(self):
+        try:
+            position = self.getPosition()
+            if position:
+                return position.altitude
+        except:
+            pass
+        return None
+    
+    @property
+    def heading(self):
+        try:
+            position = self.getPosition()
+            if position:
+                return position.heading
+        except:
+            pass
+        return None
+    
+ 
+    def getPosition(self):
+        if self.user_position:
+            return self.user_position
+        if self.track_position:
+            return self.track_position
+        if self.exif_position:
+            return self.exif_position
+        return None
+        
     def getPositionDict(self):
         ''' override if you want to change the logic for how the positions are prioritized in JSON.
         Right now exif_position is from the camera, track_position is from the track, and user_position stores any hand edits.
@@ -156,20 +228,20 @@ class AbstractImageSet(models.Model, NoteMixin):
         """
         result = modelToDict(self)
         result['pk'] = int(self.pk)
-        result['app_label'] = self.modelAppLabel
+        result['app_label'] = self.app_label
         t = type(self)
         if t._deferred:
             t = t.__base__
         result['model_type'] = t._meta.object_name
         
         result['description'] = self.description
-        result['view_url'] = self.view_url()
+        result['view_url'] = self.view_url
         result['type'] = 'ImageSet'
         if self.camera:
             result['camera_name'] = self.camera.name
         else:
             result['camera_name'] = ''
-        result['author'] = getUserName(self.author)
+        result['author_name'] = getUserName(self.author)
         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         result['timezone'] = self.acquisition_timezone
@@ -199,6 +271,10 @@ class AbstractImageSet(models.Model, NoteMixin):
             return thumbImages[0]
         else:
             return None
+    
+    @classmethod
+    def getSearchableFields(self):
+        return ['name', 'description', 'author__first_name', 'author__last_name']
 
 
 class ImageSet(AbstractImageSet):

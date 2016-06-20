@@ -153,22 +153,8 @@ $.extend(xgds_image,{
 		$(el).html(newContent);
 
 		if (!keepingImage){
-//			el.attr('id', imageJson['name']);
 			this.loadImageInViewer(imageJson);
 	    }
-//		el.find(".image-name strong").text(imageJson['name']);
-//		
-//		// update values
-//		el.find('a#new-window-target').attr('href',imageJson['view_url']);
-//		el.find('#id_pk').attr('value', imageJson['pk']);
-//		el.find('#overview_description').text(imageJson['description']);
-//		el.find('textarea[name="description"]').attr('value', imageJson['description']);
-//		el.find('input[name="name"]').attr('value', imageJson['name']);
-//		el.find('input[name="latitude"]').attr('value', imageJson['lat']);
-//		el.find('input[name="longitude"]').attr('value', imageJson['lon']);
-//		el.find('input[name="altitude"]').attr('value', imageJson['altitude']);
-//		el.find('input[name="heading"]').attr('value', imageJson['heading']);
-//		el.find('#id_changed_position').attr('value', 0);
 	},
 	hideImageNextPrev: function() {
 		$('.prev-button').hide();
@@ -259,7 +245,6 @@ $.extend(xgds_image,{
 		}
 	},
 	setupImageViewer: function(imageJson){
-		
 		if (this.viewer != undefined){
 			this.viewer.destroy();
 			this.viewer = null;

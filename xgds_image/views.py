@@ -113,7 +113,7 @@ def editImage(request, imageSetID):
             else:
                 messages.success(request, settings.XGDS_IMAGE_IMAGE_SET_MONIKER + ' successfully updated.')
             return HttpResponseRedirect(reverse('search_map_single_object', kwargs={'modelPK':imageSetID,
-                                                                                    'modelName':'ImageSet'}))
+                                                                                    'modelName':'Photo'}))
         else: 
             messages.error(request, 'The form is not valid')
             return render_to_response('xgds_image/imageEdit.html',
