@@ -15,7 +15,7 @@
 //__END_LICENSE__
 
 // render json image information on the openlayers map
-var ImageSet = {
+var Photo = {
         initStyles: function() {
             if (_.isUndefined(this.styles)){
                 this.styles = {};

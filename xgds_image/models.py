@@ -26,8 +26,9 @@ from geocamUtil.modelJson import modelToDict
 from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
-from xgds_notes2.models import NoteMixin
+from xgds_notes2.models import NoteMixin, NoteLinksMixin
 from xgds_core.couchDbStorage import CouchDbStorage
+from xgds_core.models import SearchableModel
 
 def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
@@ -47,7 +48,7 @@ DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastRe
 DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
 DEFAULT_RESOURCE_FIELD = lambda: models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
 
-class AbstractImageSet(models.Model, NoteMixin):
+class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -69,19 +70,8 @@ class AbstractImageSet(models.Model, NoteMixin):
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     
     @property
-    def app_label(self):
-        return self._meta.app_label
-    
-    @property
     def type(self):
-        return 'ImageSet'
-
-    @property
-    def model_type(self):
-        t = type(self)
-        if t._deferred:
-            t = t.__base__
-        return t._meta.object_name
+        return 'Photo'
 
     @property
     def raw_image_url(self):
@@ -106,23 +96,11 @@ class AbstractImageSet(models.Model, NoteMixin):
 
     @property
     def thumbnail_image_url(self):
-        return self.thumbnail_url()
-
-    def thumbnail_time_url(self, event_time):
-        return self.thumbnail_url()
-
-    def view_time_url(self, event_time):
-        return self.view_url
-    
-    @property
-    def view_url(self):
-        return reverse('search_map_single_object', kwargs={'modelPK':self.pk,
-                                                           'modelName': settings.XGDS_IMAGE_IMAGE_SET_MONIKER})
-    
-    def thumbnail_url(self):
         thumbImage = self.getThumbnail()
         if thumbImage:
             return thumbImage.file.url
+        return ''
+        
     
     def finish_initialization(self, request):
         ''' during construction, if you have extra data to fill in you can override this method'''
@@ -135,39 +113,6 @@ class AbstractImageSet(models.Model, NoteMixin):
         return (u"ImageSet(%s, name='%s', shortName='%s')"
                 % (self.pk, self.name, self.shortName))
     
-    @property
-    def lat(self):
-        position = self.getPosition()
-        if position:
-            return position.latitude
-        
-    @property
-    def lon(self):
-        position = self.getPosition()
-        if position:
-            return position.longitude
-
-    @property
-    def altitude(self):
-        try:
-            position = self.getPosition()
-            if position:
-                return position.altitude
-        except:
-            pass
-        return None
-    
-    @property
-    def heading(self):
-        try:
-            position = self.getPosition()
-            if position:
-                return position.heading
-        except:
-            pass
-        return None
-    
- 
     def getPosition(self):
         if self.user_position:
             return self.user_position
@@ -248,9 +193,7 @@ class AbstractImageSet(models.Model, NoteMixin):
         rawImage = self.getRawImage()
         if rawImage:
             result['raw_image_url'] = rawImage.file.url
-        thumbImage = self.getThumbnail()
-        if thumbImage:
-            result['thumbnail_image_url'] = self.thumbnail_url()
+        result['thumbnail_image_url'] = self.thumbnail_image_url
         
         result.update(self.getPositionDict())
         return result
