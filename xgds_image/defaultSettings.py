@@ -45,6 +45,11 @@ BOWER_INSTALLED_APPS += ['dropzone',
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
 
+#  This is the directory appended to MEDIA_ROOT for storing generated deep zooms.
+#  If defined, but not physically created, the directory will be created for you.
+#  If not defined, the following default directory name will be used:
+DEEPZOOM_ROOT = XGDS_IMAGE_DATA_SUBDIRECTORY + 'deepzoom_images/'
+
 XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
 XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
 XGDS_IMAGE_CAMERA_MODEL = 'xgds_image.Camera'
@@ -69,3 +74,4 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS[XGDS_IMAGE_IMAGE_SET_MONIKER + 's'] = '/xgds_image/import'
+XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM = False

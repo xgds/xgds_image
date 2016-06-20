@@ -161,89 +161,6 @@ $.extend(xgds_image,{
 		$('.next-button').hide();
 		$('#new-window-btn').hide();
 	},
-	constructImageView: function(imageJson, viewPage){
-		var imageViewWidget = $("#image_view");
-		if (imageViewWidget.length) {
-			this.updateImageView(imageViewWidget, imageJson, null, false, false);
-		} else {
-	        Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
-	        	return getLocalTimeString(sourceTime, timeZone);
-	        });
-
-			viewPage = typeof viewPage !== 'undefined' ? viewPage : false;
-			var rawTemplate = $('#template-image-view').html();
-			this.compiledTemplate = Handlebars.compile(rawTemplate);
-
-			var newDiv = this.compiledTemplate(imageJson);
-			var imageViewTemplate = $(newDiv);
-
-			// callbacks
-			this.hookEditingPosition(imageViewTemplate);
-			this.onUpdateImageInfo(imageViewTemplate);
-			this.activateButtons(imageViewTemplate);
-			this.hookDelete();
-
-			if (!viewPage){
-				this.onImageNextOrPrev(imageViewTemplate);
-			}
-
-			// append the div to the container and gridstack.
-			var newEl;
-			var container = $('#container');
-
-			if (!viewPage){
-				newEl = container.append(imageViewTemplate);
-			} else {
-				newEl = container.prepend(imageViewTemplate);
-			}
-			// add the element to the dashboard
-			if (!viewPage){
-				addItem(imageViewTemplate, 3, 3, 3, 2);
-			}
-			//	// set the loading image to be displayed when main img is loading
-			//	imageViewTemplate.find(".display-image").load(function() {
-			//	// set dimensions of loading image
-			//	var width = imageViewTemplate.find(".display-image").width();
-			//	var height = imageViewTemplate.find(".display-image").height();
-			//	imageViewTemplate.find(".loading-image").width(width);	
-			//	imageViewTemplate.find(".loading-image").height(height);
-			//	imageViewTemplate.find(".loading-image").hide();
-			//	});
-			//	setChangedPosition(0, imageViewTemplate);
-
-			//add the notes if it does not exist
-			var notes_content_div = imageViewTemplate.find("#notes_content");
-			var notes_table = undefined;
-			if ($(notes_content_div).is(':empty')){
-				// the first time we want to fill it in
-				notes_table = $.find("table.notes_list");
-				var notes_input_div = $.find("#notes_input");
-
-				var new_input_div = $(notes_input_div).hide();
-				$(notes_content_div).append(new_input_div);
-
-				var new_table_div = $(notes_table);
-				$(notes_content_div).append(new_table_div);
-				$(new_table_div).removeAttr('hidden');
-				$(new_table_div).show();
-
-				var taginput = $(new_input_div).find('.taginput');
-				xgds_notes.initializeInput(taginput);
-				xgds_notes.hookNoteSubmit();
-
-			} else {
-				notes_table = imageViewTemplate.find("table.notes_list");
-			}
-
-			xgds_notes.initializeNotesReference(imageViewTemplate, imageJson['app_label'], imageJson['model_type'], imageJson['id'], imageJson['creation_time']);
-			xgds_notes.getNotesForObject(imageJson['app_label'], imageJson['model_type'], imageJson['id'], 'notes_content', $(notes_table));
-
-			// set the gridstack image height
-			$('.image_view_outer').attr('data-gs-height', '4');
-
-			this.setupImageViewer(imageJson);
-		}
-	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
 			this.viewer.destroy();
@@ -251,15 +168,19 @@ $.extend(xgds_image,{
 		}
 		// build tile sources for openseadragon image viewer
 		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+		var tiledImage = imageJson.deepzoom_file_url 
 		this.viewer = OpenSeadragon({
 			id: "display-image",
 			prefixUrl: prefixUrl,
-			tileSources: {
-				type: 'image',
-				url: imageJson.raw_image_url
-			}
+			tileSources: tiledImage
 		});
-		
+	},
+	constructImageView: function(imageJson) {
+		var modelMap = app.options.searchModels['Photo'];
+		var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
+		$.when($.get(url, function(handlebarSource, status){
+			app.showDetailView(handlebarSource, imageJson, modelMap, 'Photo');
+		}));
 	},
 	loadImageInViewer: function(imageJson){
 		this.setupImageViewer(imageJson);

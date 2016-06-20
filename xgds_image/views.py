@@ -47,6 +47,7 @@ from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
 
+
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
@@ -242,6 +243,7 @@ def getTrackPosition(timestamp, resource):
     Look up and return the closest tracked position if there is one.
     '''
     return getClosestPosition(timestamp=timestamp, resource=resource)
+        
 
 def saveImage(request):
     """
@@ -324,8 +326,13 @@ def saveImage(request):
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
 
+#             # create deep zoom tiles for viewing in openseadragon.
+            if (newImageSet.create_deepzoom):
+                newImageSet.create_deepzoom_image()
+
             # pass the image set to the client as json.
-            return HttpResponse(json.dumps({'success': 'true', 'json': newImageSet.toMapDict()}), 
+            return HttpResponse(json.dumps({'success': 'true', 
+                                            'json': newImageSet.toMapDict()}), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
