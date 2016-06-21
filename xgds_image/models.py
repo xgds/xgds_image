@@ -44,9 +44,11 @@ from deepzoom import deepzoom
 
 from StringIO import StringIO
 from datetime import datetime
-
+from xgds_core.couchDbStorage import CouchDbStorage
 
 logger = logging.getLogger("deepzoom.models")
+couchStore = CouchDbStorage()
+couchDatabase = couchStore.couchDb
 
 
 def getNewImageFileName(instance, filename):
@@ -67,9 +69,6 @@ DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastRe
 DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
 DEFAULT_RESOURCE_FIELD = lambda: models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
 
-import couchdb
-couchServer = couchdb.Server()
-couchDatabase = couchServer[settings.COUCHDB_FILESTORE_NAME]
 
 class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
     def save(self, destination):
@@ -232,6 +231,19 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                                             editable=False,
                                             on_delete=models.SET_NULL)
     
+    def create_deepzoom_slug(self):
+        """
+        Returns a string instance for deepzoom slug.
+        """
+        if self.name:
+            try: 
+                filename = self.name.split('.')
+            except: 
+                return ''
+            deepzoomSlug = filename[0] + "_deepzoom_" + str(self.id)
+            return deepzoomSlug.lower()
+    
+    
     def create_deepzoom_image(self):
         """
         Creates and processes deep zoom image files to storage.
@@ -239,9 +251,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         uploaded image to it.
         """
         try:
-            # TODO: refactor this into a function
-            filename = self.name.split('.')
-            deepzoomSlug = filename[0] + "_deepzoom_" + str(self.id)
+            deepzoomSlug = self.create_deepzoom_slug()
             rawImageUrl = self.getRawImage().file.url
             dz, created = DeepZoomTiles.objects.get_or_create(associated_image = rawImageUrl,
                                          name=deepzoomSlug)
@@ -305,11 +315,9 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     def deepzoom_file_url(self):
         if self.associated_deepzoom:
             deepzoomSlug = self.associated_deepzoom.slug
-            filename = self.name.split('.')[0]
-            deepzoomRoot = '/xgds_core/db_attachment/xgds_image/deepzoom_images'   # todo: use reverse
-            deepzoomSlug = filename + "_deepzoom_" + str(self.id)
-            deepzoomSlug = deepzoomSlug.lower()
-            return deepzoomRoot + '/' + deepzoomSlug + '/' + deepzoomSlug + '.dzi'
+            docDir = settings.DEEPZOOM_ROOT + deepzoomSlug
+            docFile = deepzoomSlug + '.dzi'
+            return reverse('get_db_attachment', kwargs={'docDir': docDir,'docName': docFile})
         return None
     
     def finish_initialization(self, request):
