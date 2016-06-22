@@ -18,7 +18,6 @@ import os
 import logging
 import sys
 import six
-import glob
 import xml.dom.minidom
 
 from django.db import models
@@ -56,7 +55,7 @@ def getNewImageFileName(instance, filename):
 
 
 class Camera(geocamTrackModels.AbstractResource):
-    serial = models.CharField(max_length=128, blank=True, null=True)
+    serial = models.CharField(max_length=128, blank=True, null=True, db_index=True)
     
     """
     Camera class
@@ -206,19 +205,19 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     Set includes the raw image and any resized images.
     Contains utility functions to fetch different sized images.
     """
-    name = models.CharField(max_length=128, default='', blank=True, null=True, help_text="Legible " + settings.XGDS_IMAGE_IMAGE_SET_MONIKER + " name")
+    name = models.CharField(max_length=128, default='', blank=True, null=True, help_text="Legible " + settings.XGDS_IMAGE_IMAGE_SET_MONIKER + " name", db_index=True)
     shortName = models.CharField(max_length=32, blank=True, null=True, db_index=True, help_text="a short mnemonic code suitable to embed in a URL")
     camera = 'set this to DEFAULT_CAMERA_FIELD() or similar in derived classes'
     author = models.ForeignKey(User)
-    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
     deleted = models.BooleanField(default=False)
     description = models.CharField(max_length=128, blank=True)
     track_position = 'set this to DEFAULT_TRACK_POSITION_FIELD() or similar in derived classes'
     exif_position = 'set this to DEFAULT_EXIF_POSITION_FIELD() or similar in derived classes'
     user_position = 'set this to DEFAULT_USER_POSITION_FIELD() or similar in derived classes'
-    modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
-    acquisition_time = models.DateTimeField(editable=False, default=timezone.now)
-    acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE)
+    modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
+    acquisition_time = models.DateTimeField(editable=False, default=timezone.now, db_index=True)
+    acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE, db_index=True)
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     #Optionally generate deep zoom from uploaded image if set to True.
     create_deepzoom = models.BooleanField(default= settings.XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM,
@@ -460,7 +459,7 @@ class AbstractSingleImage(models.Model):
     """
     file = models.ImageField(upload_to=getNewImageFileName,
                              max_length=255, storage=couchStore)
-    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
     raw = models.BooleanField(default=True)
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
     thumbnail = models.BooleanField(default=False)
