@@ -230,6 +230,10 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                                             editable=False,
                                             on_delete=models.SET_NULL)
     
+    @classmethod
+    def timesearchField(self):
+        return 'acquisition_time'
+
     def create_deepzoom_slug(self):
         """
         Returns a string instance for deepzoom slug.

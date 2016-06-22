@@ -172,8 +172,19 @@ $.extend(xgds_image,{
 		this.viewer = OpenSeadragon({
 			id: "display-image",
 			prefixUrl: prefixUrl,
-			tileSources: tiledImage
+			tileSources: tiledImage,
+			minZoomImageRatio: 0, 
+			maxZoomPixelRatio: Infinity
+//			preserveImageSizeOnResize: true
 		});
+	},
+	resizeImageViewer: function(element) {
+//		var el = $(element);
+//		var width = el.width();
+//		var di = $('#display-image');
+//		di.width(width);
+////		var height = el.height();
+////		di.height(.8*height);
 	},
 	constructImageView: function(imageJson) {
 		var modelMap = app.options.searchModels['Photo'];
