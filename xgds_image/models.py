@@ -258,15 +258,16 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                 dz.slug = slugify(deepzoomSlug)
                 dz.save()
             dz.create_deepzoom_files()
+            self.associated_deepzoom = dz
+            self.create_deepzoom = False
+            self.save()
         except (TypeError, ValueError, AttributeError) as err:
             print("Error: Incorrect deep zoom parameter(s) in settings.py: {0}".format(err))
             raise
         except:
             print("Unexpected error creating deep zoom: {0}".format(sys.exc_info()[1:2]))
             raise
-        self.associated_deepzoom = dz
-        self.create_deepzoom = False
-        self.save()
+        
  
  
     def delete_image_file(self, path_of_image_to_delete=None):
