@@ -173,18 +173,39 @@ $.extend(xgds_image,{
 			id: "display-image",
 			prefixUrl: prefixUrl,
 			tileSources: tiledImage,
-			minZoomImageRatio: 0, 
-			maxZoomPixelRatio: Infinity
-//			preserveImageSizeOnResize: true
+		});
+		this.viewer.addHandler('full-screen', function (viewer) {
+			// grab the canvas from the viewer and reset the size.
+			var element =viewer.eventSource.element; // #display-image
+			var osd_canvas = $(element).find('.openseadragon-canvas'); // somehow change the style -- test with funky values.
+			osd_canvas.width("100%");
+			osd_canvas.height("100%");
 		});
 	},
 	resizeImageViewer: function(element) {
-//		var el = $(element);
-//		var width = el.width();
-//		var di = $('#display-image');
-//		di.width(width);
-////		var height = el.height();
-////		di.height(.8*height);
+		// when viewDiv resize,  
+		// element is the view-div
+		var element = $(element);
+		
+		var newWidth = element.width();
+		var newHeight = element.height();
+		
+		console.log('newwidth ', newWidth);
+		console.log('newHeight ', newHeight);
+		
+		var wrapper = element.find('.image-wrapper');
+		wrapper.width(newWidth);
+		wrapper.height(newHeight);
+		console.log('wrapper ', wrapper);
+		
+		var osd_viewer = wrapper.find('#display-image');
+		console.log('display_viewer ', osd_viewer);
+		osd_viewer.width(newWidth);
+		osd_viewer.height(newHeight);
+		
+		var osd_canvas = osd_viewer.find('.openseadragon-canvas');
+		osd_canvas.width(newWidth);
+		osd_canvas.height(newHeight);
 	},
 	constructImageView: function(imageJson) {
 		var modelMap = app.options.searchModels['Photo'];
