@@ -134,7 +134,14 @@ $.extend(xgds_image,{
 		}
 		return currentImageIndex;
 	},
+	stopTiles: function() {
+		if (!_.isUndefined(this.viewer)){
+			console.log("cancel pending");
+			this.viewer._cancelPendingImages();
+		}
+	},
 	updateImageView: function(el, imageJson, index, keepingImage, keepingNotes) {
+		this.stopTiles();
 		if (imageJson == null){
 			if (index != null) {
 				imageJson = imageSetsArray[index];
