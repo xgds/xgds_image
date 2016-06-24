@@ -136,7 +136,6 @@ $.extend(xgds_image,{
 	},
 	stopTiles: function() {
 		if (!_.isUndefined(this.viewer)){
-			console.log("cancel pending");
 			this.viewer._cancelPendingImages();
 		}
 	},
