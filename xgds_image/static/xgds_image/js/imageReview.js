@@ -180,6 +180,7 @@ $.extend(xgds_image,{
 			id: "display-image",
 			prefixUrl: prefixUrl,
 			tileSources: tiledImage,
+		        showRotationControl: true,
 		});
 		this.viewer.addHandler('full-screen', function (viewer) {
 			// grab the canvas from the viewer and reset the size.
