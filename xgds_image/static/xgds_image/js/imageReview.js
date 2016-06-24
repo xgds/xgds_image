@@ -183,7 +183,7 @@ $.extend(xgds_image,{
 		});
 		this.viewer.addHandler('full-screen', function (viewer) {
 			// grab the canvas from the viewer and reset the size.
-			var element =viewer.eventSource.element; // #display-image
+			var element = viewer.eventSource.element; // #display-image
 			var osd_canvas = $(element).find('.openseadragon-canvas'); // somehow change the style -- test with funky values.
 			osd_canvas.width("100%");
 			osd_canvas.height("100%");
