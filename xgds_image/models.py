@@ -89,7 +89,7 @@ class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
         fpath = os.path.dirname(destination)
         full_file_name = os.path.join(fpath, f)
         couchDatabase[full_file_name] = {"category": "xgds_image", "basename": f, "name": fpath, 
-                                "creation_time": datetime.utcnow().isoformat()}
+                                         "creation_time": datetime.utcnow().isoformat()}
         newDoc = couchDatabase[full_file_name]
         couchDatabase.put_attachment(newDoc, descriptor, filename=f)
 
