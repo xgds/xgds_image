@@ -283,10 +283,10 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         except OSError:
             logger.exception("Image file deletion failed!")
     
-    @property
-    def type(self):
+    @classmethod
+    def cls_type(cls):
         return 'Photo'
-
+    
     @property
     def raw_image_url(self):
         rawImage = self.getRawImage()
