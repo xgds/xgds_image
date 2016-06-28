@@ -21,7 +21,7 @@ var Photo = {
                 this.styles = {};
                 this.styles['iconStyle'] = new ol.style.Style({
                     image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-                        src: '/static/xgds_image/images/photo.png',
+                        src: '/static/xgds_image/images/photo_heading.png',
                         scale: 1.0
                         }))
                       });
