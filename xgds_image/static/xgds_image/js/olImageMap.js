@@ -38,6 +38,18 @@ var Photo = {
                 };
             }
         },
+        buildStyle: function(heading){
+        	if (_.isUndefined(heading) || _.isNull(heading)){
+        		heading = 0;
+        	}
+        	return new ol.style.Style({
+                image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+                    src: '/static/xgds_image/images/photo_heading.png',
+                    scale: 1.0,
+                    rotation: heading * (Math.PI/180.0)
+                    }))
+                  });
+        },
         constructElements: function(imagesJson){
             if (_.isEmpty(imagesJson)){
                 return null;
@@ -65,7 +77,7 @@ var Photo = {
                 uuid: imageJson.pk,
                 geometry: new ol.geom.Point(coords)
             });
-            feature.setStyle(this.getStyles(imageJson));
+            feature.setStyle(this.buildStyle(imageJson.heading));//this.getStyles(imageJson));
             this.setupPopup(feature, imageJson);
             return feature;
         },
