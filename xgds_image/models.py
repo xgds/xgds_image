@@ -389,38 +389,38 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
             
         return result
         
-    def toMapDict(self):
-        """
-        Return a reduced dictionary that will be turned to JSON for rendering in a map
-        """
-        result = modelToDict(self)
-        result['pk'] = int(self.pk)
-        result['app_label'] = self.app_label
-        t = type(self)
-        if t._deferred:
-            t = t.__base__
-        result['model_type'] = t._meta.object_name
-        
-        result['description'] = self.description
-        result['view_url'] = self.view_url
-        result['type'] = 'ImageSet'
-        if self.camera:
-            result['camera_name'] = self.camera.name
-        else:
-            result['camera_name'] = ''
-        result['author_name'] = getUserName(self.author)
-        result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-        result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-        result['timezone'] = self.acquisition_timezone
-        rawImage = self.getRawImage()
-        if rawImage:
-            result['raw_image_url'] = rawImage.file.url
-        result['thumbnail_image_url'] = self.thumbnail_image_url        
-        result['deepzoom_file_url'] = self.deepzoom_file_url
-        if not result['deepzoom_file_url']:
-            result['deepzoom_file_url'] = ''
-        result.update(self.getPositionDict())
-        return result
+#     def toMapDict(self):
+#         """
+#         Return a reduced dictionary that will be turned to JSON for rendering in a map
+#         """
+#         result = modelToDict(self)
+#         result['pk'] = int(self.pk)
+#         result['app_label'] = self.app_label
+#         t = type(self)
+#         if t._deferred:
+#             t = t.__base__
+#         result['model_type'] = t._meta.object_name
+#         
+#         result['description'] = self.description
+#         result['view_url'] = self.view_url
+#         result['type'] = 'ImageSet'
+#         if self.camera:
+#             result['camera_name'] = self.camera.name
+#         else:
+#             result['camera_name'] = ''
+#         result['author_name'] = getUserName(self.author)
+#         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+#         result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+#         result['timezone'] = self.acquisition_timezone
+#         rawImage = self.getRawImage()
+#         if rawImage:
+#             result['raw_image_url'] = rawImage.file.url
+#         result['thumbnail_image_url'] = self.thumbnail_image_url        
+#         result['deepzoom_file_url'] = self.deepzoom_file_url
+#         if not result['deepzoom_file_url']:
+#             result['deepzoom_file_url'] = ''
+#         result.update(self.getPositionDict())
+#         return result
 
     def getRawImage(self):
         rawImages = self.images.filter(raw=True)
@@ -469,12 +469,12 @@ class AbstractSingleImage(models.Model):
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
     thumbnail = models.BooleanField(default=False)
        
-    def toMapDict(self):
-        """
-        Return a reduced dictionary that will be turned to JSON
-        """
-        result = modelToDict(self)
-        return result
+#     def toMapDict(self):
+#         """
+#         Return a reduced dictionary that will be turned to JSON
+#         """
+#         result = modelToDict(self)
+#         return result
     
     class Meta:
         abstract = True
