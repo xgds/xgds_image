@@ -46,7 +46,6 @@ from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
-import pydevd
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
