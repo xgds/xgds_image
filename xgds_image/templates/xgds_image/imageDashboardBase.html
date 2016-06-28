@@ -20,6 +20,7 @@
     $(imageSetsJson).each(function() {
     	imageSetsArray.push(JSON.parse(this)); // parse json string
     });
+    
     <!-- set vars -->
     var updateImageUrl = "{% url 'xgds_update_image_info' %}";
     var deleteImagesUrl = "{% url 'xgds_delete_images' %}";

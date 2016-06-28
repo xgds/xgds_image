@@ -46,7 +46,7 @@ from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
-
+import pydevd
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
@@ -58,22 +58,8 @@ GEOCAM_TRACK_RESOURCE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_
 XGDS_IMAGE_TEMPLATE_LIST = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
 XGDS_IMAGE_TEMPLATE_LIST = XGDS_IMAGE_TEMPLATE_LIST + settings.XGDS_CORE_TEMPLATE_DIRS[settings.XGDS_IMAGE_IMAGE_SET_MODEL]
 
-def getImageViewPage(request, imageSetID):
-    errors = None
-    try:
-        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imageSetID)
-        imageSetsJson = [json.dumps(imageSet.toMapDict())]
-    except:
-        imageSetsJson = []
-        errors = "Image not found."
-
-    data = {'imageSetsJson': imageSetsJson,
-            'STATIC_URL': settings.STATIC_URL,
-            'templates': get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST'),
-            'errors': errors}
-    return render_to_response("xgds_image/imageView.html", data,
-                              context_instance=RequestContext(request))
     
+@login_required 
 def getImageImportPage(request):
     # map plus image templates for now
     templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
@@ -85,18 +71,6 @@ def getImageImportPage(request):
     return render_to_response("xgds_image/imageImport.html", data,
                               context_instance=RequestContext(request))
 
-    
-def getImageSearchPage(request):
-    templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
-    # search stuff
-    theForm = SpecializedForm(SearchForm, IMAGE_SET_MODEL.get())
-    theFormSetMaker = formset_factory(theForm, extra=0)
-    theFormSet = theFormSetMaker(initial=[{'modelClass': IMAGE_SET_MODEL.get()}])
-    return render_to_response("xgds_image/imageSearch.html", 
-                              {'imageSetsJson': "[]",
-                               'templates': templates,
-                               'formset': theFormSet},
-                              context_instance=RequestContext(request))
 
 @login_required 
 def editImage(request, imageSetID):
@@ -245,6 +219,33 @@ def getTrackPosition(timestamp, resource):
     return getClosestPosition(timestamp=timestamp, resource=resource)
         
 
+def getRotationValue(request):
+    if request.method == 'POST':
+        postDict = request.POST.dict()        
+        imagePK = int(postDict['imagePK'])
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
+        degrees = imageSet.rotation_degrees
+        return HttpResponse(json.dumps({'rotation_degrees': degrees}), 
+                            content_type='application/json')
+    else: 
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
+    
+
+def saveRotationValue(request):
+    if request.method == 'POST':
+        postDict = request.POST.dict()        
+        degrees = int(postDict['degrees'])
+        imagePK = int(postDict['pk'])
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
+        imageSet.rotation_degrees = degrees
+        imageSet.save()
+        return HttpResponse(json.dumps({'success': 'true'}), 
+                            content_type='application/json')
+    else: 
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
+    
+
+@login_required 
 def saveImage(request):
     """
     Image drag and drop, saves the files and to the database.
@@ -289,9 +290,10 @@ def saveImage(request):
                             localized_time = form_tz.localize(modtime)
                             exifTime = TimeUtil.timeZoneToUtc(localized_time)
             if not exifTime:
-                    exifTime = datetime.now(pytz.utc)
+                exifTime = datetime.now(pytz.utc)
             # create a new image set instance       
             
+            author = None
             if request.user.is_authenticated():    
                 author = request.user  # set user as image author
             elif 'username' in request.POST:
