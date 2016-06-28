@@ -229,6 +229,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                                             related_name="%(app_label)s_%(class)s",
                                             editable=False,
                                             on_delete=models.SET_NULL)
+    rotation_degrees = models.PositiveSmallIntegerField(null=True, default=0)
     
     @classmethod
     def timesearchField(self):
