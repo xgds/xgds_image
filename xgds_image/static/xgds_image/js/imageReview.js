@@ -188,7 +188,7 @@ $.extend(xgds_image,{
 	saveRotationDegrees: function(imageJson, degrees) {
 		// this gets called when user switches the view to another image.
 		// call ajax to save the rotation degrees. 
-		imageJson['degrees'] = degrees; 
+		imageJson['rotation_degrees'] = degrees; 
 		var postData = imageJson;
 		var url = app.options.searchModels.Photo.saveRotationUrl;
 		$.ajax({
@@ -202,20 +202,8 @@ $.extend(xgds_image,{
 			}
 		});
 	},
-	setRotation: function(osd_viewer, imagePK){
-		var postData = {'imagePK': imagePK };
-		var url = app.options.searchModels.Photo.getRotationUrl;
-		$.ajax({
-			url: url,
-			type: "POST",
-			data: postData, // serializes the form's elements.
-			success: function(data) {
-				osd_viewer.viewport.setRotation(data['rotation_degrees'])
-			},
-			error: function(request, status, error) {
-				console.log("error! ", error);
-			}
-		});
+	setOpenseadragonRotation: function(osd_viewer, rotation_degrees){
+		osd_viewer.viewport.setRotation(rotation_degrees);
 	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
@@ -229,10 +217,10 @@ $.extend(xgds_image,{
 			id: "display-image",
 			prefixUrl: prefixUrl,
 			tileSources: tiledImage,
-		        showRotationControl: true,
+		    showRotationControl: true,
 		});
 		var osd_viewer = this.viewer;
-		var degrees = this.setRotation(osd_viewer, imageJson['pk']);
+		var degrees = this.setOpenseadragonRotation(osd_viewer, imageJson['rotation_degrees']);
 		
 		// Add handlers for full-screen event and rotation event.
 		this.viewer.addHandler('full-screen', function (viewer) {

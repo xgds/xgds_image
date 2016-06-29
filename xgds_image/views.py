@@ -218,22 +218,10 @@ def getTrackPosition(timestamp, resource):
     return getClosestPosition(timestamp=timestamp, resource=resource)
         
 
-def getRotationValue(request):
-    if request.method == 'POST':
-        postDict = request.POST.dict()        
-        imagePK = int(postDict['imagePK'])
-        imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
-        degrees = imageSet.rotation_degrees
-        return HttpResponse(json.dumps({'rotation_degrees': degrees}), 
-                            content_type='application/json')
-    else: 
-        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
-    
-
 def saveRotationValue(request):
     if request.method == 'POST':
         postDict = request.POST.dict()        
-        degrees = int(postDict['degrees'])
+        degrees = int(postDict['rotation_degrees'])
         imagePK = int(postDict['pk'])
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
         imageSet.rotation_degrees = degrees
@@ -334,7 +322,7 @@ def saveImage(request):
 
             # pass the image set to the client as json.
             return HttpResponse(json.dumps({'success': 'true', 
-                                            'json': newImageSet.toMapDict()}), 
+                                            'json': json.dumps(newImageSet.toMapDict(), cls=DatetimeJsonEncoder)}), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
