@@ -47,6 +47,7 @@ from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
 
+
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
@@ -218,6 +219,18 @@ def getTrackPosition(timestamp, resource):
     return getClosestPosition(timestamp=timestamp, resource=resource)
         
 
+def getRotationValue(request):
+    if request.method == 'POST':
+        getDict = request.POST.dict()        
+        imagePK = int(getDict['imagePK'])
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
+        degrees = imageSet.rotation_degrees
+        return HttpResponse(json.dumps({'rotation_degrees': degrees}), 
+                            content_type='application/json')
+    else: 
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
+    
+
 def saveRotationValue(request):
     if request.method == 'POST':
         postDict = request.POST.dict()        
@@ -316,13 +329,16 @@ def saveImage(request):
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
 
-#             # create deep zoom tiles for viewing in openseadragon.
+            # create deep zoom tiles for viewing in openseadragon.
             if (newImageSet.create_deepzoom):
                 newImageSet.create_deepzoom_image()
 
+            imageSetDict = newImageSet.toMapDict()
+            acq_time = imageSetDict['acquisition_time'] 
+            imageSetDict['acquisition_time'] = acq_time.strftime("%Y-%m-%d %H:%M:%S UTC")  # needs to be json serializable
             # pass the image set to the client as json.
             return HttpResponse(json.dumps({'success': 'true', 
-                                            'json': json.dumps(newImageSet.toMapDict(), cls=DatetimeJsonEncoder)}), 
+                                            'json': imageSetDict}), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  

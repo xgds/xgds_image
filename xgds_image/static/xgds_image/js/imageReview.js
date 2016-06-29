@@ -15,6 +15,7 @@
 //__END_LICENSE__
 
 var xgds_image = xgds_image || {};
+
 $.extend(xgds_image,{
 	hookDelete: function() {
 		// Add a click handler for the delete row 
@@ -186,11 +187,11 @@ $.extend(xgds_image,{
 		$('#new-window-btn').hide();
 	},
 	saveRotationDegrees: function(imageJson, degrees) {
-		// this gets called when user switches the view to another image.
-		// call ajax to save the rotation degrees. 
+		// save rotation degrees to the database
 		imageJson['rotation_degrees'] = degrees; 
 		var postData = imageJson;
 		var url = app.options.searchModels.Photo.saveRotationUrl;
+		// get rotation degrees from db, compare to degrees. 
 		$.ajax({
 			url: url,
 			type: "POST",
@@ -202,8 +203,20 @@ $.extend(xgds_image,{
 			}
 		});
 	},
-	setOpenseadragonRotation: function(osd_viewer, rotation_degrees){
-		osd_viewer.viewport.setRotation(rotation_degrees);
+	setOpenseadragonRotation: function(osd_viewer, imagePK){
+		var getData = {'imagePK': imagePK };
+		var url = app.options.searchModels.Photo.getRotationUrl;
+		$.ajax({
+			url: url,
+			type: "POST",
+			data: getData, // serializes the form's elements.
+			success: function(data) {
+				osd_viewer.viewport.setRotation(data['rotation_degrees']);
+			},
+			error: function(request, status, error) {
+				console.log("error! ", error);
+			}
+		});
 	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
@@ -220,7 +233,8 @@ $.extend(xgds_image,{
 		    showRotationControl: true,
 		});
 		var osd_viewer = this.viewer;
-		var degrees = this.setOpenseadragonRotation(osd_viewer, imageJson['rotation_degrees']);
+		osd_viewer['viewer_initialized'] = true;
+		this.setOpenseadragonRotation(osd_viewer, imageJson['pk']);
 		
 		// Add handlers for full-screen event and rotation event.
 		this.viewer.addHandler('full-screen', function (viewer) {
@@ -233,11 +247,17 @@ $.extend(xgds_image,{
 		// add a handler for rotation that saves the rotation degrees to the database. 
 		var context = this;
 		this.viewer.addHandler('rotate', function(viewer) {
-			var element = viewer.eventSource.element;
-			var degrees = viewer.degrees;
-			var userData = viewer.userData;
-			// save the rotation to the db.
-			context.saveRotationDegrees(imageJson, degrees);
+			if (context.viewer['viewer_initialized'] != true) {
+				var element = viewer.eventSource.element;
+				var degrees = viewer.degrees;
+				var userData = viewer.userData;
+				// save the rotation to the db.
+				context.saveRotationDegrees(imageJson, degrees);
+			} else { // viewer is initialized. 
+				// set the initialized flag to false
+				context.viewer['viewer_initialized'] = false
+			}
+			
 		});
 	},
 	resizeImageViewer: function(element) {
