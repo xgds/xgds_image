@@ -159,7 +159,7 @@ def getHeading(exifData):
         gpsInfo = exifData["GPSInfo"]
         heading_tuple = getIfExists(gpsInfo, "GPSImgDirection")
         # no clue if this is right, totally guessing ...
-        if len(heading_tuple) == 2:
+        if heading_tuple and len(heading_tuple) == 2:
             heading = int(heading_tuple[0])/int(heading_tuple[1])
 
     return heading
