@@ -245,7 +245,6 @@ def saveRotationValue(request):
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
     
 
-@login_required 
 def saveImage(request):
     """
     Image drag and drop, saves the files and to the database.
