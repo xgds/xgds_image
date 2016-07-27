@@ -316,10 +316,13 @@ def saveImage(request):
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
 
-#             # create deep zoom tiles for viewing in openseadragon.
+            # create deep zoom tiles for viewing in openseadragon.
             if (newImageSet.create_deepzoom):
                 newImageSet.create_deepzoom_image()
 
+            imageSetDict = newImageSet.toMapDict()
+            acq_time = imageSetDict['acquisition_time'] 
+            imageSetDict['acquisition_time'] = acq_time.strftime("%Y-%m-%d %H:%M:%S UTC")  # needs to be json serializable
             # pass the image set to the client as json.
             return HttpResponse(json.dumps({'success': 'true', 
                                             'json': json.dumps(newImageSet.toMapDict(), cls=DatetimeJsonEncoder)}), 
