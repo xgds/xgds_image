@@ -26,4 +26,5 @@ urlpatterns = [
     url(r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
     url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images'),
     url(r'^saveRotation/$', views.saveRotationValue, {}, 'xgds_image_save_rotation'),
+    url(r'^getRotation/$', views.getRotationValue, {}, 'xgds_image_get_rotation'), 
     ]
