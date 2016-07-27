@@ -137,8 +137,8 @@ def updateImageInfo(request):
 #             imageSet.description = form.cleaned_data['description']
             imageSet.save()
             return HttpResponse(json.dumps([imageSet.toMapDict()], cls=DatetimeJsonEncoder),
-                content_type="application/json"
-            )
+                                content_type="application/json"
+                                )
         else: 
             return HttpResponse(json.dumps({'status': 'error',
                                             'message': "Failed to save."}),
