@@ -47,6 +47,7 @@ from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
 
+
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
@@ -220,8 +221,8 @@ def getTrackPosition(timestamp, resource):
 
 def getRotationValue(request):
     if request.method == 'POST':
-        postDict = request.POST.dict()        
-        imagePK = int(postDict['imagePK'])
+        getDict = request.POST.dict()        
+        imagePK = int(getDict['imagePK'])
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
         degrees = imageSet.rotation_degrees
         return HttpResponse(json.dumps({'rotation_degrees': degrees}), 
@@ -233,7 +234,7 @@ def getRotationValue(request):
 def saveRotationValue(request):
     if request.method == 'POST':
         postDict = request.POST.dict()        
-        degrees = int(postDict['degrees'])
+        degrees = int(postDict['rotation_degrees'])
         imagePK = int(postDict['pk'])
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
         imageSet.rotation_degrees = degrees
@@ -244,7 +245,6 @@ def saveRotationValue(request):
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
     
 
-@login_required 
 def saveImage(request):
     """
     Image drag and drop, saves the files and to the database.
@@ -328,13 +328,16 @@ def saveImage(request):
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
 
-#             # create deep zoom tiles for viewing in openseadragon.
+            # create deep zoom tiles for viewing in openseadragon.
             if (newImageSet.create_deepzoom):
                 newImageSet.create_deepzoom_image()
 
+            imageSetDict = newImageSet.toMapDict()
+            acq_time = imageSetDict['acquisition_time'] 
+            imageSetDict['acquisition_time'] = acq_time.strftime("%Y-%m-%d %H:%M:%S UTC")  # needs to be json serializable
             # pass the image set to the client as json.
             return HttpResponse(json.dumps({'success': 'true', 
-                                            'json': newImageSet.toMapDict()}), 
+                                            'json': imageSetDict}), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
