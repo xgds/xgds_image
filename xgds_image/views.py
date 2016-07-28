@@ -47,7 +47,6 @@ from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
 
-
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
@@ -221,8 +220,8 @@ def getTrackPosition(timestamp, resource):
 
 def getRotationValue(request):
     if request.method == 'POST':
-        getDict = request.POST.dict()        
-        imagePK = int(getDict['imagePK'])
+        postDict = request.POST.dict()        
+        imagePK = int(postDict['imagePK'])
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
         degrees = imageSet.rotation_degrees
         return HttpResponse(json.dumps({'rotation_degrees': degrees}), 
@@ -333,8 +332,11 @@ def saveImage(request):
                 newImageSet.create_deepzoom_image()
 
             imageSetDict = newImageSet.toMapDict()
+<<<<<<< HEAD
             acq_time = imageSetDict['acquisition_time'] 
             imageSetDict['acquisition_time'] = acq_time.strftime("%Y-%m-%d %H:%M:%S UTC")  # needs to be json serializable
+=======
+>>>>>>> image-rotation
             # pass the image set to the client as json.
             return HttpResponse(json.dumps({'success': 'true', 
                                             'json': imageSetDict}), 

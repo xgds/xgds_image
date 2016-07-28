@@ -192,6 +192,8 @@ $.extend(xgds_image,{
 		var postData = imageJson;
 		var url = app.options.searchModels.Photo.saveRotationUrl;
 		// get rotation degrees from db, compare to degrees. 
+		// this gets called when user switches the view to another image.
+		// call ajax to save the rotation degrees. 
 		$.ajax({
 			url: url,
 			type: "POST",
@@ -211,7 +213,7 @@ $.extend(xgds_image,{
 			type: "POST",
 			data: getData, // serializes the form's elements.
 			success: function(data) {
-				osd_viewer.viewport.setRotation(data['rotation_degrees']);
+				osd_viewer.viewport.setRotation(data['rotation_degrees'])
 			},
 			error: function(request, status, error) {
 				console.log("error! ", error);
