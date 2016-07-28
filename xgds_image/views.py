@@ -332,14 +332,9 @@ def saveImage(request):
                 newImageSet.create_deepzoom_image()
 
             imageSetDict = newImageSet.toMapDict()
-<<<<<<< HEAD
-            acq_time = imageSetDict['acquisition_time'] 
-            imageSetDict['acquisition_time'] = acq_time.strftime("%Y-%m-%d %H:%M:%S UTC")  # needs to be json serializable
-=======
->>>>>>> image-rotation
             # pass the image set to the client as json.
             return HttpResponse(json.dumps({'success': 'true', 
-                                            'json': imageSetDict}), 
+                                            'json': imageSetDict}, cls=DatetimeJsonEncoder), 
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
