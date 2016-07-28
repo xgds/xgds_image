@@ -162,58 +162,6 @@ $.extend(xgds_image,{
 			this.loadImageInViewer(imageJson);
 	    }
 	},
-	hideImageNextPrev: function() {
-		$('.prev-button').hide();
-		$('.next-button').hide();
-		$('#new-window-btn').hide();
-	},
-	setupImageViewer: function(imageJson){
-		if (this.viewer != undefined){
-			this.viewer.destroy();
-			this.viewer = null;
-		}
-		// build tile sources for openseadragon image viewer
-		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-		var tiledImage = imageJson.deepzoom_file_url 
-		this.viewer = OpenSeadragon({
-			id: "display-image",
-			prefixUrl: prefixUrl,
-			tileSources: tiledImage,
-		        showRotationControl: true,
-		});
-		this.viewer.addHandler('full-screen', function (viewer) {
-			// grab the canvas from the viewer and reset the size.
-			var element = viewer.eventSource.element; // #display-image
-			var osd_canvas = $(element).find('.openseadragon-canvas'); // somehow change the style -- test with funky values.
-			osd_canvas.width("100%");
-			osd_canvas.height("100%");
-		});
-	},
-	resizeImageViewer: function(element) {
-		// when viewDiv resize,  
-		// element is the view-div
-		var element = $(element);
-		
-		var newWidth = element.width();
-		var newHeight = element.height();
-		
-		console.log('newwidth ', newWidth);
-		console.log('newHeight ', newHeight);
-		
-		var wrapper = element.find('.image-wrapper');
-		wrapper.width(newWidth);
-		wrapper.height(newHeight);
-		console.log('wrapper ', wrapper);
-		
-		var osd_viewer = wrapper.find('#display-image');
-		console.log('display_viewer ', osd_viewer);
-		osd_viewer.width(newWidth);
-		osd_viewer.height(newHeight);
-		
-		var osd_canvas = osd_viewer.find('.openseadragon-canvas');
-		osd_canvas.width(newWidth);
-		osd_canvas.height(newHeight);
-	},
 	constructImageView: function(imageJson) {
 		var modelMap = app.options.searchModels['Photo'];
 		var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
@@ -231,6 +179,98 @@ $.extend(xgds_image,{
 			this.viewer.open({type: 'image', 
 							  url: imageJson.raw_image_url});
 		}
+	},
+	hideImageNextPrev: function() {
+		$('.prev-button').hide();
+		$('.next-button').hide();
+		$('#new-window-btn').hide();
+	},
+	saveRotationDegrees: function(imageJson, degrees) {
+		// this gets called when user switches the view to another image.
+		// call ajax to save the rotation degrees. 
+		imageJson['degrees'] = degrees; 
+		var postData = imageJson;
+		var url = app.options.searchModels.Photo.saveRotationUrl;
+		$.ajax({
+			url: url,
+			type: "POST",
+			data: postData, // serializes the form's elements.
+			success: function(data) {
+			},
+			error: function(request, status, error) {
+				console.log("error! ", error)
+			}
+		});
+	},
+	setRotation: function(osd_viewer, imagePK){
+		var postData = {'imagePK': imagePK };
+		var url = app.options.searchModels.Photo.getRotationUrl;
+		$.ajax({
+			url: url,
+			type: "POST",
+			data: postData, // serializes the form's elements.
+			success: function(data) {
+				osd_viewer.viewport.setRotation(data['rotation_degrees'])
+			},
+			error: function(request, status, error) {
+				console.log("error! ", error);
+			}
+		});
+	},
+	setupImageViewer: function(imageJson){
+		if (this.viewer != undefined){
+			this.viewer.destroy();
+			this.viewer = null;
+		}
+		// build tile sources for openseadragon image viewer
+		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+		var tiledImage = imageJson.deepzoom_file_url 
+		this.viewer = OpenSeadragon({
+			id: "display-image",
+			prefixUrl: prefixUrl,
+			tileSources: tiledImage,
+		        showRotationControl: true,
+		});
+		var osd_viewer = this.viewer;
+		var degrees = this.setRotation(osd_viewer, imageJson['pk']);
+		
+		// Add handlers for full-screen event and rotation event.
+		this.viewer.addHandler('full-screen', function (viewer) {
+			// grab the canvas from the viewer and reset the size.
+			var element = viewer.eventSource.element; // #display-image
+			var osd_canvas = $(element).find('.openseadragon-canvas'); // somehow change the style -- test with funky values.
+			osd_canvas.width("100%");
+			osd_canvas.height("100%");
+		});
+		// add a handler for rotation that saves the rotation degrees to the database. 
+		var context = this;
+		this.viewer.addHandler('rotate', function(viewer) {
+			var element = viewer.eventSource.element;
+			var degrees = viewer.degrees;
+			var userData = viewer.userData;
+			// save the rotation to the db.
+			context.saveRotationDegrees(imageJson, degrees);
+		});
+	},
+	resizeImageViewer: function(element) {
+		// when viewDiv resize,  
+		// element is the view-div
+		var element = $(element);
+		
+		var newWidth = element.width();
+		var newHeight = element.height();
+		
+		var wrapper = element.find('.image-wrapper');
+		wrapper.width(newWidth);
+		wrapper.height(newHeight);
+		
+		var osd_viewer = wrapper.find('#display-image');
+		osd_viewer.width(newWidth);
+		osd_viewer.height(newHeight);
+		
+		var osd_canvas = osd_viewer.find('.openseadragon-canvas');
+		osd_canvas.width(newWidth);
+		osd_canvas.height(newHeight);
 	},
 	setSaveStatusMessage: function(handler, status, msg){
 		if (status == 'success') {
