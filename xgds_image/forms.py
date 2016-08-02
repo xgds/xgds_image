@@ -49,10 +49,10 @@ class ImageSetForm(forms.ModelForm):
             positionDict = self.instance.getPositionDict()
             self.fields['latitude'].initial = positionDict['lat']
             self.fields['longitude'].initial = positionDict['lon']
-            if 'altitude' in positionDict:
-                self.fields['altitude'].initial = positionDict['altitude']
-            if 'heading' in positionDict:
-                self.fields['heading'].initial = positionDict['heading']
+            if 'alt' in positionDict:
+                self.fields['altitude'].initial = positionDict['alt']
+            if 'head' in positionDict:
+                self.fields['heading'].initial = positionDict['head']
         
     def clean(self):
         """

@@ -77,7 +77,7 @@ var Photo = {
                 uuid: imageJson.pk,
                 geometry: new ol.geom.Point(coords)
             });
-            feature.setStyle(this.buildStyle(imageJson.heading));//this.getStyles(imageJson));
+            feature.setStyle(this.buildStyle(imageJson.head));//this.getStyles(imageJson));
             this.setupPopup(feature, imageJson);
             return feature;
         },
@@ -98,8 +98,8 @@ var Photo = {
                         "Time:", imageJson.acquisition_time,
                         "Author:", imageJson.author_name,
                         "Camera:", imageJson.camera_name,
-                        "Altitude:", imageJson.altitude + " m",
-                        "Heading", imageJson.heading,
+                        "Altitude:", imageJson.alt + " m",
+                        "Heading", imageJson.head,
                         "Lat:", imageJson.lat,
                         "Lon:", imageJson.lon
                         ];
