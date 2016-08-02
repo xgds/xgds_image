@@ -358,9 +358,9 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
             result['lat'] = self.user_position.latitude
             result['lon'] = self.user_position.longitude
             if hasattr(self.user_position, 'altitude'):
-                result['altitude'] = self.user_position.altitude
+                result['alt'] = self.user_position.altitude
             if hasattr(self.user_position, 'heading'):
-                result['heading'] = self.user_position.heading
+                result['head'] = self.user_position.heading
             return result
         
         result['position_id'] = ""
@@ -368,22 +368,22 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
             result['lat'] = self.track_position.latitude
             result['lon'] = self.track_position.longitude
             if self.track_position.altitude:
-                result['altitude'] = self.track_position.altitude
+                result['alt'] = self.track_position.altitude
             if self.exif_position:
                 if hasattr(self.exif_position, 'heading'):
-                    result['heading'] = self.exif_position.heading
+                    result['head'] = self.exif_position.heading
                 elif hasattr(self.track_position, 'heading'):
-                    result['heading'] = self.track_position.heading
-                if result['altitude'] == '' and hasattr(self.exif_position, 'altitude'):
-                    result['altitude'] = self.track_position.altitude
+                    result['head'] = self.track_position.heading
+                if result['alt'] == '' and hasattr(self.exif_position, 'altitude'):
+                    result['alt'] = self.track_position.altitude
             return result
         elif self.exif_position:
             result['lat'] = self.exif_position.latitude
             result['lon'] = self.exif_position.longitude
             if hasattr(self.exif_position, 'altitude'):
-                result['altitude'] = self.exif_position.altitude
+                result['alt'] = self.exif_position.altitude
             if hasattr(self.exif_position, 'heading'):
-                result['heading'] = self.exif_position.heading
+                result['head'] = self.exif_position.heading
         else: 
             result['lat'] = ""
             result['lon'] = ""
