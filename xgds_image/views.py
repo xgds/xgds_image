@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
+import pydevd
 import pytz
 import json
 import os
@@ -245,6 +246,7 @@ def saveRotationValue(request):
     
 
 def saveImage(request):
+    pydevd.settrace('192.168.1.79')
     """
     Image drag and drop, saves the files and to the database.
     """

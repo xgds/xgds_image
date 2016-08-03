@@ -234,7 +234,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     @classmethod
     def timesearchField(self):
         return 'acquisition_time'
-
+    
     def create_deepzoom_slug(self):
         """
         Returns a string instance for deepzoom slug.
@@ -351,8 +351,8 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         track provides lat lon and altitude, exif provides heading, and user trumps all.
         '''
         result = {}
-        result['altitude'] = ""
-        result['heading'] = ""
+        result['alt'] = ""
+        result['head'] = ""
 
         if self.user_position:
             result['lat'] = self.user_position.latitude

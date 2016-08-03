@@ -13,7 +13,6 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
-
 import datetime
 import pytz
 from django import forms
@@ -76,17 +75,20 @@ class ImageSetForm(forms.ModelForm):
                     
     def save(self, commit=True):
         instance = super(ImageSetForm, self).save(commit=False)
-        if (('latitude' in self.changed_data) and ('longitude' in self.changed_data)) or ('altitude' in self.changed_data):
+        if (('latitude' in self.changed_data) and ('longitude' in self.changed_data)) or ('altitude' in self.changed_data) or ('heading' in self.changed_data):
             if instance.user_position is None:
                 instance.user_position = LOCATION_MODEL.get().objects.create(serverTimestamp = datetime.datetime.now(pytz.utc),
                                                                              timestamp = instance.acquisition_time,
                                                                              latitude = self.cleaned_data['latitude'],
                                                                              longitude = self.cleaned_data['longitude'], 
-                                                                             altitude = self.cleaned_data['altitude'])
+                                                                             altitude = self.cleaned_data['altitude'],
+                                                                             heading = self.cleaned_data['heading'])
             else:
                 instance.user_position.latitude = self.cleaned_data['latitude']
                 instance.user_position.longitude = self.cleaned_data['longitude']
                 instance.user_position.altitude = self.cleaned_data['altitude']
+                instance.user_position.heading = self.cleaned_data['heading']
+                instance.user_position.save()
 
         if commit:
             instance.save()
