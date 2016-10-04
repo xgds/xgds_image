@@ -1,4 +1,5 @@
 import django
+import traceback
 django.setup()
 
 from basaltApp.models import BasaltImageSet
@@ -18,4 +19,8 @@ For each of these imagesets,
 
 for imageset in allImageSets:
     if (imageset.associated_deepzoom) == None:
-        dzt = imageset.create_deepzoom_image() 
+        try:
+            print 'about to create deepzoom for ' + imageset.name
+            dzt = imageset.create_deepzoom_image() 
+        except:
+            traceback.print_exc()

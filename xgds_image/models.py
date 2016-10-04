@@ -47,7 +47,7 @@ from xgds_core.couchDbStorage import CouchDbStorage
 
 logger = logging.getLogger("deepzoom.models")
 couchStore = CouchDbStorage()
-couchDatabase = couchStore.couchDb
+couchDatabase = couchStore.get_couchDb()
 
 
 def getNewImageFileName(instance, filename):
