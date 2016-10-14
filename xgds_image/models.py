@@ -443,6 +443,26 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     @classmethod
     def getSearchableFields(self):
         return ['name', 'description', 'author__first_name', 'author__last_name']
+    
+    @classmethod
+    def getSearchFormFields(cls):
+        return ['name',
+                'description',
+                'author',
+                'camera',
+                'resource'
+                ]
+    
+    @classmethod
+    def getSearchFieldOrder(cls):
+        return ['resource',
+                'author',
+                'name',
+                'description',
+                'camera',
+                'acquisition_timezone',
+                'min_acquisition_time',
+                'max_acquisition_time']
 
 
 class ImageSet(AbstractImageSet):

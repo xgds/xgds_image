@@ -17,12 +17,20 @@ import datetime
 import pytz
 from django import forms
 from django.conf import settings
+from django.utils.functional import lazy
+from django.contrib.auth.models import User
+
+from django.db.models import Q
 from models import SingleImage, ImageSet
 from geocamUtil.loader import LazyGetModelByName
+from geocamUtil.forms.AbstractImportForm import getTimezoneChoices
 
 from geocamTrack.forms import AbstractImportTrackedForm
+from xgds_core.forms import SearchForm
+
 LOCATION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-from geocamTrack.utils import getClosestPosition
+IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
+
  
 class UploadFileForm(AbstractImportTrackedForm):
     class Meta:
@@ -94,3 +102,54 @@ class ImageSetForm(forms.ModelForm):
             instance.save()
         return instance
         
+class SearchImageSetForm(SearchForm):
+    author = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+    
+    min_acquisition_time = forms.DateTimeField(required=False, label='Min Time',
+                                         widget=forms.DateTimeInput(attrs={'class': 'datetimepicker'}))
+    max_acquisition_time = forms.DateTimeField(required=False, label = 'Max Time',
+                                         widget=forms.DateTimeInput(attrs={'class': 'datetimepicker'}))
+    
+    acquisition_timezone = forms.ChoiceField(required=False, choices=lazy(getTimezoneChoices, list)(empty=True), 
+                                             label='Time Zone', help_text='Required for Min/Max Time')
+
+    
+    field_order = IMAGE_SET_MODEL.get().getSearchFieldOrder()
+    
+    # populate the times properly
+    def clean_min_acquisition_time(self):
+        return self.clean_time('min_acquisition_time', self.clean_acquisition_timezone())
+
+    # populate the times properly
+    def clean_max_acquisition_time(self):
+        return self.clean_time('max_acquisition_time', self.clean_acquisition_timezone())
+    
+    def clean_acquisition_timezone(self):
+        if self.cleaned_data['acquisition_timezone'] == 'utc':
+            return 'Etc/UTC'
+        else:
+            return self.cleaned_data['acquisition_timezone']
+        return None
+
+    def clean(self):
+        cleaned_data = super(SearchImageSetForm, self).clean()
+        acquisition_timezone = cleaned_data.get("acquisition_timezone")
+        min_acquisition_time = cleaned_data.get("min_acquisition_time")
+        max_acquisition_time = cleaned_data.get("max_acquisition_time")
+
+        if min_acquisition_time or max_acquisition_time:
+            if not acquisition_timezone:
+                self.add_error('event_timezone',"Time Zone is required for min / max times.")
+                raise forms.ValidationError(
+                    "Time Zone is required for min / max times."
+                )
+
+    def buildQueryForField(self, fieldname, field, value, minimum=False, maximum=False):
+        if fieldname == 'description' or fieldname == 'name':
+            return self.buildContainsQuery(fieldname, field, value)
+        return super(SearchImageSetForm, self).buildQueryForField(fieldname, field, value, minimum, maximum)
+        
+
+    class Meta:
+        model = IMAGE_SET_MODEL.get()
+        fields = IMAGE_SET_MODEL.get().getSearchFormFields()
