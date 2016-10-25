@@ -339,10 +339,10 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     def getPosition(self):
         if self.user_position:
             return self.user_position
-        if self.track_position:
-            return self.track_position
         if self.exif_position:
             return self.exif_position
+        if self.track_position:
+            return self.track_position
         return None
         
     def getPositionDict(self):

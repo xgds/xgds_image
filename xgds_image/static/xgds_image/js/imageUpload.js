@@ -24,7 +24,7 @@ var lastModDate = [];
 Dropzone.options.imageDropZone = {
 	// Prevents Dropzone from uploading dropped files immediately
 	autoProcessQueue : false,
-	parallelUploads: 1000, // upload up to 1000 images in parallel
+	parallelUploads: 1, // upload up to 1000 images in parallel
 	addRemoveLinks: true,
 	acceptedFiles: ".png,.jpg,.jpeg,.tif,.tiff,.gif,.pdf",
 	init : function() {
@@ -36,7 +36,8 @@ Dropzone.options.imageDropZone = {
 		this.previewsContainer.appendChild(filesEnqueuedMessage);
 		// process files when submit is clicked.
 		submitButton.addEventListener("click", function() {
-			imageDropZone.options.headers = { 'lastMod': lastModDate},
+			imageDropZone.options.headers = { 'lastMod': lastModDate};
+		    imageDropZone.options.autoProcessQueue = true;
 			imageDropZone.processQueue();  // Tell Dropzone to process all queued files.
 		});
 		
@@ -66,11 +67,11 @@ Dropzone.options.imageDropZone = {
 				filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
 			}
 		});
-		this.on("complete", function(file) {
-			// automatically remove a file when it’s finished uploading
-			this.removeFile(file); 
-			this.lastModDate = [];
-		});
+		// this.on("complete", function(file) {
+		// 	// automatically remove a file when it’s finished uploading
+		// 	this.removeFile(file); 
+		// 	this.lastModDate = [];
+		// });
 		
 		this.on("success", function(file, responseText, e) {
 			var json = responseText['json'];

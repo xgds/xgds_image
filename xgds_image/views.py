@@ -19,6 +19,7 @@ import os
 import traceback
 from datetime import datetime
 from dateutil.parser import parse as dateparser
+from threading import Thread
 
 from django.utils import timezone
 from django.conf import settings
@@ -329,7 +330,9 @@ def saveImage(request):
 
             # create deep zoom tiles for viewing in openseadragon.
             if (newImageSet.create_deepzoom):
-                newImageSet.create_deepzoom_image()
+                deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
+                deepzoomTilingThread.start()
+#                newImageSet.create_deepzoom_image()
 
             imageSetDict = newImageSet.toMapDict()
             # pass the image set to the client as json.
