@@ -312,23 +312,22 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     @property
     def originalImageResolutionString(self):
         originalImage = self.getRawImage()
-        width = originalImage.width
-        height = originalImage.height
+        if originalImage:
+            width = originalImage.width
+            height = originalImage.height
 
-        if width and height:
-            megaPixels = (width * height)/(1000.0*1000.0)
-            return "%1d x %1d | %1.2f MP" % (width, height, megaPixels)
-        else:
-            return "N/A"
+            if width and height:
+                megaPixels = (width * height)/(1000.0*1000.0)
+                return "%1d x %1d | %1.2f MP" % (width, height, megaPixels)
+        return ''
 
     @property
     def originalImageFileSizeMB(self):
         originalImage = self.getRawImage()
-        if originalImage.fileSizeBytes:
+        if originalImage and originalImage.fileSizeBytes:
             fileSizeMB = "%1.2f MB" % (originalImage.fileSizeBytes/(1024.0*1024.0))
             return fileSizeMB
-        else:
-            return "N/A"
+        return ''
 
     @property
     def thumbnail_image_url(self):
