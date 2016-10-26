@@ -259,7 +259,12 @@ def saveImage(request):
             form_tz = form.getTimezone()
             resource = form.getResource()
             exifData = getExifData(newImage)
-            
+
+            # save image dimensions and file size
+            newImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
+            newImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
+            newImage.fileSizeBytes = uploadedFile.size
+
             # get exif time
             exifTime  = None
             exifTimeString = getExifValue(exifData, 'DateTimeOriginal')

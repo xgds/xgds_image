@@ -6,16 +6,20 @@
 			<table>
 				<tr>
 					<td class="small">{{ author_name }}</td>
-					<td class="small">{{prettyTime acquisition_time acquisition_timezone}}</td>
+					<td colspan=3 class="small">{{prettyTime acquisition_time acquisition_timezone}}</td>
 				</tr>
-				{{#if head}}
 				<tr>
 					<td class="small">Heading:</td>
+				{{#if head}}
 					<td class="small">{{ head }}&deg;</td>
-				</tr>
+				{{else}}
+					<td class="small">n/a</td>
 				{{/if}}
+					<td class="small">Resolution:</td>
+					<td class="small">{{originalImageResolutionString}} | {{originalImageFileSizeMB}}</td>
+				</tr>
 				<tr>
-					<td colspan=2 id="overview_description">{{ description }}</td>
+					<td colspan=4 id="overview_description">{{ description }}</td>
 				</tr>
 			</table>
 		</div>

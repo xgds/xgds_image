@@ -310,6 +310,27 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         return self.acquisition_timezone
 
     @property
+    def originalImageResolutionString(self):
+        originalImage = self.getRawImage()
+        width = originalImage.width
+        height = originalImage.height
+
+        if width and height:
+            megaPixels = (width * height)/(1000.0*1000.0)
+            return "%1d x %1d | %1.2f MP" % (width, height, megaPixels)
+        else:
+            return "N/A"
+
+    @property
+    def originalImageFileSizeMB(self):
+        originalImage = self.getRawImage()
+        if originalImage.fileSizeBytes:
+            fileSizeMB = "%1.2f MB" % (originalImage.fileSizeBytes/(1024.0*1024.0))
+            return fileSizeMB
+        else:
+            return "N/A"
+
+    @property
     def thumbnail_image_url(self):
         thumbImage = self.getThumbnail()
         if thumbImage:
@@ -489,7 +510,10 @@ class AbstractSingleImage(models.Model):
     raw = models.BooleanField(default=True)
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
     thumbnail = models.BooleanField(default=False)
-       
+    width = models.IntegerField(blank=True,null=True)
+    height = models.IntegerField(blank=True,null=True)
+    fileSizeBytes = models.IntegerField(blank=True,null=True)
+
 #     def toMapDict(self):
 #         """
 #         Return a reduced dictionary that will be turned to JSON
