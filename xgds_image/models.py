@@ -319,7 +319,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
             if width and height:
                 megaPixels = (width * height)/(1000.0*1000.0)
                 return "%1d x %1d | %1.2f MP" % (width, height, megaPixels)
-        return ''
+        return 'n/a'
 
     @property
     def originalImageFileSizeMB(self):
@@ -327,7 +327,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         if originalImage and originalImage.fileSizeBytes:
             fileSizeMB = "%1.2f MB" % (originalImage.fileSizeBytes/(1024.0*1024.0))
             return fileSizeMB
-        return ''
+        return 'n/a'
 
     @property
     def thumbnail_image_url(self):
