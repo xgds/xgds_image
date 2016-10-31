@@ -43,6 +43,13 @@ def createThumbnailFile(src):
     thumbFile.name = dstFileName
     return File(thumbFile)
 
+
+def getHeightWidth(imageModelInstance):
+    """ Read size and width with PIL
+    """
+    pilImageObj = Image.open(imageModelInstance.file)
+    return pilImageObj.size
+
 """
 Exif utility Functions
 referenced: https://gist.github.com/erans/983821

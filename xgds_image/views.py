@@ -38,7 +38,7 @@ from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates
 from xgds_data.forms import SearchForm, SpecializedForm
-from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
 
 from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
@@ -47,6 +47,7 @@ from geocamUtil.models.UuidField import makeUuid
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
+from utils import getHeightWidth
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
@@ -261,8 +262,13 @@ def saveImage(request):
             exifData = getExifData(newImage)
 
             # save image dimensions and file size
-            newImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
-            newImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
+            try:
+                newImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
+                newImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
+            except:
+                # try reading size from pil
+                newImage.width, newImage.height = getHeightWidthFromPIL(newImage)
+                
             newImage.fileSizeBytes = uploadedFile.size
 
             # get exif time
