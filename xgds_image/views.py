@@ -265,8 +265,7 @@ def saveImage(request):
                 newImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
                 newImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
             except:
-                # try reading size from pil
-                newImage.width, newImage.height = getHeightWidthFromPIL(newImage)
+                pass
                 
             newImage.fileSizeBytes = uploadedFile.size
 

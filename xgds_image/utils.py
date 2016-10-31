@@ -72,6 +72,11 @@ def getExifData(imageModelInstance):
                     exifData[ExifTags.TAGS[tag]] = value
     except: 
         pass
+    
+    if 'ExifImageWidth' not in exifData:
+        width, height = pilImageObj.size
+        exifData['ExifImageWidth'] = width
+        exifData['ExifImageHeight'] = height
     return exifData
 
 
