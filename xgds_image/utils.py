@@ -44,7 +44,7 @@ def createThumbnailFile(src):
     return File(thumbFile)
 
 
-def getHeightWidth(imageModelInstance):
+def getHeightWidthFromPIL(imageModelInstance):
     """ Read size and width with PIL
     """
     pilImageObj = Image.open(imageModelInstance.file)
