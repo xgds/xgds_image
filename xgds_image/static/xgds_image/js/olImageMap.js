@@ -93,6 +93,7 @@ var Photo = {
             var coords = transform([imageJson.lon, imageJson.lat]);
             var feature = new ol.Feature({
             	type: imageJson.type,
+            	view_url: imageJson.view_url,
                 name: imageJson.name,
                 uuid: imageJson.pk,
                 pk: imageJson.pk,
