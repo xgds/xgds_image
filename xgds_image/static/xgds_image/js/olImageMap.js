@@ -16,12 +16,20 @@
 
 // render json image information on the openlayers map
 var Photo = {
+		selectedStylePath: '/static/xgds_image/images/photo_heading_selected.png',
+		stylePath: '/static/xgds_image/images/photo_heading.png',
         initStyles: function() {
             if (_.isUndefined(this.styles)){
                 this.styles = {};
                 this.styles['iconStyle'] = new ol.style.Style({
                     image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-                        src: '/static/xgds_image/images/photo_heading.png',
+                        src: this.stylePath,
+                        scale: 1.0
+                        }))
+                      });
+                this.styles['selectedIconStyle'] = new ol.style.Style({
+                    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+                        src: this.selectedStylePath,
                         scale: 1.0
                         }))
                       });
@@ -38,13 +46,24 @@ var Photo = {
                 };
             }
         },
-        buildStyle: function(heading){
+        buildStyle: function(heading, selected){
         	if (_.isUndefined(heading) || _.isNull(heading)){
         		heading = 0;
         	}
+        	if (_.isUndefined(selected) || _.isNull(selected)){
+        		selected = false;
+        	}
+        	var zIndex=1;
+        	var stylePath = this.stylePath;
+        	if (selected){
+        		stylePath = this.selectedStylePath;
+        		zIndex=10;
+        	}
+        	
         	return new ol.style.Style({
+        		zIndex: zIndex,
                 image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-                    src: '/static/xgds_image/images/photo_heading.png',
+                    src: stylePath,
                     scale: 1.0,
                     rotation: heading * (Math.PI/180.0)
                     }))
@@ -63,7 +82,7 @@ var Photo = {
                 }
             }
             var vectorLayer = new ol.layer.Vector({
-                name: "Notes",
+                name: imagesJson[0].type,
                 source: new ol.source.Vector({
                     features: olFeatures
                 }),
@@ -73,17 +92,25 @@ var Photo = {
         constructMapElement:function(imageJson){
             var coords = transform([imageJson.lon, imageJson.lat]);
             var feature = new ol.Feature({
-                name: imageJson.acquisition_time,
+            	type: imageJson.type,
+                name: imageJson.name,
                 uuid: imageJson.pk,
+                pk: imageJson.pk,
                 geometry: new ol.geom.Point(coords)
             });
-            feature.setStyle(this.buildStyle(imageJson.head));//this.getStyles(imageJson));
+            feature.setStyle(this.buildStyle(imageJson.head));
             this.setupPopup(feature, imageJson);
             return feature;
         },
-        getStyles: function(imageJson) {
-            var styles = [this.styles['iconStyle']];
-            return styles;
+        selectMapElement:function(feature){
+        	var heading = feature.getStyle().getImage().getRotation();
+        	heading = heading / (Math.PI/180.0);
+        	feature.setStyle(this.buildStyle(heading, true));
+        },
+        deselectMapElement:function(feature){
+        	var heading = feature.getStyle().getImage().getRotation();
+        	heading = heading / (Math.PI/180.0);
+        	feature.setStyle(this.buildStyle(heading, false));
         },
         setupPopup: function(feature, imageJson) {
             var trString = "<tr><td>%s</td><td>%s</td></tr>";
