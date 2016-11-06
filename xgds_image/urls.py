@@ -23,7 +23,6 @@ urlpatterns = [
     url(r'^edit/(?P<imageSetID>[\d]+)$', views.editImage, {}, 'xgds_image_edit_image'),
     url(r'^import/', views.getImageImportPage, {}, 'xgds_image_import'),
     url(r'^saveImage/$', views.saveImage, {'loginRequired': False}, 'xgds_save_image'),
-    url(r'^writeEvent/$', views.sdWriteEvent, {'loginRequired': False}, 'xgds_sd_write_event'),
     url(r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
     url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images'),
     url(r'^saveRotation/$', views.saveRotationValue, {}, 'xgds_image_save_rotation'),

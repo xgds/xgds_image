@@ -20,9 +20,6 @@ import traceback
 from datetime import datetime
 from dateutil.parser import parse as dateparser
 from threading import Thread
-from threading import Timer
-
-import requests
 
 from django.utils import timezone
 from django.conf import settings
@@ -247,19 +244,6 @@ def saveRotationValue(request):
     else: 
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
     
-def checkForNewImages():
-    print "Calling imageloader..."
-    r = requests.get("http://10.10.24.75/fileUpdate.lua")
-    print "response:", r.text
-    print ""
-
-def sdWriteEvent(request):
-#    r = redis.Redis(host="127.0.0.1",port=6379)
-    print "Write event called.  queue event here..."
-#    r.set('globalTimeMark', time.time())
-    fCheck = Timer(1.5, checkForNewImages)
-    fCheck.start()
-    return HttpResponse("OK", content_type='text/plain')
 
 def saveImage(request):
     """
