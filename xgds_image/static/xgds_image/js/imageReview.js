@@ -160,7 +160,7 @@ $.extend(xgds_image,{
 		$(el).html(newContent);
 
 		if (!keepingImage){
-			this.loadImageInViewer(imageJson);
+			this.setupImageViewer(imageJson);
 	    }
 	},
 	constructImageView: function(imageJson) {
@@ -174,12 +174,12 @@ $.extend(xgds_image,{
 		this.setupImageViewer(imageJson);
 		return;
     	// load new image into OpenSeadragon viewer
-		if (this.viewer == undefined){
-			this.setupImageViewer(imageJson);
-		} else {
-			this.viewer.open({type: 'image', 
-							  url: imageJson.raw_image_url});
-		}
+//		if (this.viewer == undefined){
+//			this.setupImageViewer(imageJson);
+//		} else {
+//			this.viewer.open({type: 'image', 
+//							  url: imageJson.raw_image_url});
+//		}
 	},
 	hideImageNextPrev: function() {
 		$('.prev-button').hide();
@@ -220,14 +220,32 @@ $.extend(xgds_image,{
 			}
 		});
 	},
+	showRawImage: function(imageJson){
+		var rawImage = imageJson.raw_image_url; 
+		if (!_.isUndefined(this.viewer)){
+			this.viewer._cancelPendingImages();
+			this.viewer.destroy();
+			this.viewer = undefined;
+		}
+		$(".openseadragon-container").hide();
+		$('#display-image').prepend('<img id="raw-image" src="' + rawImage + '" />');
+	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
+			this.stopTiles();
 			this.viewer.destroy();
-			this.viewer = null;
+			this.viewer = undefined;
 		}
+		// try removing the raw image
+		try {
+			$("#raw-image").remove();  // or destroy();
+		} catch (err) {
+			//pass
+		}
+		
 		// build tile sources for openseadragon image viewer
 		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-		var tiledImage = imageJson.deepzoom_file_url 
+		var tiledImage = imageJson.deepzoom_file_url;
 		this.viewer = OpenSeadragon({
 			id: "display-image",
 			prefixUrl: prefixUrl,
@@ -246,6 +264,23 @@ $.extend(xgds_image,{
 			osd_canvas.width("100%");
 			osd_canvas.height("100%");
 		});
+		
+		var context = {imageJson: imageJson,
+					   showRawImage: xgds_image.showRawImage,
+					   };
+		this.viewer.addHandler('open-failed', function(inputDict) {
+			// If the tiles are not there or not ready, then open the raw image
+			inputDict.userData.showRawImage(inputDict.userData.imageJson);
+		}, context);
+		
+//		this.viewer.addHandler('tile-load-failed', function(inputDict) {
+//			// If the tiles are not there or not ready, then open the raw image
+//			debugger;
+//			console.log('TILE LOAD FAILED');
+//			console.log(inputDict.message); // for now
+//			inputDict.userData.showRawImage(inputDict.userData.imageJson);
+//		}, context);
+		
 		// add a handler for rotation that saves the rotation degrees to the database. 
 		var context = this;
 		this.viewer.addHandler('rotate', function(viewer) {
