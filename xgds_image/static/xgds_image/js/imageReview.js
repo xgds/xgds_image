@@ -232,10 +232,13 @@ $.extend(xgds_image,{
 	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
+			if (this.viewer.imageJson.pk == imageJson.pk){
+				return;
+			}
 			this.stopTiles();
 			this.viewer.destroy();
 			this.viewer = undefined;
-		}
+		} 
 		// try removing the raw image
 		try {
 			$("#raw-image").remove();  // or destroy();
@@ -251,6 +254,7 @@ $.extend(xgds_image,{
 			prefixUrl: prefixUrl,
 			tileSources: tiledImage,
 		    showRotationControl: true,
+		    imageJson: imageJson
 		});
 		var osd_viewer = this.viewer;
 		osd_viewer['viewer_initialized'] = true;
@@ -265,21 +269,18 @@ $.extend(xgds_image,{
 			osd_canvas.height("100%");
 		});
 		
-		var context = {imageJson: imageJson,
-					   showRawImage: xgds_image.showRawImage,
+		var failDict = {imageJson: imageJson,
 					   };
 		this.viewer.addHandler('open-failed', function(inputDict) {
 			// If the tiles are not there or not ready, then open the raw image
-			inputDict.userData.showRawImage(inputDict.userData.imageJson);
-		}, context);
+			xgds_image.showRawImage(inputDict.userData.imageJson);
+		}, failDict);
 		
-//		this.viewer.addHandler('tile-load-failed', function(inputDict) {
-//			// If the tiles are not there or not ready, then open the raw image
-//			debugger;
-//			console.log('TILE LOAD FAILED');
-//			console.log(inputDict.message); // for now
-//			inputDict.userData.showRawImage(inputDict.userData.imageJson);
-//		}, context);
+		this.viewer.addHandler('tile-load-failed', function(inputDict) {
+			// If the tiles are not there or not ready, then open the raw image
+			// do not expect the data here
+			xgds_image.showRawImage(inputDict.userData.imageJson);
+		}, failDict);
 		
 		// add a handler for rotation that saves the rotation degrees to the database. 
 		var context = this;
