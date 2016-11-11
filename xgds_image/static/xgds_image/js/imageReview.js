@@ -257,6 +257,7 @@ $.extend(xgds_image,{
 				  url: '/xgds_image/checkTiles/' + imageJson.pk,
 				  success: function(data) {
 					  imageJson.create_deepzoom = data.create_deepzoom; 
+					  imageJson.deepzoom_file_url = data.deepzoom_file_url;
 				  },
 				  error: function(){
 					  // use the old state
@@ -269,9 +270,13 @@ $.extend(xgds_image,{
 			}
 		}
 		
+		var tiledImage = imageJson.deepzoom_file_url;
+		if (_.isEmpty(tiledImage)){
+			this.showRawImage(imageJson);
+		}
+		
 		// build tile sources for openseadragon image viewer
 		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-		var tiledImage = imageJson.deepzoom_file_url;
 		this.viewer = OpenSeadragon({
 			id: "display-image",
 			prefixUrl: prefixUrl,

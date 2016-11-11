@@ -372,7 +372,8 @@ def getTileState(request, imageSetPK):
     try:
         image = IMAGE_SET_MODEL.get().objects.get(pk=imageSetPK)
         return HttpResponse(json.dumps({'pk': imageSetPK, 
-                                        'create_deepzoom': image.create_deepzoom}), 
+                                        'create_deepzoom': image.create_deepzoom,
+                                        'deepzoom_file_url': image.deepzoom_file_url}), 
                                         content_type='application/json')
     except Exception, e:
         return HttpResponse(json.dumps({'pk': imageSetPK, 
