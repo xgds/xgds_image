@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images'),
     url(r'^saveRotation/$', views.saveRotationValue, {}, 'xgds_image_save_rotation'),
     url(r'^getRotation/$', views.getRotationValue, {}, 'xgds_image_get_rotation'), 
+    url(r'^checkTiles/(?P<imageSetPK>[\d]+)$', views.getTileState, {}, 'xgds_image_check_tiles'), 
     ]

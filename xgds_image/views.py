@@ -366,3 +366,16 @@ def saveImage(request):
                                 content_type='application/json')
         else: 
             return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
+
+
+def getTileState(request, imageSetPK):
+    try:
+        image = IMAGE_SET_MODEL.get().objects.get(pk=imageSetPK)
+        return HttpResponse(json.dumps({'pk': imageSetPK, 
+                                        'create_deepzoom': image.create_deepzoom}), 
+                                        content_type='application/json')
+    except Exception, e:
+        return HttpResponse(json.dumps({'pk': imageSetPK, 
+                                        'error': str(e)}), 
+                                        content_type='application/json',
+                                            status=404)

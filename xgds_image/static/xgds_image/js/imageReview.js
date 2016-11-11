@@ -201,7 +201,7 @@ $.extend(xgds_image,{
 			success: function(data) {
 			},
 			error: function(request, status, error) {
-				console.log("error! ", error)
+				//console.log("error! ", error)
 			}
 		});
 	},
@@ -227,7 +227,11 @@ $.extend(xgds_image,{
 			this.viewer.destroy();
 			this.viewer = undefined;
 		}
-		$(".openseadragon-container").hide();
+		try {
+			$(".openseadragon-container").hide();
+		} catch (err){
+			// pass
+		}
 		$('#display-image').prepend('<img id="raw-image" src="' + rawImage + '" />');
 	},
 	setupImageViewer: function(imageJson){
@@ -244,6 +248,25 @@ $.extend(xgds_image,{
 			$("#raw-image").remove();  // or destroy();
 		} catch (err) {
 			//pass
+		}
+		
+		if (imageJson.create_deepzoom){
+			// tiles are not ready yet, let's make sure:
+			$.ajax({
+				  dataType: "json",
+				  url: '/xgds_image/checkTiles/' + imageJson.pk,
+				  success: function(data) {
+					  imageJson.create_deepzoom = data.create_deepzoom; 
+				  },
+				  error: function(){
+					  // use the old state
+				  },
+				  async: false
+				});
+			if (imageJson.create_deepzoom){
+				this.showRawImage(imageJson);
+				return;
+			}
 		}
 		
 		// build tile sources for openseadragon image viewer
