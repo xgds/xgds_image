@@ -141,7 +141,6 @@ $.extend(xgds_image,{
 		}
 	},
 	updateImageView: function(el, imageJson, index, keepingImage, keepingNotes) {
-		this.stopTiles();
 		if (imageJson == null){
 			if (index != null) {
 				imageJson = imageSetsArray[index];
@@ -172,14 +171,6 @@ $.extend(xgds_image,{
 	},
 	loadImageInViewer: function(imageJson){
 		this.setupImageViewer(imageJson);
-		return;
-    	// load new image into OpenSeadragon viewer
-//		if (this.viewer == undefined){
-//			this.setupImageViewer(imageJson);
-//		} else {
-//			this.viewer.open({type: 'image', 
-//							  url: imageJson.raw_image_url});
-//		}
 	},
 	hideImageNextPrev: function() {
 		$('.prev-button').hide();
@@ -220,13 +211,16 @@ $.extend(xgds_image,{
 			}
 		});
 	},
-	showRawImage: function(imageJson){
-		var rawImage = imageJson.raw_image_url; 
+	removeViewer: function() {
 		if (!_.isUndefined(this.viewer)){
 			this.viewer._cancelPendingImages();
 			this.viewer.destroy();
 			this.viewer = undefined;
 		}
+	},
+	showRawImage: function(imageJson){
+		var rawImage = imageJson.raw_image_url; 
+		this.removeViewer();
 		try {
 			$(".openseadragon-container").hide();
 		} catch (err){
@@ -236,12 +230,11 @@ $.extend(xgds_image,{
 	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
-			if (this.viewer.imageJson.pk == imageJson.pk){
-				return;
-			}
-			this.stopTiles();
-			this.viewer.destroy();
-			this.viewer = undefined;
+			//TODO this should really be appropriate but somehow updateContents is being triggered many times
+//			if (this.viewer.imageJson.pk == imageJson.pk){
+//				return;
+//			}
+			this.removeViewer();
 		} 
 		// try removing the raw image
 		try {
@@ -250,7 +243,9 @@ $.extend(xgds_image,{
 			//pass
 		}
 		
-		if (imageJson.create_deepzoom){
+		var tiledImage = imageJson.deepzoom_file_url;
+
+		if (imageJson.create_deepzoom || _.isEmpty(tiledImage)){
 			// tiles are not ready yet, let's make sure:
 			$.ajax({
 				  dataType: "json",
@@ -258,22 +253,19 @@ $.extend(xgds_image,{
 				  success: function(data) {
 					  imageJson.create_deepzoom = data.create_deepzoom; 
 					  imageJson.deepzoom_file_url = data.deepzoom_file_url;
+					  tiledImage = data.deepzoom_file_url;
 				  },
 				  error: function(){
 					  // use the old state
 				  },
 				  async: false
 				});
-			if (imageJson.create_deepzoom){
+			if (imageJson.create_deepzoom || _.isEmpty(tiledImage)){
 				this.showRawImage(imageJson);
 				return;
 			}
 		}
 		
-		var tiledImage = imageJson.deepzoom_file_url;
-		if (_.isEmpty(tiledImage)){
-			this.showRawImage(imageJson);
-		}
 		
 		// build tile sources for openseadragon image viewer
 		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
@@ -284,9 +276,8 @@ $.extend(xgds_image,{
 		    showRotationControl: true,
 		    imageJson: imageJson
 		});
-		var osd_viewer = this.viewer;
-		osd_viewer['viewer_initialized'] = true;
-		this.setOpenseadragonRotation(osd_viewer, imageJson['pk']);
+		this.viewer['viewer_initialized'] = true;
+		this.setOpenseadragonRotation(this.viewer, imageJson['pk']);
 		
 		// Add handlers for full-screen event and rotation event.
 		this.viewer.addHandler('full-screen', function (viewer) {
