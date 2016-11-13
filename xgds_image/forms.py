@@ -18,15 +18,18 @@ import pytz
 from django import forms
 from django.conf import settings
 from django.utils.functional import lazy
-from django.contrib.auth.models import User
 
 from django.db.models import Q
+from dal import autocomplete
+
 from models import SingleImage, ImageSet
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.forms.AbstractImportForm import getTimezoneChoices
 
 from geocamTrack.forms import AbstractImportTrackedForm
+from xgds_core.models import XgdsUser
 from xgds_core.forms import SearchForm
+
 
 LOCATION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
@@ -103,7 +106,9 @@ class ImageSetForm(forms.ModelForm):
         return instance
         
 class SearchImageSetForm(SearchForm):
-    author = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+    author = forms.ModelChoiceField(XgdsUser.objects.all(), 
+                                    required=False,
+                                    widget=autocomplete.ModelSelect2(url='select2_model_user'))
     
     min_acquisition_time = forms.DateTimeField(required=False, label='Min Time',
                                          widget=forms.DateTimeInput(attrs={'class': 'datetimepicker'}))
