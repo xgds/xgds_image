@@ -17,6 +17,7 @@ import pytz
 import json
 import os
 import traceback
+import time
 from datetime import datetime
 from dateutil.parser import parse as dateparser
 from threading import Thread
@@ -36,6 +37,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, Ht
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
+from django.core.cache import cache
 
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
@@ -247,17 +249,18 @@ def saveRotationValue(request):
     else: 
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
     
-def checkForNewImages():
-    print "Calling imageloader..."
-    r = requests.get("http://10.10.24.75/fileUpdate.lua")
+def checkForNewFiles(sdCardIp):
+    print "Calling file loader @ %s..." % sdCardIp
+    r = requests.get("http://%s/fileUpdate.lua" % sdCardIp)
     print "response:", r.text
+    cache.delete("imageAutoloadGlobalTimeMark")
     print ""
 
 def sdWriteEvent(request):
-#    r = redis.Redis(host="127.0.0.1",port=6379)
     print "Write event called.  queue event here..."
-#    r.set('globalTimeMark', time.time())
-    fCheck = Timer(1.5, checkForNewImages)
+    requestingIp = request.META["REMOTE_ADDR"]
+    cache.set('imageAutoloadGlobalTimeMark', time.time())
+    fCheck = Timer(1.5, checkForNewFiles, (requestingIp,) )
     fCheck.start()
     return HttpResponse("OK", content_type='text/plain')
 
@@ -266,6 +269,7 @@ def saveImage(request):
     Image drag and drop, saves the files and to the database.
     """
     if request.method == 'POST':
+        timeMark = time.time()
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             # create and save a single image obj
@@ -340,6 +344,14 @@ def saveImage(request):
             newImageSet.author = author
             newImageSet.resource = resource
             newImageSet.finish_initialization(request)
+
+            nowTime = time.time()
+            uploadAndSaveTime = nowTime - timeMark
+            newImageSet.uploadAndSaveTime = uploadAndSaveTime
+            overallStartTime = cache.get("imageAutoloadGlobalTimeMark", None)
+            if overallStartTime:
+                totalTimeSinceNotify = nowTime - float(overallStartTime)
+                newImageSet.totalTimeSinceNotify = totalTimeSinceNotify
             newImageSet.save()
             
             # link the "image set" to "image".
