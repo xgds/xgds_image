@@ -219,6 +219,8 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     acquisition_time = models.DateTimeField(editable=False, default=timezone.now, db_index=True)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE, db_index=True)
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
+    uploadAndSaveTime = models.FloatField(null=True, blank=True)
+    totalTimeSinceNotify = models.FloatField(null=True, blank=True)
     #Optionally generate deep zoom from uploaded image if set to True.
     create_deepzoom = models.BooleanField(default= settings.XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM,
                                           help_text="Generate deep zoom?")   # True if you need to create a deepzoom
