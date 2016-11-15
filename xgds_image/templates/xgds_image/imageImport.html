@@ -4,6 +4,7 @@
  {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
  {% endblock cssExtras %}
+ {% block siteSection %}Import {{settings.XGDS_IMAGE_IMAGE_SET_MONIKER}}{% endblock %}
 
 
 {% block scripts %}
