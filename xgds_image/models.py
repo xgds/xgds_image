@@ -506,7 +506,7 @@ class AbstractSingleImage(models.Model):
     An abstract image which may not necessarily have a location on a map
     """
     file = models.ImageField(upload_to=getNewImageFileName,
-                             max_length=255, storage=couchStore)
+                             max_length=256, storage=couchStore)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
     raw = models.BooleanField(default=True)
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
