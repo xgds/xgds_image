@@ -269,53 +269,64 @@ $.extend(xgds_image,{
 		
 		// build tile sources for openseadragon image viewer
 		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-		this.viewer = OpenSeadragon({
-			id: "display-image",
-			prefixUrl: prefixUrl,
-			tileSources: tiledImage,
-		    showRotationControl: true,
-		    imageJson: imageJson
-		});
-		this.viewer['viewer_initialized'] = true;
-		this.setOpenseadragonRotation(this.viewer, imageJson['pk']);
-		
-		// Add handlers for full-screen event and rotation event.
-		this.viewer.addHandler('full-screen', function (viewer) {
-			// grab the canvas from the viewer and reset the size.
-			var element = viewer.eventSource.element; // #display-image
-			var osd_canvas = $(element).find('.openseadragon-canvas'); // somehow change the style -- test with funky values.
-			osd_canvas.width("100%");
-			osd_canvas.height("100%");
-		});
-		
-		var failDict = {imageJson: imageJson,
-					   };
-		this.viewer.addHandler('open-failed', function(inputDict) {
-			// If the tiles are not there or not ready, then open the raw image
-			xgds_image.showRawImage(inputDict.userData.imageJson);
-		}, failDict);
-		
-		this.viewer.addHandler('tile-load-failed', function(inputDict) {
-			// If the tiles are not there or not ready, then open the raw image
-			// do not expect the data here
-			xgds_image.showRawImage(inputDict.userData.imageJson);
-		}, failDict);
-		
-		// add a handler for rotation that saves the rotation degrees to the database. 
-		var context = this;
-		this.viewer.addHandler('rotate', function(viewer) {
-			if (context.viewer['viewer_initialized'] != true) {
-				var element = viewer.eventSource.element;
-				var degrees = viewer.degrees;
-				var userData = viewer.userData;
-				// save the rotation to the db.
-				context.saveRotationDegrees(imageJson, degrees);
-			} else { // viewer is initialized. 
-				// set the initialized flag to false
-				context.viewer['viewer_initialized'] = false
+		try {
+			var displayImage = $('#display-image');
+			if (displayImage.length == 0){
+				throw ('Cound not find display-image div');
+			} else {
+				displayImage = displayImage[0];
 			}
+			this.viewer = OpenSeadragon({
+				element: displayImage,
+//				id: "display-image",
+				prefixUrl: prefixUrl,
+				tileSources: tiledImage,
+			    showRotationControl: true,
+			    imageJson: imageJson
+			});
+			this.viewer['viewer_initialized'] = true;
+			this.setOpenseadragonRotation(this.viewer, imageJson['pk']);
 			
-		});
+			// Add handlers for full-screen event and rotation event.
+			this.viewer.addHandler('full-screen', function (viewer) {
+				// grab the canvas from the viewer and reset the size.
+				var element = viewer.eventSource.element; // #display-image
+				var osd_canvas = $(element).find('.openseadragon-canvas'); // somehow change the style -- test with funky values.
+				osd_canvas.width("100%");
+				osd_canvas.height("100%");
+			});
+			
+			var failDict = {imageJson: imageJson};
+			this.viewer.addHandler('open-failed', function(inputDict) {
+				// If the tiles are not there or not ready, then open the raw image
+				xgds_image.showRawImage(inputDict.userData.imageJson);
+			}, failDict);
+			
+			this.viewer.addHandler('tile-load-failed', function(inputDict) {
+				// If the tiles are not there or not ready, then open the raw image
+				// do not expect the data here
+				xgds_image.showRawImage(inputDict.userData.imageJson);
+			}, failDict);
+			
+			// add a handler for rotation that saves the rotation degrees to the database. 
+			var context = this;
+			this.viewer.addHandler('rotate', function(viewer) {
+				if (context.viewer['viewer_initialized'] != true) {
+					var element = viewer.eventSource.element;
+					var degrees = viewer.degrees;
+					var userData = viewer.userData;
+					// save the rotation to the db.
+					context.saveRotationDegrees(imageJson, degrees);
+				} else { // viewer is initialized. 
+					// set the initialized flag to false
+					context.viewer['viewer_initialized'] = false
+				}
+				
+			});
+		} catch (err) {
+			console.log(err);
+			debugger;
+		}
 	},
 	resizeImageViewer: function(element) {
 		// when viewDiv resize,  
