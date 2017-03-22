@@ -21,7 +21,7 @@
         data-gs-width="3" data-gs-height="2">
             <div class="grid-stack-item-content">
 		<div class="error-message upload-error"></div>
-		<i class="icon-lock-open pinDiv"></i><br/>
+		<i class="fa fa-unlock-alt pinDiv"></i><br/>
 		<!-- Dropzone image upload -->
 		
 		<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
@@ -41,14 +41,14 @@
 		data-gs-x="3" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content" >
-			<i class="icon-lock-open pinDiv warning"></i>
-			<i class="icon-cancel-circled"></i>
-			<div class="small default btn btn-primary icon-right entypo icon-window" id="new-window-btn btn-primary">
+			<i class="fa fa-unlock-alt pinDiv warning"></i>
+			<i class="fa fa-window-close fa-lg"></i>
+			<div class="small default btn btn-primary icon-right fa fa-window-restore" id="new-window-btn btn-primary">
 				<a href="#" id="view-new-window-target" target="_blank">New Window</a>
 			</div>
-			<button class="small info btn btn-primary prev-button" id="prev_button"><i class="icon-left-dir"></i></button>
+			<button class="small info btn btn-primary prev-button" id="prev_button"><i class="fa fa-step-backward"></i></button>
 			<strong id="nameBlock"></strong>
-			<button class="small info btn btn-primary next-button" id="next_button"><i class="icon-right-dir"></i></button>
+			<button class="small info btn btn-primary next-button" id="next_button"><i class="fa fa-step-forward"></i></button>
 			<div id="viewDivPhoto">
 			</div>
 			<div id="notesDivPhoto">
