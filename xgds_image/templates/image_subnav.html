@@ -1,10 +1,8 @@
 {% block sitemenu-content-secondary %}
 {% load nav %}
-<div class="sitemenu-nav-secondary">
 	<nav class="subnav">
-	<ul>
-		<li {% currentnav xgds_image_import %}><a href="{% url 'xgds_image_import' %}">Import</a></li>
+	<ul class="nav nav-pills">
+		<li class='nav-item {% currentnav xgds_image_import %}'><a class='nav-link {% currentnav xgds_image_import %}' href="{% url 'xgds_image_import' %}">Import</a></li>
   	</ul>
   	</nav>
-</div>
 {% endblock %}
