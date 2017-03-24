@@ -2,22 +2,22 @@
 	<div class="image-name" ><strong> {{ name }} </strong></div>
 
 		<div id="image_overview">
-			<button id="edit_info_button" class="small float_button" onClick="window.open('/xgds_image/edit/{{pk}}', '_blank');">Edit</button>
-			<a href="{{raw_image_url}}" class="small float_button mybutton" download>Download</a>
+			<button id="edit_info_button" class="btn btn-primary" onClick="window.open('/xgds_image/edit/{{pk}}', '_blank');">Edit</button>
+			<a href="{{raw_image_url}}" class="btn btn-primary" download>Download</a>
 			<table>
 				<tr>
-					<td class="small">{{ author_name }}</td>
-					<td colspan=3 class="small">{{prettyTime acquisition_time acquisition_timezone}}</td>
+					<td >{{ author_name }}</td>
+					<td colspan=3 >{{prettyTime acquisition_time acquisition_timezone}}</td>
 				</tr>
 				<tr>
-					<td class="small">Heading:</td>
+					<td >Heading:</td>
 				{{#if head}}
-					<td class="small">{{ head }}&deg;</td>
+					<td >{{ head }}&deg;</td>
 				{{else}}
-					<td class="small">n/a</td>
+					<td >n/a</td>
 				{{/if}}
-					<td class="small">Resolution:</td>
-					<td class="small">{{originalImageResolutionString}} | {{originalImageFileSizeMB}}</td>
+					<td >Resolution:</td>
+					<td >{{originalImageResolutionString}} | {{originalImageFileSizeMB}}</td>
 				</tr>
 				<tr>
 					<td colspan=4 id="overview_description">{{ description }}</td>
