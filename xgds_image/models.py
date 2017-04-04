@@ -517,7 +517,7 @@ class AbstractSingleImage(models.Model):
 
     @property
     def acquisition_time(self):
-        return self.creation_time
+        return self.imageSet.acquisition_time
 
 #     def toMapDict(self):
 #         """

@@ -359,7 +359,7 @@ def saveImage(request):
             newImage.save()
             
             # relay if needed
-            if True: #if 'relay' in form.cleaned_data:
+            if 'relay' in form.cleaned_data:
                 # create the record for the datum 
                 # fire a message for new data
                 addRelayFile(newImage, uploadedFile)
