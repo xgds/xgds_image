@@ -515,6 +515,10 @@ class AbstractSingleImage(models.Model):
     height = models.IntegerField(blank=True,null=True)
     fileSizeBytes = models.IntegerField(blank=True,null=True)
 
+    @property
+    def acquisition_time(self):
+        return self.creation_time
+
 #     def toMapDict(self):
 #         """
 #         Return a reduced dictionary that will be turned to JSON

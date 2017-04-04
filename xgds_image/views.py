@@ -41,7 +41,7 @@ from django.core.cache import cache
 
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
-from xgds_core.views import get_handlebars_templates
+from xgds_core.views import get_handlebars_templates, addRelayFile
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
 
@@ -357,6 +357,12 @@ def saveImage(request):
             # link the "image set" to "image".
             newImage.imageSet = newImageSet
             newImage.save()
+            
+            # relay if needed
+            if True: #if 'relay' in form.cleaned_data:
+                # create the record for the datum 
+                # fire a message for new data
+                addRelayFile(newImage, uploadedFile)
             
             # create a thumbnail
             thumbnailStream = createThumbnailFile(newImage.file)
