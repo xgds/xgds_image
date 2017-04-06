@@ -70,7 +70,7 @@ $(document).ready(function() {
     </ol>
 	{% endif %}
 	<form id="updateImageForm" action="{% url 'xgds_image_edit_image' form.instance.pk %}" method="post" enctype="multipart/form-data">
-		<input type=hidden name=imageSetId value="{{ form.instance.pk }}">
+		<input type='hidden' name='imageSetId' value="{{ form.instance.pk }}">
 		<table class="table-striped">
 			{{ form.as_table }}
 		</table>
