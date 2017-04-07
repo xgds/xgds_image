@@ -274,20 +274,20 @@ def saveImage(request):
         if form.is_valid():
             # create and save a single image obj
             uploadedFile = request.FILES['file']
-            newImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
+            newSingleImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
             
             form_tz = form.getTimezone()
             resource = form.getResource()
-            exifData = getExifData(newImage)
+            exifData = getExifData(newSingleImage)
 
             # save image dimensions and file size
             try:
-                newImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
-                newImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
+                newSingleImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
+                newSingleImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
             except:
                 pass
                 
-            newImage.fileSizeBytes = uploadedFile.size
+            newSingleImage.fileSizeBytes = uploadedFile.size
 
             # get exif time
             exifTime  = None
@@ -330,8 +330,12 @@ def saveImage(request):
                     author = User.objects.get(username=username)
                 except:
                     author = User.objects.get(username='camera')
-                
-            newImageSet = IMAGE_SET_MODEL.get()()
+            
+            if 'object_id' in form.cleaned_data:
+                newImageSet = IMAGE_SET_MODEL.get()(pk=int(form.cleaned_data['object_id']))
+            else:
+                newImageSet = IMAGE_SET_MODEL.get()()
+
             newImageSet.acquisition_time = exifTime
             newImageSet.acquisition_timezone = form.getTimezoneName()
             fileName = uploadedFile.name
@@ -355,17 +359,17 @@ def saveImage(request):
             newImageSet.save()
             
             # link the "image set" to "image".
-            newImage.imageSet = newImageSet
-            newImage.save()
+            newSingleImage.imageSet = newImageSet
+            newSingleImage.save()
             
             # relay if needed
             if 'relay' in form.cleaned_data:
                 # create the record for the datum 
                 # fire a message for new data
-                addRelayFiles(newImage, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
+                addRelayFiles(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
             
             # create a thumbnail
-            thumbnailStream = createThumbnailFile(newImage.file)
+            thumbnailStream = createThumbnailFile(newSingleImage.file)
             SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailStream, 
                                                     raw = False, 
                                                     thumbnail = True,
