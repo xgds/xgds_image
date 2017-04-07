@@ -363,7 +363,7 @@ def saveImage(request):
             newSingleImage.save()
             
             # relay if needed
-            if 'relay' in form.cleaned_data:
+            if 'relay' in request.POST:
                 # create the record for the datum 
                 # fire a message for new data
                 addRelayFiles(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
