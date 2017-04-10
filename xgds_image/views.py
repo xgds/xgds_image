@@ -331,8 +331,8 @@ def saveImage(request):
                 except:
                     author = User.objects.get(username='camera')
             
-            if 'object_id' in form.cleaned_data:
-                newImageSet = IMAGE_SET_MODEL.get()(pk=int(form.cleaned_data['object_id']))
+            if 'object_id' in request.POST:
+                newImageSet = IMAGE_SET_MODEL.get()(pk=int(request.POST['object_id']))
             else:
                 newImageSet = IMAGE_SET_MODEL.get()()
 
