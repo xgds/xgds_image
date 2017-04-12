@@ -73,12 +73,13 @@ $(document).ready(function() {
 		<input type='hidden' name='imageSetId' value="{{ form.instance.pk }}">
 		<table class="table-striped">
 			{{ form.as_table }}
+			<tr>
+			<td></td>
+			<td id="IMAGE-edit-button-group"><a href="{% url 'search_map_single_object' 'Photo' form.instance.pk %}" class="btn btn-primary">Cancel</a>
+			<input class="btn btn-primary" id="IMAGE-info-submit" type="submit" value="Save"/></td>
+			</tr>
 		</table>
 		{% csrf_token %}
-		<div id="IMAGE-edit-button-group">
-			<a href="{% url 'search_map_single_object' 'Photo' form.instance.pk %}" class="btn btn-primary">Cancel</a>
-			<input class="btn btn-primary" id="IMAGE-info-submit" type="submit" value="Save"/>
-		</div>
 	</form>
 	
 	<div class="image-wrapper"> 
