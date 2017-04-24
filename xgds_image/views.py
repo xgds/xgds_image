@@ -25,17 +25,13 @@ from threading import Timer
 
 import requests
 
-from django.utils import timezone
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.forms.formsets import formset_factory
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
-from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
+from django.shortcuts import render
+from django.http import HttpResponseRedirect,  HttpResponse
 from django.template import RequestContext
-from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
 
@@ -73,8 +69,10 @@ def getImageImportPage(request):
             'form': UploadFileForm(),
             'imageSetForm': ImageSetForm()
             }
-    return render_to_response("xgds_image/imageImport.html", data,
-                              context_instance=RequestContext(request))
+    return render(request,
+                  "xgds_image/imageImport.html", 
+                  data,
+                  )
 
 
 @login_required 
@@ -96,13 +94,15 @@ def editImage(request, imageSetID):
                                                                                     'modelName':'Photo'}))
         else: 
             messages.error(request, 'The form is not valid')
-            return render_to_response('xgds_image/imageEdit.html',
-                                      RequestContext(request, {'form': form}))
+            return render(request,
+                          'xgds_image/imageEdit.html',
+                          {'form': form})
     elif request.method == "GET":
         form = ImageSetForm(instance=imageSet)
-        return render_to_response('xgds_image/imageEdit.html',
-                                  RequestContext(request, {'form': form,
-                                                           'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')}))                
+        return render(request,
+                      'xgds_image/imageEdit.html',
+                      {'form': form,
+                       'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')})                
 
 
 def updateImageInfo(request):
