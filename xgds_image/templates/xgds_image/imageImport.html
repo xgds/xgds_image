@@ -1,5 +1,6 @@
 {% extends 'xgds_image/imageDashboardBase.html' %}
 
+ {% load static %}
  {% block cssExtras %}
  {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{{ EXTERNAL_URL }}dropzone/dist/min/dropzone.min.css"></link>
@@ -10,7 +11,7 @@
 {% block scripts %}
 {{block.super}}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}dropzone/dist/dropzone.js'></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageUpload.js"></script>
+	<script type="text/javascript" src="{% static 'xgds_image/js/imageUpload.js' %}"></script>
 {% endblock scripts %}
 
 

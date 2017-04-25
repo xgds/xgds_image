@@ -1,4 +1,5 @@
 {% extends 'dashboard_base.html' %}
+{% load static %}
 
 {% block sitemenu-content-secondary %}
 	{% include "image_subnav.html" %}
@@ -7,7 +8,7 @@
  {% block cssExtras %}
  {{ block.super }}
     {% include "xgds_notes2/NoteCSS.html" %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}xgds_image/css/xgds_image.css"></link>
+    <link rel="stylesheet" type="text/css" href="{% static 'xgds_image/css/xgds_image.css' %}"></link>
  {% endblock cssExtras %}
 
 
@@ -15,7 +16,6 @@
 	// initialize global javascript variables
 	<!--  parse image json -->
     var imageSetsJson = {{ imageSetsJson|safe }};
-    var STATIC_URL = {{ STATIC_URL }};
     var imageSetsArray = []; // stores JSON objects
     $(imageSetsJson).each(function() {
     	imageSetsArray.push(JSON.parse(this)); // parse json string
@@ -56,7 +56,7 @@
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
     <!--- openseadragon: image pan zoom library -->
     <script type="text/javascript" src="{{ EXTERNAL_URL }}/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}xgds_image/js/imageReview.js"></script>
+    <script type="text/javascript" src="{% static 'xgds_image/js/imageReview.js' %}"></script>
     <!--  load handlebars -->
 	{% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
