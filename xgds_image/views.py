@@ -258,7 +258,8 @@ def checkForNewFiles(sdCardIp):
 
 def sdWriteEvent(request):
     print "Write event called.  queue event here..."
-    requestingIp = request.META["REMOTE_ADDR"]
+    print "Full request.meta", request.META
+    requestingIp = request.META["HTTP_X_REAL_IP"]
     cache.set('imageAutoloadGlobalTimeMark', time.time())
     fCheck = Timer(1.5, checkForNewFiles, (requestingIp,) )
     fCheck.start()
