@@ -28,10 +28,12 @@ $("form#image-drop-zone").dropzone(options);
         data-gs-width="3" data-gs-height="2">
             <div class="grid-stack-item-content">
 		<div class="error-message upload-error"></div>
-			<i class="fa fa-unlock-alt pinDiv gray-light"></i><br/>
+			<ul class="nav justify-content-end mb-1">
+				<i class="fa fa-unlock-alt pinDiv gray-light"></i>
+			</ul>
 		<!-- Dropzone image upload -->
 		
-		<form class="dropzone mt-negative-1rem" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
+		<form class="dropzone" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
 		enctype="multipart/form-data" >
 		<table style="margin-top:-150px;margin-left:-10px;">
     	{{ form.as_table }}
