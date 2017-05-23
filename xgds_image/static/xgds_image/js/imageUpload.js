@@ -27,13 +27,14 @@ Dropzone.options.imageDropZone = {
 	parallelUploads: 1, // upload up to 1000 images in parallel
 	addRemoveLinks: true,
 	acceptedFiles: ".png,.jpg,.jpeg,.tif,.tiff,.gif,.pdf",
+	dictDefaultMessage: 'Drop files here to upload, or click for file browser.',
 	init : function() {
 		var submitButton = document.querySelector("#submit-all")
 		imageDropZone = this;
+
 		// display message showing number of files enqueued
-		filesEnqueuedMessage = document.createElement("div");
-		filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
-		this.previewsContainer.appendChild(filesEnqueuedMessage);
+		$("#enqueued_count").html = this.files.length;
+		
 		// process files when submit is clicked.
 		submitButton.addEventListener("click", function() {
 			imageDropZone.options.headers = { 'lastMod': lastModDate};
@@ -43,7 +44,8 @@ Dropzone.options.imageDropZone = {
 		
 		this.on("reset", function() {
 			// reset the files enqueued message.
-			filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + 0;
+			$("#enqueued_count").html = 0;
+			
 			// reset error msg (TODO: handle files that didn't failed on upload")
 			$(".upload-error").html("");
 		});
@@ -64,7 +66,7 @@ Dropzone.options.imageDropZone = {
 				" files </strong></div>" + 
 				"</div>";
 				// update message to show number of files enqueued.
-				filesEnqueuedMessage.innerHTML = "<strong> Files enqueued: </strong> " + this.files.length; 
+				$("#enqueued_count").html = this.files.length;
 			}
 		});
 		// this.on("complete", function(file) {

@@ -14,6 +14,12 @@
 	<script type="text/javascript" src="{% static 'xgds_image/js/imageUpload.js' %}"></script>
 {% endblock scripts %}
 
+{% block otherJSInit %}
+{{ block.super }}
+var options = Dropzone.options.imageDropZone;
+options['url'] = "{% url 'xgds_save_image' %}";
+$("form#image-drop-zone").dropzone(options);
+{% endblock otherJSInit %}
 
 {% block preMap %}
 	{{ block.super }}
@@ -22,19 +28,22 @@
         data-gs-width="3" data-gs-height="2">
             <div class="grid-stack-item-content">
 		<div class="error-message upload-error"></div>
-		<i class="fa fa-unlock-alt pinDiv gray-light"></i><br/>
+			<i class="fa fa-unlock-alt pinDiv gray-light"></i><br/>
 		<!-- Dropzone image upload -->
 		
 		<form class="dropzone mt-negative-1rem" id="image-drop-zone" action="{% url 'xgds_save_image' %}" method="post" 
 		enctype="multipart/form-data" >
-		<table>
+		<table style="margin-top:-150px;margin-left:-10px;">
     	{{ form.as_table }}
     	</table>
 		{% csrf_token %}
 		</form>
-		<button id="submit-all" class="btn btn-primary">
+		<div>
+		<button id="submit-all" class="btn btn-primary mt-2">
 			Import
 		</button>
+		<span class='alert alert-info mt-2' style="padding: 0.3rem 1.25rem; vertical-align: -webkit-baseline-middle;"><strong>Files enqueued: </strong><span id="enqueued_count">0</span></span>
+		</div>
 	</div>
 </div>
 
