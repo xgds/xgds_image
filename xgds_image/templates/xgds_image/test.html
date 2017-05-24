@@ -1,7 +1,8 @@
 {#{% extends 'xgds_image/imageDashboardBase.html' %}  <-- adding this breaks testpage  #}
 <head>
-{#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
-<script type="text/javascript" src='{{  EXTERNAL_URL }}openseadragon/built-openseadragon/openseadragon/openseadragon.js'></script>
+<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon/built-openseadragon/openseadragon/openseadragon.js'></script>
+<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>
+
 </head>
 <h1>Emigre Sandbox</h1>
 <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
@@ -14,7 +15,7 @@
 				prefixUrl:     prefixUrl,
 				showNavigator: true,
 				gestureSettingsMouse:   {
-					clickToZoom: fals
+					clickToZoom: false
 				},
 				clickToZoom: "false",
 				tileSources:   [{
@@ -34,18 +35,7 @@
 					}
 				}],
 			});
+    viewer.initializeAnnotations();
 </script>
 <p>Hello world</p>
 
-/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_image/templates/xgds_image/test.html
-/Users/William/kusz/xGDS/xgds_basalt/data/images/spacePics
-
-/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files/
-../../xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files/
-/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files
-
-
-
-/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files
-/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_image/templates/xgds_image/test.html
-../../../../xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files
