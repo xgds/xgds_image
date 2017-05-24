@@ -1,0 +1,51 @@
+{#{% extends 'xgds_image/imageDashboardBase.html' %}  <-- adding this breaks testpage  #}
+<head>
+{#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
+<script type="text/javascript" src='{{  EXTERNAL_URL }}openseadragon/built-openseadragon/openseadragon/openseadragon.js'></script>
+</head>
+<h1>Emigre Sandbox</h1>
+<div id="openseadragon1" style="width: 800px; height: 600px;"></div>
+
+<script type="text/javascript">
+
+    var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+    var viewer = OpenSeadragon({
+				id:            "openseadragon1",
+				prefixUrl:     prefixUrl,
+				showNavigator: true,
+				gestureSettingsMouse:   {
+					clickToZoom: fals
+				},
+				clickToZoom: "false",
+				tileSources:   [{
+					Image:  {
+						//Need to change [tile_format="jpg", image_quality=0.85,]
+						//Plus any other changes in deepzoom.py we make
+						xmlns: "http://schemas.microsoft.com/deepzoom/2009",
+						Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
+						TileSize: "128",
+						Overlap: "2",
+						Format: "png",
+						ServerFormat: "Default",
+						Size: {
+							Width: "4928",
+							Height: "3280",
+						}
+					}
+				}],
+			});
+</script>
+<p>Hello world</p>
+
+/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_image/templates/xgds_image/test.html
+/Users/William/kusz/xGDS/xgds_basalt/data/images/spacePics
+
+/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files/
+../../xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files/
+/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files
+
+
+
+/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files
+/Users/William/kusz/xGDS/xgds_basalt/apps/xgds_image/templates/xgds_image/test.html
+../../../../xgds_data/static/xgds_data/xgds_images/spacePics/ISS044-E-1998_files
