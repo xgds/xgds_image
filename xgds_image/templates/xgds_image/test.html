@@ -2,7 +2,8 @@
 
 {%  block scripts %}
 {{  block.super }}
-<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>
+<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
+{#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
 {%  endblock scripts %}
 
 {%  block content %}
@@ -38,6 +39,7 @@
 					}
 				}],
 			});
-    viewer.initializeAnnotations();
+        var overlay = viewer.fabricjsOverlay();
+
     {% endblock jsInit  %}
 
