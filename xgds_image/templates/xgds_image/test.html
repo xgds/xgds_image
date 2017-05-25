@@ -53,33 +53,39 @@
 {#            canvas = overlay.fabricCanvas();#}
             console.log("hello world");
 
-            function addCircle(x, y) {
-                var rect = new fabric.Rect({
-                left: x,
-                top: y,
-                fill: 'blue',
-                width: 1000,
-                height: 1000
-            });
+
+            function addRectangle(x, y) {
+                 var rect = new fabric.Rect({
+                    left: x,
+                    top: y,
+                    fill: 'blue',
+                    width: 1000,
+                    height: 1000
+                });
                 overlay.fabricCanvas().add(rect);
                 overlay.fabricCanvas().renderAll();
             }
-            viewer.addHandler('canvas-click', function(event) {
-                console.log("openseadragon event handler comes in plug");
-                var pointer = overlay.fabricCanvas().getPointer(event.e);
-                console.log(pointer);
-                circle = new fabric.Circle({
-                    left: pointer.x,
-                    top: pointer.y,
-                    radius: 1,
+
+            function addCircle(x, y) {
+                var circle = new fabric.Circle({
+                    left: x,
+                    top: y,
+                    radius: 225,
                     strokeWidth: 1,
                     stroke: 'black',
                     fill: 'white',
                     selectable: true,
                     originX: 'center', originY: 'center'
                 });
-                addCircle(pointer.x, pointer.y);
                 overlay.fabricCanvas().add(circle);
+                overlay.fabricCanvas().renderAll();
+            }
+
+            viewer.addHandler('canvas-click', function(event) {
+                var pointer = overlay.fabricCanvas().getPointer(event.e);
+
+                addCircle(pointer.x, pointer.y);
+                addRectangle(pointer.x, pointer.y);
 
             });
 
