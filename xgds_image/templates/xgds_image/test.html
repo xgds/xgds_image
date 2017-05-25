@@ -1,58 +1,110 @@
-{% extends 'xgds_image/imageDashboardBase.html' %}
+    {% extends 'xgds_image/imageDashboardBase.html' %}
 
-{%  block scripts %}
-{{  block.super }}
+    {%  block scripts %}
+    {{  block.super }}
 
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}fabric.js/dist/fabric.min.js'></script>
-<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
-{#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
-{%  endblock scripts %}
+        <script type="text/javascript" src='{{ EXTERNAL_URL }}fabric.js/dist/fabric.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
+    {#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
+    {%  endblock scripts %}
 
-{%  block content %}
-<h1>Emigre Sandbox beta</h1>
-<div id="openseadragon1" style="width: 800px; height: 600px;"></div>
-{%  endblock content  %}
+    {%  block content %}
+    <h1>Emigre Sandbox beta</h1>
+    <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
+    {%  endblock content  %}
 
-    {%  block jsInit %}
-    var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-    var viewer = OpenSeadragon({
-				id:            "openseadragon1",
-				prefixUrl:     prefixUrl,
-				showNavigator: true,
-				gestureSettingsMouse:   {
-					clickToZoom: false
-				},
-				clickToZoom: "false",
-				tileSources:   [{
-					Image:  {
-						//Need to change [tile_format="jpg", image_quality=0.85,]
-						//Plus any other changes in deepzoom.py we make
-						xmlns: "http://schemas.microsoft.com/deepzoom/2009",
-						Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
-						TileSize: "128",
-						Overlap: "2",
-						Format: "png",
-						ServerFormat: "Default",
-						Size: {
-							Width: "4928",
-							Height: "3280",
-						}
-					}
-				}],
-			});
-        var overlay = viewer.fabricjsOverlay();
-            // add fabric rectangle
+        {% block jsInit %}
+        var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+        var viewer = OpenSeadragon({
+                    id:            "openseadragon1",
+                    prefixUrl:     prefixUrl,
+                    showNavigator: true,
+                    gestureSettingsMouse:   {
+                        clickToZoom: false
+                    },
+                    clickToZoom: "false",
+                    tileSources:   [{
+                        Image:  {
+                            //Need to change [tile_format="jpg", image_quality=0.85,]
+                            //Plus any other changes in deepzoom.py we make
+                            xmlns: "http://schemas.microsoft.com/deepzoom/2009",
+                            Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
+                            TileSize: "128",
+                            Overlap: "2",
+                            Format: "png",
+                            ServerFormat: "Default",
+                            Size: {
+                                Width: "4928",
+                                Height: "3280",
+                            }
+                        }
+                    }],
+                });
+            var overlay = viewer.fabricjsOverlay();
+                // add fabric rectangle
 
-                    var rect = new fabric.Rect({
-                      left: 0,
-                      top: 0,
-                      fill: 'red',
-                      width: 1000,
-                      height: 1000
-                    });
+            var rect = new fabric.Rect({
+                left: 0,
+                top: 0,
+                fill: 'red',
+                width: 1000,
+                height: 1000
+            });
+{#            canvas = overlay.fabricCanvas();#}
+            console.log("hello world");
 
-        overlay.fabricCanvas().add(rect);
+            function addCircle(x, y) {
+                var rect = new fabric.Rect({
+                left: x,
+                top: y,
+                fill: 'blue',
+                width: 1000,
+                height: 1000
+            });
+                overlay.fabricCanvas().add(rect);
+                overlay.fabricCanvas().renderAll();
+            }
+            viewer.addHandler('canvas-click', function(event) {
+                console.log("openseadragon event handler comes in plug");
+                var pointer = overlay.fabricCanvas().getPointer(event.e);
+                console.log(pointer);
+                circle = new fabric.Circle({
+                    left: pointer.x,
+                    top: pointer.y,
+                    radius: 1,
+                    strokeWidth: 1,
+                    stroke: 'black',
+                    fill: 'white',
+                    selectable: true,
+                    originX: 'center', originY: 'center'
+                });
+                addCircle(pointer.x, pointer.y);
+                overlay.fabricCanvas().add(circle);
+
+            });
+
+            overlay.fabricCanvas().observe('mouse:down', function(o){
+                console.log("mouse down event");
+                isDown = true;
+                var pointer = overlay.fabricCanvas().getPointer(o.e);
+                origX = pointer.x;
+                origY = pointer.y;
+                circle = new fabric.Circle({
+                    left: pointer.x,
+                    top: pointer.y,
+                    radius: 1,
+                    strokeWidth: 1,
+                    stroke: 'black',
+                    fill: 'white',
+                    selectable: true,
+                    originX: 'center', originY: 'center'
+                });
+                overlay.fabricCanvas().add(circle);
+            });
 
 
-    {% endblock jsInit  %}
+            overlay.fabricCanvas().add(rect);
+
+
+        {% endblock jsInit %}
 
