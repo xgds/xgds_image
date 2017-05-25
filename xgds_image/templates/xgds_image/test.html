@@ -1,14 +1,17 @@
-{#{% extends 'xgds_image/imageDashboardBase.html' %}  <-- adding this breaks testpage  #}
-<head>
-<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon/built-openseadragon/openseadragon/openseadragon.js'></script>
-<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>
+{% extends 'xgds_image/imageDashboardBase.html' %}
 
-</head>
+{%  block scripts %}
+{{  block.super }}
+<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>
+{%  endblock scripts %}
+
+{%  block content %}
 <h1>Emigre Sandbox</h1>
 <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
+{%  endblock content  %}
 
-<script type="text/javascript">
 
+    {%  block jsInit %}
     var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
 				id:            "openseadragon1",
@@ -36,6 +39,5 @@
 				}],
 			});
     viewer.initializeAnnotations();
-</script>
-<p>Hello world</p>
+    {% endblock jsInit  %}
 
