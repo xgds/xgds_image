@@ -11,6 +11,7 @@
     {%  block content %}
     <h1>Emigre Sandbox beta</h1>
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
+        <button type="button" id="toggleMapScrolling">Toggle Map Scrolling</button>
     {%  endblock content  %}
 
         {% block jsInit %}
@@ -89,13 +90,32 @@
 
             });
 
+            //TODO: use to track cirlc center.
+            viewer.addHandler('press', function(event) {
+                //what does this even do? Doesn't work when mapScrolling is disabled soooooooo
+                //is never triggered at all kek totally useless
+                console.log("press event");
+            });
+
+            //TODO: use to calculate final circle radius size?
+            viewer.addHandler('release', function(event) {
+                console.log("release event");
+            });
+
+            //TODO: use this to draw circles live
+            viewer.addHandler('canvas-drag', function(event) {
+                console.log("you're dragging m8");
+            });
+
+            //so this is trigerred here...
             overlay.fabricCanvas().observe('mouse:down', function(o){
                 console.log("mouse down event");
                 isDown = true;
                 var pointer = overlay.fabricCanvas().getPointer(o.e);
+                addCircle(pointer.x, pointer.y);
                 origX = pointer.x;
                 origY = pointer.y;
-                circle = new fabric.Circle({
+                var circle = new fabric.Circle({
                     left: pointer.x,
                     top: pointer.y,
                     radius: 1,
@@ -106,11 +126,30 @@
                     originX: 'center', originY: 'center'
                 });
                 overlay.fabricCanvas().add(circle);
+                overlay.fabricCanvas().renderAll();
             });
 
 
             overlay.fabricCanvas().add(rect);
 
 
+            //TODO:
+            //$("#selec").click(function(){
+            //  canvas.isDrawingMode = false;
+            //    canvas.selection= true;
+            //    canvas.off('mouse:down');
+            //    canvas.off('mouse:move');
+            //    canvas.off('mouse:up');
+            //    canvas.forEachObject(function(o){ o.setCoords() })
+            //})
+
+            //add jquery button
+
+            $("#toggleMapScrolling").click(function() {
+                console.log("toggle dat map scrolling boi");
+                viewer.setMouseNavEnabled(false);
+
+                //so this works, but then the canvas drawing stops working too... hmm..
+            })
         {% endblock jsInit %}
 
