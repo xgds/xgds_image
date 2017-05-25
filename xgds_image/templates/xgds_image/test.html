@@ -2,15 +2,16 @@
 
 {%  block scripts %}
 {{  block.super }}
+
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}fabric.js/dist/fabric.min.js'></script>
 <script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
 {#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
 {%  endblock scripts %}
 
 {%  block content %}
-<h1>Emigre Sandbox</h1>
+<h1>Emigre Sandbox beta</h1>
 <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
 {%  endblock content  %}
-
 
     {%  block jsInit %}
     var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
@@ -40,6 +41,18 @@
 				}],
 			});
         var overlay = viewer.fabricjsOverlay();
+            // add fabric rectangle
+
+                    var rect = new fabric.Rect({
+                      left: 0,
+                      top: 0,
+                      fill: 'red',
+                      width: 1000,
+                      height: 1000
+                    });
+
+        overlay.fabricCanvas().add(rect);
+
 
     {% endblock jsInit  %}
 

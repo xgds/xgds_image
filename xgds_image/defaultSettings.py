@@ -41,7 +41,8 @@ BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
 BOWER_INSTALLED_APPS += ['dropzone',
                          'openseadragon',
                          'openseadragon-annotations',
-                         'openseadragon-fabricjsOverlay'
+                         'openseadragon-fabricjsOverlay=https://github.com/altert/OpenseadragonFabricjsOverlay.git',
+                         'fabric'
                          ]
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
