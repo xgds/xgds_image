@@ -15,7 +15,7 @@
     {%  endblock content  %}
 
         {% block jsInit %}
-       var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+        var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
         var viewer = OpenSeadragon({
                     id:            "openseadragon1",
                     prefixUrl:     prefixUrl,
@@ -41,15 +41,14 @@
                         }
                     }],
                 });
+            //fabricjs-openseadragon annotation
             var overlay = viewer.fabricjsOverlay();
                 // add fabric rectangle
 
-
-{#            canvas = overlay.fabricCanvas();#}
             console.log("hello world");
 
-
-            function addRectangle(x, y) {
+            //create a new rectangle and add to canvas
+            function addRectToCanvas(x, y) {
                  var rect = new fabric.Rect({
                     left: x,
                     top: y,
@@ -61,7 +60,8 @@
                 overlay.fabricCanvas().renderAll();
             }
 
-            function addCircle(x, y) {
+            //create a new circle and add it to canvas
+            function addCircleToCanvas(x, y) {
                 var circle = new fabric.Circle({
                     left: x,
                     top: y,
@@ -76,36 +76,28 @@
                 overlay.fabricCanvas().renderAll();
             }
 
-            viewer.addHandler('canvas-click', function(event) {
-                var pointer = overlay.fabricCanvas().getPointer(event.e);
-                console.log("EVENT TRIGERRED: OSD-canvas-click")
-            });
-
-
-            //TODO:
-            //$("#selec").click(function(){
-            //  canvas.isDrawingMode = false;
-            //    canvas.selection= true;
-            //    canvas.off('mouse:down');
-            //    canvas.off('mouse:move');
-            //    canvas.off('mouse:up');
-            //    canvas.forEachObject(function(o){ o.setCoords() })
-            //})
-
-            //add jquery button
-
-            $("#toggleMapScrolling").click(function() {
-                console.log("toggle dat map scrolling boi");
-                viewer.setMouseNavEnabled(false);
-
-                //so this works, but then the canvas drawing stops working too... hmm..
-            })
-
-
-
-
-
  var circle, isDown, origX, origY;
+
+            function initializeCircle(x, y) {
+                circle = new fabric.Circle({
+                    left: pointer.x,
+                    top: pointer.y,
+                    radius: 1,
+                    strokeWidth: 1,
+                    stroke: 'black',
+                    fill: 'white',
+                    selectable: true,
+                    originX: 'center', originY: 'center'
+                });
+                overlay.fabricCanvas().add(circle);
+            }
+
+            //TODO: Create overloaded initializeCircle function
+            //TODO: should I update the circle member variable automatically or pass in the object to modify?
+            function updateCircleRadius(x, y, origX) {
+                circle.set({radius: Math.abs(origX - pointer.x)});
+                //TODO: check this radius measure, seems funky.. it's only x distance?
+            }
 
  overlay.fabricCanvas().observe('mouse:down', function(o){
      console.log("EVENT TRIGERRED: fabricjs-mouse:down");
@@ -113,24 +105,15 @@
      var pointer = overlay.fabricCanvas().getPointer(o.e);
      origX = pointer.x;
      origY = pointer.y;
-     circle = new fabric.Circle({
-         left: pointer.x,
-         top: pointer.y,
-         radius: 1,
-         strokeWidth: 1,
-         stroke: 'black',
-         fill: 'white',
-         selectable: true,
-         originX: 'center', originY: 'center'
-     });
-     overlay.fabricCanvas().add(circle);
+
+     initializeCircle(pointer.x, pointer.y)
  });
 
  overlay.fabricCanvas().observe('mouse:move', function(o){
      console.log("EVENT TRIGERRED: fabricjs-mouse:move");
      if (!isDown) return;
      var pointer = overlay.fabricCanvas().getPointer(o.e);
-     circle.set({ radius: Math.abs(origX - pointer.x) });
+     updateCircleRadius(pointer.x, pointer.y, origX); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
      overlay.fabricCanvas().renderAll();
  });
 
@@ -138,5 +121,10 @@
      console.log("EVENT TRIGERRED: fabricj-mouse:up");
      isDown = false;
  });
+
+ viewer.addHandler('canvas-click', function(event) {
+                var pointer = overlay.fabricCanvas().getPointer(event.e);
+                console.log("EVENT TRIGERRED: OSD-canvas-click")
+            });
         {% endblock jsInit %}
 
