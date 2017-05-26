@@ -3,190 +3,210 @@
     {% block scripts %}
     {{ block.super }}
         <script type="text/javascript" src='{{ EXTERNAL_URL }}fabric.js/dist/fabric.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
+        <script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
     {#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
     {% endblock scripts %}
-
     {% block content %}
     <h1>Emigre Sandbox beta</h1>
+
+
+    <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary active">
+            <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="navigateImage" checked>Navigate Image</label>
+        <label class="btn btn-primary">
+            <input type="radio" name="cursorMode" id="editAnnotations" autocomplete="off" value="editAnnotations">Edit Annotations</label>
+    </div>
+
+    </br>
+    <div class="btn-group" data-toggle="buttons">
+    <label class="btn btn-primary active">
+        <input type="radio" name="annotationShape" id="text" autocomplete="off" value="text"checked>Text</label>
+    <label class="btn btn-primary">
+        <input type="radio" name="annotationShape" id="rectangle" autocomplete="off" value="rectangle">Rectangle</label>
+    <label class="btn btn-primary">
+        <input type="radio" name="annotationShape" id="circle" autocomplete="off" value="circle">Circle</label>
+
+    </div>
+    <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off">Add Annotation</button>
+
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
-        <button type="button" id="toggleMapScrolling">Toggle Map Scrolling</button>
     {% endblock content %}
-
         {% block jsInit %}
+            var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+            var viewer = OpenSeadragon({
+                id:            "openseadragon1",
+                prefixUrl:     prefixUrl,
+                showNavigator: true,
+                gestureSettingsMouse:   {
+                    clickToZoom: false
+                },
+                clickToZoom: "false",
+                tileSources:   [{
+                    Image:  {
+                        //Need to change [tile_format="jpg", image_quality=0.85,]
+                        //Plus any other changes in deepzoom.py we make
+                        xmlns: "http://schemas.microsoft.com/deepzoom/2009",
+                        Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
+                        TileSize: "128",
+                        Overlap: "2",
+                        Format: "png",
+                        ServerFormat: "Default",
+                        Size: {
+                            Width: "4928",
+                            Height: "3280",
+                        }
+                    }
+                }],
+            });
 
-                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-    var viewer = OpenSeadragon({
-        id:            "openseadragon1",
-        prefixUrl:     prefixUrl,
-        showNavigator: true,
-        gestureSettingsMouse:   {
-            clickToZoom: false
-        },
-        clickToZoom: "false",
-        tileSources:   [{
-            Image:  {
-                //Need to change [tile_format="jpg", image_quality=0.85,]
-                //Plus any other changes in deepzoom.py we make
-                xmlns: "http://schemas.microsoft.com/deepzoom/2009",
-                Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
-                TileSize: "128",
-                Overlap: "2",
-                Format: "png",
-                ServerFormat: "Default",
-                Size: {
-                    Width: "4928",
-                    Height: "3280",
+            //fabricjs-openseadragon annotation object
+            var overlay = viewer.fabricjsOverlay();
+            var rectangle, circle, isDown, origX, origY;
+
+            /* the mouse can be in 3 modes:
+                1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
+                2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
+                3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw on clicK)
+                getters and setters are below
+             */
+            var mouseMode = "OSD";
+
+
+            //Euclidean distance between (x1,y1) and (x2,y2)
+            function distanceFormula(x1, y1, x2, y2) {
+                var xDist = Math.pow((x1-x2),2);
+                var yDist = Math.pow((y1-y2),2);
+                return Math.sqrt(xDist+yDist);
+            }
+
+            //TODO: Create overloaded initializeCircle function
+            function initializeCircle(x, y) {
+                circle = new fabric.Circle({
+                    left: x,
+                    top: y,
+                    radius: 1,
+                    strokeWidth: 1,
+                    stroke: 'black',
+                    fill: 'white',
+                    selectable: true,
+                    originX: 'center', originY: 'center'
+                });
+                overlay.fabricCanvas().add(circle);
+            }
+
+            //TODO: should I update the circle member variable automatically or pass in the object to modify?
+            function updateCircleRadius(x, y, origX, origY) {
+                var radius = distanceFormula(x, y, origX, origY);
+                circle.set({radius: radius});
+            }
+
+            //fabricJS mouse-down event listener
+            overlay.fabricCanvas().observe('mouse:down', function(o){
+                 console.log("EVENT TRIGERRED: fabricjs-mouse:down");
+                 console.log("mouse mode is " + getMouseMode());
+                 if(getMouseMode()=="addAnnotation") {
+                     console.log("initializing circle!!!!!!!!!!!!!!!!!!!!!!!!");
+                     isDown = true;
+                     var pointer = overlay.fabricCanvas().getPointer(o.e);
+                     origX = pointer.x;
+                     origY = pointer.y;
+                     initializeCircle(pointer.x, pointer.y)
+                 }
+            });
+
+            //fabricJS mouse-move event listener
+            overlay.fabricCanvas().observe('mouse:move', function(o){
+                 console.log("EVENT TRIGERRED: fabricjs-mouse:move");
+                 console.log($("input[name='cursorMode']:checked").val());
+                 console.log($("input[name='annotationShape']:checked").val());
+                 if (!isDown) return;
+                 var pointer = overlay.fabricCanvas().getPointer(o.e);
+                 updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
+                 overlay.fabricCanvas().renderAll();
+            });
+
+            //fabricJS mouse-up event listener
+            overlay.fabricCanvas().on('mouse:up', function(o){
+                console.log("EVENT TRIGERRED: fabricj-mouse:up");
+                isDown = false;
+            });
+
+            //OSD event listener. Currently not really used.
+            viewer.addHandler('canvas-click', function(event) {
+                var pointer = overlay.fabricCanvas().getPointer(event.e);
+                console.log("EVENT TRIGERRED: OSD-canvas-click")
+            });
+
+            //Toggle map scrolling button.
+            $("#toggleMapScrolling").click(function() {
+                console.log("toggle dat map scrolling boi");
+                viewer.setMouseNavEnabled(false);
+                setMouseMode("addAnnotation");
+            })
+
+
+            function setMouseMode(mode) {
+                switch(mode) {
+                    case "OSD":
+                        console.log("mousemode: OSD");
+                    mouseMode="OSD";
+                        viewer.setMouseNavEnabled(true);
+                        break;
+                    case "addAnnotation":
+                        console.log("mousemode: addAnnotation");
+                        mouseMode="addAnnotation";
+                        viewer.setMouseNavEnabled(false); //if we're in addAnnotation mode, don't set isDown to true -- actually, ONLY set to true if mode is addAnnotation
+                        break;
+                    case "editAnnotation":
+                        console.log("mousemode: editAnnotation");
+                        mouseMode="editAnnotation";
+                        break;
+                    default:
+                        throw "Tried to set invalid mouse mode";
                 }
             }
-        }],
-    });
 
-    //fabricjs-openseadragon annotation object
-    var overlay = viewer.fabricjsOverlay();
-    var rectangle, circle, isDown, origX, origY;
-
-    /* the mouse can be in 3 modes:
-        1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
-        2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
-        3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw on clicK)
-        getters and setters are below
-     */
-    var mouseMode = "OSD";
-
-
-    //Euclidean distance between (x1,y1) and (x2,y2)
-    function distanceFormula(x1, y1, x2, y2) {
-        var xDist = Math.pow((x1-x2),2);
-        var yDist = Math.pow((y1-y2),2);
-        return Math.sqrt(xDist+yDist);
-    }
-
-    //TODO: Create overloaded initializeCircle function
-    function initializeCircle(x, y) {
-        circle = new fabric.Circle({
-            left: x,
-            top: y,
-            radius: 1,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
-            selectable: true,
-            originX: 'center', originY: 'center'
-        });
-        overlay.fabricCanvas().add(circle);
-    }
-
-    //TODO: should I update the circle member variable automatically or pass in the object to modify?
-    function updateCircleRadius(x, y, origX, origY) {
-        var radius = distanceFormula(x, y, origX, origY);
-        circle.set({radius: radius});
-    }
-
-    //fabricJS mouse-down event listener
-    overlay.fabricCanvas().observe('mouse:down', function(o){
-         console.log("EVENT TRIGERRED: fabricjs-mouse:down");
-         console.log("mouse mode is " + getMouseMode());
-         if(getMouseMode()=="addAnnotation") {
-             console.log("initializing circle!!!!!!!!!!!!!!!!!!!!!!!!");
-             isDown = true;
-             var pointer = overlay.fabricCanvas().getPointer(o.e);
-             origX = pointer.x;
-             origY = pointer.y;
-             initializeCircle(pointer.x, pointer.y)
-         }
-    });
-
-    //fabricJS mouse-move event listener
-    overlay.fabricCanvas().observe('mouse:move', function(o){
-         console.log("EVENT TRIGERRED: fabricjs-mouse:move");
-         if (!isDown) return;
-         var pointer = overlay.fabricCanvas().getPointer(o.e);
-         updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
-         overlay.fabricCanvas().renderAll();
-    });
-
-    //fabricJS mouse-up event listener
-    overlay.fabricCanvas().on('mouse:up', function(o){
-        console.log("EVENT TRIGERRED: fabricj-mouse:up");
-        isDown = false;
-    });
-
-    //OSD event listener. Currently not really used.
-    viewer.addHandler('canvas-click', function(event) {
-        var pointer = overlay.fabricCanvas().getPointer(event.e);
-        console.log("EVENT TRIGERRED: OSD-canvas-click")
-    });
-
-    //Toggle map scrolling button.
-    $("#toggleMapScrolling").click(function() {
-        console.log("toggle dat map scrolling boi");
-        viewer.setMouseNavEnabled(false);
-        setMouseMode("addAnnotation");
-    })
-
-
-    function setMouseMode(mode) {
-        switch(mode) {
-            case "OSD":
-                console.log("mousemode: OSD");
-                mouseMode="OSD";
-                viewer.setMouseNavEnabled(true);
-                break;
-            case "addAnnotation":
-                console.log("mousemode: addAnnotation");
-                mouseMode="addAnnotation";
-                viewer.setMouseNavEnabled(false); //if we're in addAnnotation mode, don't set isDown to true -- actually, ONLY set to true if mode is addAnnotation
-                break;
-            case "editAnnotation":
-                console.log("mousemode: editAnnotation");
-                mouseMode="editAnnotation";
-                break;
-            default:
-                throw "Tried to set invalid mouse mode";
-        }
-    }
-
-    function getMouseMode(){
-        return mouseMode;
-    }
+            function getMouseMode(){
+                return mouseMode;
+            }
 
 
 
 
-    /*************************/
-    /* Might be useful later */
-    /*************************/
 
 
-    //create a new rectangle and add to canvas
-    function addRectToCanvas(x, y) {
-         var rect = new fabric.Rect({
-            left: x,
-            top: y,
-            fill: 'blue',
-            width: 1000,
-            height: 1000
-        });
-        overlay.fabricCanvas().add(rect);
-        overlay.fabricCanvas().renderAll();
-    }
+            /*************************/
+            /* Might be useful later */
+            /*************************/
 
-    //create a new circle and add it to canvas
-    function addCircleToCanvas(x, y) {
-        var circle = new fabric.Circle({
-            left: x,
-            top: y,
-            radius: 225,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
-            selectable: true,
-            originX: 'center', originY: 'center'
-        });
-        overlay.fabricCanvas().add(circle);
-        overlay.fabricCanvas().renderAll();
-    }
 
+            //create a new rectangle and add to canvas
+            function addRectToCanvas(x, y) {
+                 var rect = new fabric.Rect({
+                    left: x,
+                    top: y,
+                    fill: 'blue',
+                    width: 1000,
+                    height: 1000
+                });
+                overlay.fabricCanvas().add(rect);
+                overlay.fabricCanvas().renderAll();
+            }
+
+            //create a new circle and add it to canvas
+            function addCircleToCanvas(x, y) {
+                var circle = new fabric.Circle({
+                    left: x,
+                    top: y,
+                    radius: 225,
+                    strokeWidth: 1,
+                    stroke: 'black',
+                    fill: 'white',
+                    selectable: true,
+                    originX: 'center', originY: 'center'
+                });
+                overlay.fabricCanvas().add(circle);
+                overlay.fabricCanvas().renderAll();
+            }
         {% endblock jsInit %}
 
