@@ -44,13 +44,7 @@
             var overlay = viewer.fabricjsOverlay();
                 // add fabric rectangle
 
-            var rect = new fabric.Rect({
-                left: 0,
-                top: 0,
-                fill: 'red',
-                width: 1000,
-                height: 1000
-            });
+
 {#            canvas = overlay.fabricCanvas();#}
             console.log("hello world");
 
@@ -83,55 +77,9 @@
             }
 
             viewer.addHandler('canvas-click', function(event) {
-                console.log("EVENT TRIGERRED: OSD-canvas-click")
                 var pointer = overlay.fabricCanvas().getPointer(event.e);
-
-                addCircle(pointer.x, pointer.y);
-                addRectangle(pointer.x, pointer.y);
-
+                console.log("EVENT TRIGERRED: OSD-canvas-click")
             });
-
-            //TODO: use to track cirlc center.
-            viewer.addHandler('press', function(event) {
-                //what does this even do? Doesn't work when mapScrolling is disabled soooooooo
-                //is never triggered at all kek totally useless
-                console.log("EVENT TRIGGERED: OSD-press");
-            });
-
-            //TODO: use to calculate final circle radius size?
-            viewer.addHandler('release', function(event) {
-                console.log("EVENT TRIGERRED: OSD-event");
-            });
-
-            //TODO: use this to draw circles live
-            viewer.addHandler('canvas-drag', function(event) {
-                console.log("EVENT TRIGERRED: OSD-drag");
-            });
-
-            //so this is trigerred here...
-            // overlay.fabricCanvas().observe('mouse:down', function(o){
-            //     console.log("mouse down event");
-            //     isDown = true;
-            //     var pointer = overlay.fabricCanvas().getPointer(o.e);
-            //     addCircle(pointer.x, pointer.y);
-            //     origX = pointer.x;
-            //     origY = pointer.y;
-            //     var circle = new fabric.Circle({
-            //         left: pointer.x,
-            //         top: pointer.y,
-            //         radius: 1,
-            //         strokeWidth: 1,
-            //         stroke: 'black',
-            //         fill: 'white',
-            //         selectable: true,
-            //         originX: 'center', originY: 'center'
-            //     });
-            //     overlay.fabricCanvas().add(circle);
-            //     overlay.fabricCanvas().renderAll();
-            // });
-
-
-            overlay.fabricCanvas().add(rect);
 
 
             //TODO:
