@@ -15,7 +15,7 @@
     {%  endblock content  %}
 
         {% block jsInit %}
-        var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+       var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
         var viewer = OpenSeadragon({
                     id:            "openseadragon1",
                     prefixUrl:     prefixUrl,
@@ -83,6 +83,7 @@
             }
 
             viewer.addHandler('canvas-click', function(event) {
+                console.log("EVENT TRIGERRED: OSD-canvas-click")
                 var pointer = overlay.fabricCanvas().getPointer(event.e);
 
                 addCircle(pointer.x, pointer.y);
@@ -94,40 +95,40 @@
             viewer.addHandler('press', function(event) {
                 //what does this even do? Doesn't work when mapScrolling is disabled soooooooo
                 //is never triggered at all kek totally useless
-                console.log("press event");
+                console.log("EVENT TRIGGERED: OSD-press");
             });
 
             //TODO: use to calculate final circle radius size?
             viewer.addHandler('release', function(event) {
-                console.log("release event");
+                console.log("EVENT TRIGERRED: OSD-event");
             });
 
             //TODO: use this to draw circles live
             viewer.addHandler('canvas-drag', function(event) {
-                console.log("you're dragging m8");
+                console.log("EVENT TRIGERRED: OSD-drag");
             });
 
             //so this is trigerred here...
-            overlay.fabricCanvas().observe('mouse:down', function(o){
-                console.log("mouse down event");
-                isDown = true;
-                var pointer = overlay.fabricCanvas().getPointer(o.e);
-                addCircle(pointer.x, pointer.y);
-                origX = pointer.x;
-                origY = pointer.y;
-                var circle = new fabric.Circle({
-                    left: pointer.x,
-                    top: pointer.y,
-                    radius: 1,
-                    strokeWidth: 1,
-                    stroke: 'black',
-                    fill: 'white',
-                    selectable: true,
-                    originX: 'center', originY: 'center'
-                });
-                overlay.fabricCanvas().add(circle);
-                overlay.fabricCanvas().renderAll();
-            });
+            // overlay.fabricCanvas().observe('mouse:down', function(o){
+            //     console.log("mouse down event");
+            //     isDown = true;
+            //     var pointer = overlay.fabricCanvas().getPointer(o.e);
+            //     addCircle(pointer.x, pointer.y);
+            //     origX = pointer.x;
+            //     origY = pointer.y;
+            //     var circle = new fabric.Circle({
+            //         left: pointer.x,
+            //         top: pointer.y,
+            //         radius: 1,
+            //         strokeWidth: 1,
+            //         stroke: 'black',
+            //         fill: 'white',
+            //         selectable: true,
+            //         originX: 'center', originY: 'center'
+            //     });
+            //     overlay.fabricCanvas().add(circle);
+            //     overlay.fabricCanvas().renderAll();
+            // });
 
 
             overlay.fabricCanvas().add(rect);
@@ -151,5 +152,43 @@
 
                 //so this works, but then the canvas drawing stops working too... hmm..
             })
+
+
+
+
+
+ var circle, isDown, origX, origY;
+
+ overlay.fabricCanvas().observe('mouse:down', function(o){
+     console.log("EVENT TRIGERRED: fabricjs-mouse:down");
+     isDown = true;
+     var pointer = overlay.fabricCanvas().getPointer(o.e);
+     origX = pointer.x;
+     origY = pointer.y;
+     circle = new fabric.Circle({
+         left: pointer.x,
+         top: pointer.y,
+         radius: 1,
+         strokeWidth: 1,
+         stroke: 'black',
+         fill: 'white',
+         selectable: true,
+         originX: 'center', originY: 'center'
+     });
+     overlay.fabricCanvas().add(circle);
+ });
+
+ overlay.fabricCanvas().observe('mouse:move', function(o){
+     console.log("EVENT TRIGERRED: fabricjs-mouse:move");
+     if (!isDown) return;
+     var pointer = overlay.fabricCanvas().getPointer(o.e);
+     circle.set({ radius: Math.abs(origX - pointer.x) });
+     overlay.fabricCanvas().renderAll();
+ });
+
+ overlay.fabricCanvas().on('mouse:up', function(o){
+     console.log("EVENT TRIGERRED: fabricj-mouse:up");
+     isDown = false;
+ });
         {% endblock jsInit %}
 
