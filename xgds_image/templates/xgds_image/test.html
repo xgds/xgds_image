@@ -117,8 +117,6 @@
             //fabricJS mouse-move event listener
             overlay.fabricCanvas().observe('mouse:move', function(o){
                  console.log("EVENT TRIGERRED: fabricjs-mouse:move");
-                 console.log($("input[name='cursorMode']:checked").val());
-                 console.log($("input[name='annotationShape']:checked").val());
                  if (!isDown) return;
                  var pointer = overlay.fabricCanvas().getPointer(o.e);
                  updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
@@ -143,6 +141,18 @@
                 viewer.setMouseNavEnabled(false);
                 setMouseMode("addAnnotation");
             })
+
+            $("input[name='cursorMode']").change(function() {
+                console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
+
+            });
+
+            $("input[name='annotationShape']").change(function(){
+                console.log("annotationShape change detected: " + $("input[name='annotationShape']:checked").val());
+
+            });
+
+
 
 
             function setMouseMode(mode) {
@@ -208,5 +218,6 @@
                 overlay.fabricCanvas().add(circle);
                 overlay.fabricCanvas().renderAll();
             }
+            
         {% endblock jsInit %}
 
