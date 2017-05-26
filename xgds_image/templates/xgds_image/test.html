@@ -15,7 +15,7 @@
     {%  endblock content  %}
 
         {% block jsInit %}
-        var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+          var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
         var viewer = OpenSeadragon({
                     id:            "openseadragon1",
                     prefixUrl:     prefixUrl,
@@ -78,10 +78,12 @@
 
  var circle, isDown, origX, origY;
 
+            //TODO: Create overloaded initializeCircle function
             function initializeCircle(x, y) {
+                console.log("circle is set tho");
                 circle = new fabric.Circle({
-                    left: pointer.x,
-                    top: pointer.y,
+                    left: x,
+                    top: y,
                     radius: 1,
                     strokeWidth: 1,
                     stroke: 'black',
@@ -92,10 +94,10 @@
                 overlay.fabricCanvas().add(circle);
             }
 
-            //TODO: Create overloaded initializeCircle function
+
             //TODO: should I update the circle member variable automatically or pass in the object to modify?
             function updateCircleRadius(x, y, origX) {
-                circle.set({radius: Math.abs(origX - pointer.x)});
+                circle.set({radius: Math.abs(origX - x)});
                 //TODO: check this radius measure, seems funky.. it's only x distance?
             }
 
@@ -126,5 +128,13 @@
                 var pointer = overlay.fabricCanvas().getPointer(event.e);
                 console.log("EVENT TRIGERRED: OSD-canvas-click")
             });
+
+
+            $("#toggleMapScrolling").click(function() {
+                console.log("toggle dat map scrolling boi");
+                viewer.setMouseNavEnabled(false);
+
+                //so this works, but then the canvas drawing stops working too... hmm..
+            })
         {% endblock jsInit %}
 
