@@ -41,7 +41,7 @@ BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
 BOWER_INSTALLED_APPS += ['dropzone',
                          'openseadragon',
                          'openseadragon-annotations',
-                         'openseadragon-fabricjsOverlay=https://github.com/altert/OpenseadragonFabricjsOverlay.git',
+                         'openseadragon-fabricjsOverlay=https://github.com/altert/OpenseadragonFabricjsOverlay.git#2b6ce02dc6a920e6549dc6f5a4dd62b7bbf31970',
                          'fabric'
                          ]
 
