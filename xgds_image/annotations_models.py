@@ -7,6 +7,8 @@ class annotations(models.Model):
     fill = #point to some dictionary?
     stroke = models.PositiveIntegerField()
     strokeWidth = models.PositiveIntegerField()
+    selectable = models.BooleanField(default=True)
+    angle = models.IntegerField(db_index=True) #store shape rotation angle
 
     #Might need?
     author = models.ForeignKey(User)
@@ -40,6 +42,11 @@ class annotations(models.Model):
     def getAuthor(self):
         if self.author:
             return self.author
+        return None
+
+    def isSelectable(self):
+        if self.selectable:
+            return self.selectable
         return None
 
 

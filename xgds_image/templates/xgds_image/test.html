@@ -32,7 +32,6 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
         {% block jsInit %}
-
             var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
             var viewer = OpenSeadragon({
                 id:            "openseadragon1",
@@ -62,7 +61,7 @@
 
             //fabricjs-openseadragon annotation object
             var overlay = viewer.fabricjsOverlay();
-            var line, rectangle, circle, isDown, origX, origY;
+            var line, rectangle, circle, ellipse, isDown, origX, origY;
 
             /* the mouse can be in 3 modes:
                 1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
@@ -97,6 +96,26 @@
                 line.set({x2:x, y2:y});
             }
 
+            function initializeEllipse(x, y) {
+                ellipse = new fabric.Ellipse({
+                    left: x,
+                    top: y,
+                    radius: 1,
+                    strokeWidth: 1,
+                    stroke: 'black',
+                    fill: 'white',
+                    selectable: true,
+                    originX: 'center', originY: 'center'
+                });
+                overlay.fabricCanvas().add(ellipse);
+            }
+
+            function updateEllipse(x, y) {
+                var distance = distanceFormula(x,y,origX,origY);
+
+                ellipse.set({rx: Math.abs(origX-x), ry:Math.abs(origY-y)});
+            }
+
 
             //TODO: Create overloaded initializeCircle function
             function initializeCircle(x, y) {
@@ -108,7 +127,8 @@
                     stroke: 'black',
                     fill: 'white',
                     selectable: true,
-                    originX: 'center', originY: 'center'
+                    originX: 'center',
+                    originY: 'center'
                 });
                 overlay.fabricCanvas().add(circle);
             }
@@ -149,7 +169,8 @@
                      origY = pointer.y;
                      // initializeCircle(pointer.x, pointer.y);
                      // initializeRectangle(pointer.x, pointer.y);
-                     initializeLine(pointer.x, pointer.y);
+                     // initializeLine(pointer.x, pointer.y);
+                     initializeEllipse(pointer.x, pointer.y);
                  }
             });
 
@@ -160,7 +181,8 @@
                  var pointer = overlay.fabricCanvas().getPointer(o.e);
                  // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
                  // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
-                    updateLineEndpoint(pointer.x, pointer.y);
+                 // updateLineEndpoint(pointer.x, pointer.y);
+                    updateEllipse(pointer.x, pointer.y);
                  overlay.fabricCanvas().renderAll();
             });
 
@@ -281,9 +303,7 @@
         serialization
         color pallete
         xgds ref
-
-
          */
 
-        {% endblock jsInit %}
+     {% endblock jsInit %}
 
