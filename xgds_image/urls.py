@@ -30,4 +30,6 @@ urlpatterns = [
     url(r'^getRotation/$', views.getRotationValue, {}, 'xgds_image_get_rotation'), 
     url(r'^checkTiles/(?P<imageSetPK>[\d]+)$', views.getTileState, {}, 'xgds_image_check_tiles'),
     url(r'^testpage$', TemplateView.as_view(template_name='xgds_image/test.html'), {}, 'test'),
+    url(r'^saveAnnotations/$', views.saveAnnotations, {}, 'xgds_image_save_annotations'),
+
     ]

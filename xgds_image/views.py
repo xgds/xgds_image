@@ -403,3 +403,19 @@ def getTileState(request, imageSetPK):
                                         'error': str(e)}), 
                                         content_type='application/json',
                                             status=404)
+
+
+def saveAnnotations(request):
+    if request.method == 'POST':
+        #new python object
+        json.loads()
+        postDict = request.POST.dict()
+        degrees = int(postDict['mapAnnotations'])
+        imagePK = int(postDict['pk'])
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
+        imageSet.rotation_degrees = degrees
+        imageSet.save()
+        return HttpResponse(json.dumps({'success': 'true'}),
+                            content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
