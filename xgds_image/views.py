@@ -409,7 +409,7 @@ def saveAnnotations(request):
     print("holy python can print to console godbless")
     if request.method == 'POST':
 
-        json.loads()
+        # json.loads() <-- this throws an error?
 
         postDict = request.POST.dict()
         # annotations = int(postDict['mapAnnotations'])
@@ -421,3 +421,4 @@ def saveAnnotations(request):
                             content_type='application/json')
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+
