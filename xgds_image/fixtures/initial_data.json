@@ -7,5 +7,29 @@
             "first_name": "Some",
             "last_name": "Camera"
         }
+    },
+    {
+        "pk": 1,
+        "model": "xgds_image.AnnotationColor",
+        "fields": {
+            "name": "red",
+            "hex": "FF0000"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "xgds_image.AnnotationColor",
+        "fields": {
+            "name": "green",
+            "hex": "00FF00"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "xgds_image.AnnotationColor",
+        "fields": {
+            "name": "blue",
+            "hex": "0000FF"
+        }
     }
 ]

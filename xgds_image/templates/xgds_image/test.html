@@ -32,7 +32,8 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
         {% block jsInit %}
-                  var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+
+                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -104,8 +105,8 @@
             strokeWidth: 1,
             stroke: 'black',
             fill: 'white',
-            selectable: true,
-            originX: 'center', originY: 'center'
+            selectable: true
+
         });
         overlay.fabricCanvas().add(ellipse);
     }
@@ -183,8 +184,8 @@
              // initializeCircle(pointer.x, pointer.y);
              // initializeRectangle(pointer.x, pointer.y);
              // initializeLine(pointer.x, pointer.y);
-             // initializeEllipse(pointer.x, pointer.y);
-             initializeText(pointer.x, pointer.y);
+             initializeEllipse(pointer.x, pointer.y);
+             // initializeText(pointer.x, pointer.y);
          }
     });
 
@@ -196,8 +197,8 @@
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
          // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
          // updateLineEndpoint(pointer.x, pointer.y);
-         // updateEllipse(pointer.x, pointer.y);
-         updateTextContent(pointer.x, pointer.y);
+         updateEllipse(pointer.x, pointer.y);
+         // updateTextContent(pointer.x, pointer.y);
          overlay.fabricCanvas().renderAll();
     });
 
