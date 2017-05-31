@@ -403,3 +403,21 @@ def getTileState(request, imageSetPK):
                                         'error': str(e)}), 
                                         content_type='application/json',
                                             status=404)
+
+
+def saveAnnotations(request):
+    print("holy python can print to console godbless")
+    if request.method == 'POST':
+
+        json.loads()
+
+        postDict = request.POST.dict()
+        # annotations = int(postDict['mapAnnotations'])
+        annotations = postDict['mapAnnotations']
+
+        # new python object
+        # object.save() and some majic happens
+        return HttpResponse(json.dumps({'success': 'true'}),
+                            content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
