@@ -33,7 +33,7 @@
     {% endblock content %}
         {% block jsInit %}
 
-                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+                  var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -105,8 +105,8 @@
             strokeWidth: 1,
             stroke: 'black',
             fill: 'white',
-            selectable: true
-
+            selectable: true,
+            originX: 'center', originY: 'center'
         });
         overlay.fabricCanvas().add(ellipse);
     }
@@ -170,6 +170,69 @@
         var height = Math.abs(y-origY);
         text.set({width: width, height: height})
     }
+
+    /*
+    Arrows are initialized in a strange way. Arrows aren't provided by fabricjs so you need to create them yourself. We do this by
+    computing a group of points (in calculateArrowPoints()) and then creating a polygon that encloses all of those points (so we're
+    really drawing a polygon, not an arrow). Taken from https://jsfiddle.net/6e17oxc3/
+    */
+    function initializeArrow(x, y) {
+        var angle = Math.atan2(toy - fromy, tox - fromx);
+        var headlen = 15;  // arrow head size
+        // bring the line end back some to account for arrow head.
+        tox = tox - (headlen) * Math.cos(angle);
+        toy = toy - (headlen) * Math.sin(angle);
+        // calculate the points.
+        var points = [
+            {
+                x: fromx,  // start point
+                y: fromy
+            }, {
+                x: fromx - (headlen / 4) * Math.cos(angle - Math.PI / 2),
+                y: fromy - (headlen / 4) * Math.sin(angle - Math.PI / 2)
+            },{
+                x: tox - (headlen / 4) * Math.cos(angle - Math.PI / 2),
+                y: toy - (headlen / 4) * Math.sin(angle - Math.PI / 2)
+            }, {
+                x: tox - (headlen) * Math.cos(angle - Math.PI / 2),
+                y: toy - (headlen) * Math.sin(angle - Math.PI / 2)
+            },{
+                x: tox + (headlen) * Math.cos(angle),  // tip
+                y: toy + (headlen) * Math.sin(angle)
+            }, {
+                x: tox - (headlen) * Math.cos(angle + Math.PI / 2),
+                y: toy - (headlen) * Math.sin(angle + Math.PI / 2)
+            }, {
+                x: tox - (headlen / 4) * Math.cos(angle + Math.PI / 2),
+                y: toy - (headlen / 4) * Math.sin(angle + Math.PI / 2)
+            }, {
+                x: fromx - (headlen / 4) * Math.cos(angle + Math.PI / 2),
+                y: fromy - (headlen / 4) * Math.sin(angle + Math.PI / 2)
+            },{
+                x: fromx,
+                y: fromy
+            }
+        ];
+
+        var pline = new fabric.Polyline(points, {
+            fill: 'white',
+            stroke: 'black',
+            opacity: 1,
+            strokeWidth: 2,
+            originX: 'left',
+            originY: 'top',
+            selectable: true
+        });
+        canvas.add(pline);
+        canvas.renderAll();
+    }
+
+    function updateArrow(x, y) {
+
+    }
+
+    function calculateArrowPoints() {}
+
 
     //fabricJS mouse-down event listener
     overlay.fabricCanvas().observe('mouse:down', function(o){
@@ -306,7 +369,24 @@
     function serializeToJSON() {
         console.log("attempting to serialize");
         console.log(overlay.fabricCanvas().toJSON());
-        return "complete";
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'xgds_image_save_annotations' %}",
+            data: overlay.fabricCanvas().toJSON(),
+            contentType: 'application/json; charset=utf-8'
+        }).done(function (response) {
+            location.reload(true);
+        })
+
+        // $.ajax({
+        //     url: url,
+        //     type: "POST",
+        //     data: JSON.stringify(data),
+        //     processData: false,
+        //     contentType: "application/json; charset=UTF-8",
+        //     complete: callback
+        // });
     }
 
     //need to pass in JSON string

@@ -406,15 +406,17 @@ def getTileState(request, imageSetPK):
 
 
 def saveAnnotations(request):
+    print("holy python can print to console godbless")
     if request.method == 'POST':
-        #new python object
+
         json.loads()
+
         postDict = request.POST.dict()
-        degrees = int(postDict['mapAnnotations'])
-        imagePK = int(postDict['pk'])
-        imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
-        imageSet.rotation_degrees = degrees
-        imageSet.save()
+        # annotations = int(postDict['mapAnnotations'])
+        annotations = postDict['mapAnnotations']
+
+        # new python object
+        # object.save() and some majic happens
         return HttpResponse(json.dumps({'success': 'true'}),
                             content_type='application/json')
     else:
