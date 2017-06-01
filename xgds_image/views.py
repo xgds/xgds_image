@@ -405,20 +405,34 @@ def getTileState(request, imageSetPK):
                                             status=404)
 
 
+# def saveAnnotations(request):
+#     print("holy python can print to console godbless")
+#     if request.method == 'POST':
+#
+#         # json.loads() <-- this throws an error?
+#
+#         postDict = request.POST.dict()
+#         # annotations = int(postDict['mapAnnotations'])
+#         annotations = postDict['mapAnnotations']
+#
+#         # new python object
+#         # object.save() and some majic happens
+#         return HttpResponse(json.dumps({'success': 'true'}),
+#                             content_type='application/json')
+#     else:
+#         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+
 def saveAnnotations(request):
-    print("holy python can print to console godbless")
+
     if request.method == 'POST':
+        # data = json.loads(request.body)
+        temp = request.POST.get('mapAnnotations', None)
+        print "save annotations"
+        print temp
 
-        # json.loads() <-- this throws an error?
-
-        postDict = request.POST.dict()
-        # annotations = int(postDict['mapAnnotations'])
-        annotations = postDict['mapAnnotations']
-
-        # new python object
-        # object.save() and some majic happens
-        return HttpResponse(json.dumps({'success': 'true'}),
+        mapAnnotations = json.loads(temp)
+        return HttpResponse(json.dumps(mapAnnotations),
                             content_type='application/json')
+
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
-

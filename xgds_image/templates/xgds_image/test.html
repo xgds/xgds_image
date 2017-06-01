@@ -31,9 +31,8 @@
 
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
-        {% block jsInit %}
-
-                            var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+    {% block jsInit %}
+                          var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -254,9 +253,9 @@
              // initializeCircle(pointer.x, pointer.y);
              // initializeRectangle(pointer.x, pointer.y);
              // initializeLine(pointer.x, pointer.y);
-             // initializeEllipse(pointer.x, pointer.y);
+             initializeEllipse(pointer.x, pointer.y);
              // initializeText(pointer.x, pointer.y);
-             initializeArrow(pointer.x, pointer.y);
+             // initializeArrow(pointer.x, pointer.y);
          }
     });
 
@@ -268,9 +267,9 @@
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
          // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
          // updateLineEndpoint(pointer.x, pointer.y);
-         // updateEllipse(pointer.x, pointer.y);
+         updateEllipse(pointer.x, pointer.y);
          // updateTextContent(pointer.x, pointer.y);
-         updateArrow(pointer.x, pointer.y);
+         // updateArrow(pointer.x, pointer.y);
          overlay.fabricCanvas().renderAll();
     });
 
@@ -377,25 +376,34 @@
 
     function serializeToJSON() {
         console.log("attempting to serialize");
-        console.log(overlay.fabricCanvas().toJSON());
+        // console.log(overlay.fabricCanvas().toJSON());
 
+        var mapAnnotationsDict = JSON.stringify(overlay.fabricCanvas());
+        console.log(mapAnnotationsDict);
         $.ajax({
             type: "POST",
-            url: "{% url 'xgds_image_save_annotations' %}",
-            data: overlay.fabricCanvas().toJSON(),
-            contentType: 'application/json; charset=utf-8'
-        }).done(function (response) {
-            location.reload(true);
-        })
+            url: "{% url 'xgds_image_save_annotations' %}", // maybe change the url/hard code it
+            datatype: 'json',
+            data: {
+                mapAnnotations: JSON.stringify(overlay.fabricCanvas())
+            },
+            success: function (data) {
+                console.log(data)
+            },
+            error: function(a,b,c,d) {
+                console.log(a);
+            }
 
-        // $.ajax({
-        //     url: url,
-        //     type: "POST",
-        //     data: JSON.stringify(data),
-        //     processData: false,
-        //     contentType: "application/json; charset=UTF-8",
-        //     complete: callback
-        // });
+
+            // $.ajax({
+            //     url: url,
+            //     type: "POST",
+            //     data: JSON.stringify(data),
+            //     processData: false,
+            //     contentType: "application/json; charset=UTF-8",
+            //     complete: callback
+            // });
+        });
     }
 
     //need to pass in JSON string
@@ -411,5 +419,5 @@ xgds ref
 
 
  */
-     {% endblock jsInit %}
+    {% endblock jsInit %}
 
