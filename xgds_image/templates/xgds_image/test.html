@@ -32,7 +32,6 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
     {% block jsInit %}
-
                 var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
@@ -219,7 +218,7 @@
     //TODO: TODO: this should not be manually put here
     function calculateArrowPoints(x, y, headlen) {
         var angle = Math.atan2(y - origY, x - origX);
-        var headlen = 15;  // arrow head size
+        var headlen = 100;  // arrow head size
         // bring the line end back some to account for arrow head.
         x = x - (headlen) * Math.cos(angle);
         y = y - (headlen) * Math.sin(angle);
