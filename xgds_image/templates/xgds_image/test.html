@@ -33,7 +33,7 @@
     {% endblock content %}
     {% block jsInit %}
 
-            var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -176,9 +176,10 @@
     computing a group of points (in calculateArrowPoints()) and then creating a polygon that encloses all of those points (so we're
     really drawing a polygon, not an arrow). Taken from https://jsfiddle.net/6e17oxc3/
     */
-    function initializeArrow(x, y) {
+
+    function drawArrow(x, y) { //TODO: order of points fed to calculateArrowPoints probably matters
         var headlen = 15;  // arrow head size
-        arrow = new fabric.Polygon(calculateArrowPoints(x,y,x+20,y+20,headlen),{
+        arrow = new fabric.Polyline(calculateArrowPoints(origX,origY,x,y,headlen), {
             fill: 'white',
             stroke: 'black',
             opacity: 1,
@@ -191,6 +192,8 @@
     }
 
     function updateArrow(x, y) {
+        overlay.fabricCanvas().remove(arrow)
+        //TODO: dont forget to remove from canvas
         var angle = Math.atan2(y - origY, x - origX);
         var headlen = 15;  // arrow head size TODO: this should not be manually put here
         // bring the line end back some to account for arrow head.
@@ -199,82 +202,18 @@
         // calculate the points.
 
         var pointsArray = calculateArrowPoints(x, y, headlen);
-        console.log("your points, sire: " + pointsArray);
-        arrow.set({points: pointsArray});
+        arrow = new fabric.Polyline(pointsArray, {
+            fill: 'white',
+            stroke: 'black',
+            opacity: 1,
+            strokeWidth: 2,
+            originX: 'left',
+            originY: 'top',
+            selectable: true
+        });
+        overlay.fabricCanvas().add(arrow);
+        overlay.fabricCanvas().renderAll();
     }
-
-    var knownPoints = [
-        {
-          x: 100,
-          y: 100
-        }, {
-          x: 97.34834957055045,
-          y: 102.65165042944955
-        },{
-          x: 136.74174785275224,
-          y: 142.04504871165133
-        },{
-          x: 128.78679656440357,
-          y: 150
-        },{
-          x: 150,
-          y: 150
-        },{
-          x: 150,
-          y: 128.78679656440357
-        },{
-          x: 142.04504871165133,
-          y: 136.74174785275224
-        },{
-          x: 102.65165042944955,
-          y: 97.34834957055045
-        }
-    ];
-
-    arrowTemp = new fabric.Polygon(knownPoints, {
-        fill: 'white',
-        stroke: 'black',
-        opacity: 1,
-        strokeWidth: 2,
-        originX: 'left',
-        originY: 'top',
-        selectable: true
-    });
-
-    overlay.fabricCanvas().add(arrowTemp);
-    overlay.fabricCanvas().renderAll()
-
-    var doubleKnownPoints = [
-        {
-          x: 200,
-          y: 200
-        }, {
-          x: 194.6966991411,
-          y: 205.3033008589
-        },{
-          x: 273.4834957055,
-          y: 284.0900974233
-        },{
-          x: 257.5735931288,
-          y: 300
-        },{
-          x: 300,
-          y: 300
-        },{
-          x: 300,
-          y: 257.5735931288
-        },{
-          x: 284.0900974233,
-          y: 273.4834957055
-        },{
-          x: 205.3033008589,
-          y: 194.6966991411
-        }
-    ];
-
-    arrowTemp.set({points: doubleKnownPoints});
-    arrowTemp.setCoords()
-    overlay.fabricCanvas().renderAll()
 
     //TODO: Refactor this to camelcaps
     //TODO: TODO: this should not be manually put here
@@ -334,7 +273,8 @@
              // initializeLine(pointer.x, pointer.y);
              // initializeEllipse(pointer.x, pointer.y);
              // initializeText(pointer.x, pointer.y);
-             initializeArrow(pointer.x, pointer.y);
+             // initializeArrow(pointer.x, pointer.y);
+             drawArrow(pointer.x, pointer.y);
          }
     });
 
