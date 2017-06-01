@@ -32,7 +32,8 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
     {% block jsInit %}
-                                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+
+            var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -61,7 +62,7 @@
 
     //fabricjs-openseadragon annotation object
     var overlay = viewer.fabricjsOverlay();
-    var arrow, line, rectangle, circle, ellipse, text, isDown, origX, origY;
+    var arrow, arrowTemp, line, rectangle, circle, ellipse, text, isDown, origX, origY;
 
     /* the mouse can be in 3 modes:
         1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
@@ -177,7 +178,7 @@
     */
     function initializeArrow(x, y) {
         var headlen = 15;  // arrow head size
-        arrow = new fabric.Polyline(calculateArrowPoints(x,y,x,y,headlen),{
+        arrow = new fabric.Polygon(calculateArrowPoints(x,y,x+20,y+20,headlen),{
             fill: 'white',
             stroke: 'black',
             opacity: 1,
@@ -190,7 +191,7 @@
     }
 
     function updateArrow(x, y) {
-        var angle = Math.atan2(toy - origY, tox - origX);
+        var angle = Math.atan2(y - origY, x - origX);
         var headlen = 15;  // arrow head size TODO: this should not be manually put here
         // bring the line end back some to account for arrow head.
         x = x - (headlen) * Math.cos(angle);
@@ -202,40 +203,118 @@
         arrow.set({points: pointsArray});
     }
 
+    var knownPoints = [
+        {
+          x: 100,
+          y: 100
+        }, {
+          x: 97.34834957055045,
+          y: 102.65165042944955
+        },{
+          x: 136.74174785275224,
+          y: 142.04504871165133
+        },{
+          x: 128.78679656440357,
+          y: 150
+        },{
+          x: 150,
+          y: 150
+        },{
+          x: 150,
+          y: 128.78679656440357
+        },{
+          x: 142.04504871165133,
+          y: 136.74174785275224
+        },{
+          x: 102.65165042944955,
+          y: 97.34834957055045
+        }
+    ];
+
+    arrowTemp = new fabric.Polygon(knownPoints, {
+        fill: 'white',
+        stroke: 'black',
+        opacity: 1,
+        strokeWidth: 2,
+        originX: 'left',
+        originY: 'top',
+        selectable: true
+    });
+
+    overlay.fabricCanvas().add(arrowTemp);
+    overlay.fabricCanvas().renderAll()
+
+    var doubleKnownPoints = [
+        {
+          x: 200,
+          y: 200
+        }, {
+          x: 194.6966991411,
+          y: 205.3033008589
+        },{
+          x: 273.4834957055,
+          y: 284.0900974233
+        },{
+          x: 257.5735931288,
+          y: 300
+        },{
+          x: 300,
+          y: 300
+        },{
+          x: 300,
+          y: 257.5735931288
+        },{
+          x: 284.0900974233,
+          y: 273.4834957055
+        },{
+          x: 205.3033008589,
+          y: 194.6966991411
+        }
+    ];
+
+    arrowTemp.set({points: doubleKnownPoints});
+    arrowTemp.setCoords()
+    overlay.fabricCanvas().renderAll()
+
     //TODO: Refactor this to camelcaps
     //TODO: TODO: this should not be manually put here
     function calculateArrowPoints(x, y, headlen) {
-          var angle = Math.atan2(y - origY, x - origX);
-          var points = [
-            {
-                x: origX,  // start point
-                y: origY
-            }, {
-                x: origX - (headlen / 4) * Math.cos(angle - Math.PI / 2),
-                y: origY - (headlen / 4) * Math.sin(angle - Math.PI / 2)
-            },{
-                x: x - (headlen / 4) * Math.cos(angle - Math.PI / 2),
-                y: y - (headlen / 4) * Math.sin(angle - Math.PI / 2)
-            }, {
-                x: x - (headlen) * Math.cos(angle - Math.PI / 2),
-                y: y - (headlen) * Math.sin(angle - Math.PI / 2)
-            },{
-                x: x + (headlen) * Math.cos(angle),  // tip
-                y: y + (headlen) * Math.sin(angle)
-            }, {
-                x: x - (headlen) * Math.cos(angle + Math.PI / 2),
-                y: y - (headlen) * Math.sin(angle + Math.PI / 2)
-            }, {
-                x: x - (headlen / 4) * Math.cos(angle + Math.PI / 2),
-                y: y - (headlen / 4) * Math.sin(angle + Math.PI / 2)
-            }, {
-                x: origX - (headlen / 4) * Math.cos(angle + Math.PI / 2),
-                y: origY - (headlen / 4) * Math.sin(angle + Math.PI / 2)
-            },{
-                x: origX,
-                y: origY
-            }
-        ];
+        var angle = Math.atan2(y - origY, x - origX);
+        var headlen = 15;  // arrow head size
+        // bring the line end back some to account for arrow head.
+        x = x - (headlen) * Math.cos(angle);
+        y = y - (headlen) * Math.sin(angle);
+
+        var points = [
+		{
+			x: origX,  // start point
+			y: origY
+		}, {
+			x: origX - (headlen / 4) * Math.cos(angle - Math.PI / 2),
+			y: origY - (headlen / 4) * Math.sin(angle - Math.PI / 2)
+		},{
+			x: x - (headlen / 4) * Math.cos(angle - Math.PI / 2),
+			y: y - (headlen / 4) * Math.sin(angle - Math.PI / 2)
+		}, {
+			x: x - (headlen) * Math.cos(angle - Math.PI / 2),
+			y: y - (headlen) * Math.sin(angle - Math.PI / 2)
+		},{
+			x: x + (headlen) * Math.cos(angle),  // tip
+			y: y + (headlen) * Math.sin(angle)
+		}, {
+			x: x - (headlen) * Math.cos(angle + Math.PI / 2),
+			y: y - (headlen) * Math.sin(angle + Math.PI / 2)
+		}, {
+			x: x - (headlen / 4) * Math.cos(angle + Math.PI / 2),
+			y: y - (headlen / 4) * Math.sin(angle + Math.PI / 2)
+		}, {
+			x: origX - (headlen / 4) * Math.cos(angle + Math.PI / 2),
+			y: origY - (headlen / 4) * Math.sin(angle + Math.PI / 2)
+		},{
+			x: origX,
+			y: origY
+		}
+	];
         return points;
     }
 
@@ -253,9 +332,9 @@
              // initializeCircle(pointer.x, pointer.y);
              // initializeRectangle(pointer.x, pointer.y);
              // initializeLine(pointer.x, pointer.y);
-             initializeEllipse(pointer.x, pointer.y);
+             // initializeEllipse(pointer.x, pointer.y);
              // initializeText(pointer.x, pointer.y);
-             // initializeArrow(pointer.x, pointer.y);
+             initializeArrow(pointer.x, pointer.y);
          }
     });
 
@@ -267,9 +346,9 @@
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
          // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
          // updateLineEndpoint(pointer.x, pointer.y);
-         updateEllipse(pointer.x, pointer.y);
+         // updateEllipse(pointer.x, pointer.y);
          // updateTextContent(pointer.x, pointer.y);
-         // updateArrow(pointer.x, pointer.y);
+         updateArrow(pointer.x, pointer.y);
          overlay.fabricCanvas().renderAll();
     });
 
@@ -404,8 +483,6 @@ mouse modes
 serialization
 color pallete
 xgds ref
-
-
  */
     {% endblock jsInit %}
 
