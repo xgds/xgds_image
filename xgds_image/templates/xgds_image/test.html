@@ -32,7 +32,7 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
     {% block jsInit %}
-                          var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+                                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -376,10 +376,8 @@
 
     function serializeToJSON() {
         console.log("attempting to serialize");
-        // console.log(overlay.fabricCanvas().toJSON());
-
-        var mapAnnotationsDict = JSON.stringify(overlay.fabricCanvas());
-        console.log(mapAnnotationsDict);
+        // var mapAnnotationsDict = JSON.stringify(overlay.fabricCanvas());
+        // console.log(mapAnnotationsDict);
         $.ajax({
             type: "POST",
             url: "{% url 'xgds_image_save_annotations' %}", // maybe change the url/hard code it
@@ -388,21 +386,11 @@
                 mapAnnotations: JSON.stringify(overlay.fabricCanvas())
             },
             success: function (data) {
-                console.log(data)
+                 console.log(data)
             },
             error: function(a,b,c,d) {
                 console.log(a);
             }
-
-
-            // $.ajax({
-            //     url: url,
-            //     type: "POST",
-            //     data: JSON.stringify(data),
-            //     processData: false,
-            //     contentType: "application/json; charset=UTF-8",
-            //     complete: callback
-            // });
         });
     }
 

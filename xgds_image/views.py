@@ -423,14 +423,30 @@ def getTileState(request, imageSetPK):
 #         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
 def saveAnnotations(request):
-
     if request.method == 'POST':
         # data = json.loads(request.body)
         temp = request.POST.get('mapAnnotations', None)
-        print "save annotations"
-        print temp
+        # print "save annotations"
+        # print temp
 
         mapAnnotations = json.loads(temp)
+
+        print "map annotations dictionary"
+        print mapAnnotations
+
+        # print mapAnnotations[0]
+        # print mapAnnotations.__dict__
+        # print mapAnnotations[0].fill
+        # print mapAnnotations.object[0]
+        # print mapAnnotations.objects[0]
+        # print mapAnnotations.Object
+        # print mapAnnotations.Objects
+        # print mapAnnotations.Objects[0]
+        # print mapAnnotations[0]["fill"]
+        print mapAnnotations["objects"][0]
+
+        # print temp[0]
+        # print type(temp)
         return HttpResponse(json.dumps(mapAnnotations),
                             content_type='application/json')
 
