@@ -556,6 +556,11 @@ class AbstractAnnotation(models.Model):
     strokeWidth = models.PositiveIntegerField()
     angle = models.FloatField(default=0) #store shape rotation angle
 
+    #added, Tamar should check
+    originX = models.CharField(max_length=16)
+    originY = models.CharField(max_length=16)
+    fill = models.ForeignKey(AnnotationColor)
+
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
     image = models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
@@ -565,7 +570,7 @@ class AbstractAnnotation(models.Model):
 
 
 class TextAnnotation(AbstractAnnotation):
-    text = models.CharField(max_length=512, default='')
+    content = models.CharField(max_length=512, default='')
     isBold = models.BooleanField(default=False)
     isItalics = models.BooleanField(default=False)
 
@@ -578,6 +583,13 @@ class EllipseAnnotation(AbstractAnnotation):
 class RectangleAnnotation(AbstractAnnotation):
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
+
+class ArrowAnnotation(AbstractAnnotation):
+    points = models.CharField() #store list as a string
+
+
+
+
 
 
 #TODO: add line class (arrow?) or both

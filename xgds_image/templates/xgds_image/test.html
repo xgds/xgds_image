@@ -32,7 +32,7 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
     {% block jsInit %}
-                var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+            var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
@@ -177,7 +177,7 @@
     */
 
     function drawArrow(x, y) { //TODO: order of points fed to calculateArrowPoints probably matters
-        var headlen = 15;  // arrow head size
+        var headlen = 100;  // arrow head size
         arrow = new fabric.Polyline(calculateArrowPoints(origX,origY,x,y,headlen), {
             fill: 'white',
             stroke: 'black',
@@ -185,7 +185,8 @@
             strokeWidth: 2,
             originX: 'left',
             originY: 'top',
-            selectable: true
+            selectable: true,
+            type: 'arrow'
         });
         overlay.fabricCanvas().add(arrow);
     }
@@ -194,7 +195,7 @@
         overlay.fabricCanvas().remove(arrow)
         //TODO: dont forget to remove from canvas
         var angle = Math.atan2(y - origY, x - origX);
-        var headlen = 15;  // arrow head size TODO: this should not be manually put here
+        var headlen = 100;  // arrow head size TODO: this should not be manually put here
         // bring the line end back some to account for arrow head.
         x = x - (headlen) * Math.cos(angle);
         y = y - (headlen) * Math.sin(angle);
@@ -208,7 +209,8 @@
             strokeWidth: 2,
             originX: 'left',
             originY: 'top',
-            selectable: true
+            selectable: true,
+            type: 'arrow'
         });
         overlay.fabricCanvas().add(arrow);
         overlay.fabricCanvas().renderAll();
@@ -288,7 +290,7 @@
          // updateEllipse(pointer.x, pointer.y);
          // updateTextContent(pointer.x, pointer.y);
          updateArrow(pointer.x, pointer.y);
-         overlay.fabricCanvas().renderAll();
+         // overlay.fabricCanvas().renderAll();
     });
 
     //fabricJS mouse-up event listener
@@ -396,6 +398,7 @@
         console.log("attempting to serialize");
         // var mapAnnotationsDict = JSON.stringify(overlay.fabricCanvas());
         // console.log(mapAnnotationsDict);
+        //need to get object type... either pass each object individually or save all on canvas
         $.ajax({
             type: "POST",
             url: "{% url 'xgds_image_save_annotations' %}", // maybe change the url/hard code it
@@ -423,5 +426,6 @@ serialization
 color pallete
 xgds ref
  */
+
     {% endblock jsInit %}
 

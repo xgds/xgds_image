@@ -434,6 +434,13 @@ def saveAnnotations(request):
         print "map annotations dictionary"
         print mapAnnotations
 
+
+        #Keep in a list
+        #text = TextAnnotation(a,b,d,c)
+        #can also store in database!!!!!!
+        #objects have a type
+
+
         # print mapAnnotations[0]
         # print mapAnnotations.__dict__
         # print mapAnnotations[0].fill
@@ -447,6 +454,69 @@ def saveAnnotations(request):
 
         # print temp[0]
         # print type(temp)
+
+        #can I use dot notation here?
+        #TODO: see what fields are necessary/redundant/unique
+        for annotation in mapAnnotations["objects"]:
+            if (annotation["type"]=="rect"):
+                rectangle = RectangleAnnotation()
+                rectangle.left = annotation["left"]
+                rectangle.top = annotation["top"]
+                rectangle.strokeWidth = annotation["strokeWidth"]
+                rectangle.strokeColor = annotation["stroke"]
+                rectangle.originX = annotation["originX"]
+                rectangle.originY = annotation["originY"]
+                rectangle.fill = annotation["fill"]
+
+                rectangle.width = annotation["width"]
+                rectangle.height = annotation["height"]
+
+                rectangle.save()                
+            elif (annotation["type"]=="ellipse"):
+                ellipse = EllipseAnnotation()
+                ellipse.left = annotation["left"]
+                ellipse.top = annotation["top"]
+                ellipse.strokeWidth = annotation["strokeWidth"]
+                ellipse.strokeColor = annotation["stroke"]
+                ellipse.originX = annotation["originX"]
+                ellipse.originY = annotation["originY"]
+                ellipse.fill = annotation["fill"]
+
+                ellipse.radiusX = annotation["rx"]
+                ellipse.radiusY = annotation["ry"]
+
+
+                ellipse.save()
+            elif (annotation["type"]=="arrow"):
+                arrow = ArrowAnnotation()
+                arrow.left = annotation["left"]
+                arrow.top = annotation["top"]
+                arrow.strokeWidth = annotation["strokeWidth"]
+                arrow.strokeColor = annotation["stroke"]
+                arrow.originX = annotation["originX"]
+                arrow.originY = annotation["originY"]
+                arrow.fill = annotation["fill"]
+                #do we need to store type? probably not
+
+                arrow.points = annotation["points"] #might yell at us for this line
+                arrow.save()
+            elif (annotation["type"]=="text"):
+                text = TextAnnotation()
+                text.left = annotation["left"]
+                text.top = annotation["top"]
+                text.strokeWidth = annotation["strokeWidth"]
+                text.strokeColor = annotation["stroke"]
+                text.originX = annotation["originX"]
+                text.originY = annotation["originY"]
+                text.fill = annotation["fill"]
+
+                text.width = annotation["width"]
+                text.height = annotation["height"]
+                text.content = annotation["content"]
+                text.save()
+            else:
+                #your shape doesn't exist bruh
+
         return HttpResponse(json.dumps(mapAnnotations),
                             content_type='application/json')
 
