@@ -556,14 +556,14 @@ class AnnotationColor(models.Model):
 class AbstractAnnotation(models.Model):
     left = models.IntegerField(null=False, blank=False)
     top = models.IntegerField(null=False, blank=False)
-    strokeColor = models.ForeignKey(AnnotationColor)   #point to some dictionary?
-    strokeWidth = models.PositiveIntegerField()
+    strokeColor = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_strokeColor', default=1)   #point to some dictionary?
+    strokeWidth = models.PositiveIntegerField(default=2)
     angle = models.FloatField(default=0) #store shape rotation angle
 
     #added, Tamar should check
-    originX = models.CharField(max_length=16)
-    originY = models.CharField(max_length=16)
-    fill = models.ForeignKey(AnnotationColor)
+    originX = models.CharField(max_length=16, default="left")
+    originY = models.CharField(max_length=16, default="center")
+    fill = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_fill', null=True, blank=True)
 
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
@@ -580,16 +580,17 @@ class TextAnnotation(AbstractAnnotation):
 
 
 class EllipseAnnotation(AbstractAnnotation):
-    radiusX = models.IntegerField(db_index=True)
-    radiusY = models.IntegerField(db_index=True)
+    radiusX = models.IntegerField()
+    radiusY = models.IntegerField()
 
 
 class RectangleAnnotation(AbstractAnnotation):
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
 
+
 class ArrowAnnotation(AbstractAnnotation):
-    points = models.CharField() #store list as a string
+    points = models.CharField(max_length=256, default='[]') #store list as a string
 
 
 ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,

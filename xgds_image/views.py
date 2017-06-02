@@ -427,7 +427,9 @@ def saveAnnotations(request):
         # data = json.loads(request.body)
         temp = request.POST.get('mapAnnotations', None)
         imagePK = request.POST.get('image_pk')
-        
+        print 'got image pk passed back'
+        print imagePK
+
         #singleImage = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
         #data['author'] = request.user
         
@@ -435,6 +437,7 @@ def saveAnnotations(request):
         # print temp
 
         mapAnnotations = json.loads(temp)
+        result = []
 
         print "map annotations dictionary"
         print mapAnnotations
@@ -463,6 +466,8 @@ def saveAnnotations(request):
         #can I use dot notation here?
         #TODO: see what fields are necessary/redundant/unique
         for annotationJSON in mapAnnotations["objects"]:
+            print 'building annotation'
+            print annotationJSON['type']
             if (annotationJSON["type"]=="rect"):
                 annotationModel = RectangleAnnotation()
 
@@ -486,6 +491,7 @@ def saveAnnotations(request):
                 annotationModel.content = annotationJSON["content"] #not sure if this is where text content is stored
 
             else:
+                print "That shape doesn't exist"
                 #your shape doesn't exist
                 #throw some kind of error
 
@@ -493,15 +499,20 @@ def saveAnnotations(request):
             annotationModel.left = annotationJSON["left"]
             annotationModel.top = annotationJSON["top"]
             annotationModel.strokeWidth = annotationJSON["strokeWidth"]
-            annotationModel.strokeColor = annotationJSON["stroke"]
+            annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)
             annotationModel.originX = annotationJSON["originX"]
             annotationModel.originY = annotationJSON["originY"]
-            annotationModel.fill = annotationJSON["fill"]
+            annotationModel.fill = AnnotationColor.objects.get(pk=1)
             annotationModel.angle = annotationJSON["angle"]
 
             annotationModel.author = request.user
-            annotationModel.image__pk = imagePK
+            annotationModel.image_id = imagePK
+            print 'about to save'
+            annotationModel.save()
+            print 'saved'
+            result.append(annotationModel)
 
+        #TODO return a json response of the result list to include PK
         return HttpResponse(json.dumps(mapAnnotations),
                             content_type='application/json')
 
