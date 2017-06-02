@@ -30,6 +30,7 @@ from django.utils.text import slugify
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
+from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
@@ -525,7 +526,10 @@ class AbstractSingleImage(models.Model):
 #         """
 #         result = modelToDict(self)
 #         return result
-    
+
+    def getAnnotations(self):
+        return ANNOTATION_MANAGER.filter(image__pk=self.pk)
+
     class Meta:
         abstract = True
         ordering = ['-creation_time']
@@ -588,11 +592,13 @@ class ArrowAnnotation(AbstractAnnotation):
     points = models.CharField() #store list as a string
 
 
+ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
+                                         [TextAnnotation,
+                                          EllipseAnnotation,
+                                          RectangleAnnotation,
+                                          ArrowAnnotation
+                                          ])
 
-
-
-
-#TODO: add line class (arrow?) or both
 
 
 

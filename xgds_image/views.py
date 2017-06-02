@@ -30,7 +30,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render
-from django.http import HttpResponseRedirect,  HttpResponse
+from django.http import HttpResponseRedirect,  HttpResponse, JsonResponse
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
@@ -426,6 +426,11 @@ def saveAnnotations(request):
     if request.method == 'POST':
         # data = json.loads(request.body)
         temp = request.POST.get('mapAnnotations', None)
+        imagePK = request.POST.get('image_pk')
+        
+        #singleImage = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
+        #data['author'] = request.user
+        
         # print "save annotations"
         # print temp
 
@@ -457,68 +462,54 @@ def saveAnnotations(request):
 
         #can I use dot notation here?
         #TODO: see what fields are necessary/redundant/unique
-        for annotation in mapAnnotations["objects"]:
-            if (annotation["type"]=="rect"):
-                rectangle = RectangleAnnotation()
-                rectangle.left = annotation["left"]
-                rectangle.top = annotation["top"]
-                rectangle.strokeWidth = annotation["strokeWidth"]
-                rectangle.strokeColor = annotation["stroke"]
-                rectangle.originX = annotation["originX"]
-                rectangle.originY = annotation["originY"]
-                rectangle.fill = annotation["fill"]
+        for annotationJSON in mapAnnotations["objects"]:
+            if (annotationJSON["type"]=="rect"):
+                annotationModel = RectangleAnnotation()
 
-                rectangle.width = annotation["width"]
-                rectangle.height = annotation["height"]
+                annotationModel.width = annotationJSON["width"]
+                annotationModel.height = annotationJSON["height"]
 
-                rectangle.save()                
-            elif (annotation["type"]=="ellipse"):
-                ellipse = EllipseAnnotation()
-                ellipse.left = annotation["left"]
-                ellipse.top = annotation["top"]
-                ellipse.strokeWidth = annotation["strokeWidth"]
-                ellipse.strokeColor = annotation["stroke"]
-                ellipse.originX = annotation["originX"]
-                ellipse.originY = annotation["originY"]
-                ellipse.fill = annotation["fill"]
+            elif (annotationJSON["type"]=="ellipse"):
+                annotationModel = EllipseAnnotation()
+                annotationModel.radiusX = annotationJSON["rx"]
+                annotationModel.radiusY = annotationJSON["ry"]
 
-                ellipse.radiusX = annotation["rx"]
-                ellipse.radiusY = annotation["ry"]
-
-
-                ellipse.save()
-            elif (annotation["type"]=="arrow"):
-                arrow = ArrowAnnotation()
-                arrow.left = annotation["left"]
-                arrow.top = annotation["top"]
-                arrow.strokeWidth = annotation["strokeWidth"]
-                arrow.strokeColor = annotation["stroke"]
-                arrow.originX = annotation["originX"]
-                arrow.originY = annotation["originY"]
-                arrow.fill = annotation["fill"]
+            elif (annotationJSON["type"]=="arrow"):
                 #do we need to store type? probably not
+                annotationModel = ArrowAnnotation()
+                annotationModel.points = annotationJSON["points"] #might yell at us for this line
 
-                arrow.points = annotation["points"] #might yell at us for this line
-                arrow.save()
-            elif (annotation["type"]=="text"):
-                text = TextAnnotation()
-                text.left = annotation["left"]
-                text.top = annotation["top"]
-                text.strokeWidth = annotation["strokeWidth"]
-                text.strokeColor = annotation["stroke"]
-                text.originX = annotation["originX"]
-                text.originY = annotation["originY"]
-                text.fill = annotation["fill"]
+            elif (annotationJSON["type"]=="text"):
+                annotationModel = TextAnnotation()
+                annotationModel.width = annotationJSON["width"]
+                annotationModel.height = annotationJSON["height"]
+                annotationModel.content = annotationJSON["content"] #not sure if this is where text content is stored
 
-                text.width = annotation["width"]
-                text.height = annotation["height"]
-                text.content = annotation["content"]
-                text.save()
             else:
-                #your shape doesn't exist bruh
+                #your shape doesn't exist
+                #throw some kind of error
+
+            #add common variables
+            annotationModel.left = annotationJSON["left"]
+            annotationModel.top = annotationJSON["top"]
+            annotationModel.strokeWidth = annotationJSON["strokeWidth"]
+            annotationModel.strokeColor = annotationJSON["stroke"]
+            annotationModel.originX = annotationJSON["originX"]
+            annotationModel.originY = annotationJSON["originY"]
+            annotationModel.fill = annotationJSON["fill"]
+            annotationModel.angle = annotationJSON["angle"]
+
+            annotationModel.author = request.user
+            annotationModel.image__pk = imagePK
 
         return HttpResponse(json.dumps(mapAnnotations),
                             content_type='application/json')
 
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+
+
+def getAnnotationsJson(request, imagePK):
+    image =  SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
+    annotations = image.getAnnotations(); #DDICTIONARY VS QUERY SET
+    return JsonResponse(annotations, content_type='application/json', encoder=DatetimeJsonEncoder)
