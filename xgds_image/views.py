@@ -472,9 +472,10 @@ def saveAnnotations(request):
 
 
 def getAnnotationsJson(request, imagePK):
-    image =  SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
+    image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
     annotations = image.getAnnotations()
     result = []
     for a in annotations:
-        result.push(a.toJson())
-    return JsonResponse(result, content_type='application/json', encoder=DatetimeJsonEncoder)
+        result.append(a.toJson())
+    #TODO: do we add imagepk to the response?
+    return HttpResponse(json.dumps(result), content_type='application/json')

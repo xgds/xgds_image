@@ -582,6 +582,7 @@ class AbstractAnnotation(models.Model):
     def toJson(self):
         result = model_to_dict(self)
         result['annotationType'] = self.getJsonType()
+        return result
 
 
 class TextAnnotation(AbstractAnnotation):
