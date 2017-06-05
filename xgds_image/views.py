@@ -59,8 +59,8 @@ GEOCAM_TRACK_RESOURCE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_
 XGDS_IMAGE_TEMPLATE_LIST = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
 XGDS_IMAGE_TEMPLATE_LIST = XGDS_IMAGE_TEMPLATE_LIST + settings.XGDS_CORE_TEMPLATE_DIRS[settings.XGDS_IMAGE_IMAGE_SET_MODEL]
 
-    
-@login_required 
+
+@login_required
 def getImageImportPage(request):
     # map plus image templates for now
     templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
@@ -70,12 +70,12 @@ def getImageImportPage(request):
             'imageSetForm': ImageSetForm()
             }
     return render(request,
-                  "xgds_image/imageImport.html", 
+                  "xgds_image/imageImport.html",
                   data,
                   )
 
 
-@login_required 
+@login_required
 def editImage(request, imageSetID):
     imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imageSetID)
     if request.POST:
@@ -86,13 +86,13 @@ def editImage(request, imageSetID):
                 for key, msg in form.errors.items():
                     if key == 'warning':
                         messages.warning(request, msg)
-                    elif key == 'error': 
+                    elif key == 'error':
                         messages.error(request, msg)
             else:
                 messages.success(request, settings.XGDS_IMAGE_IMAGE_SET_MONIKER + ' successfully updated.')
             return HttpResponseRedirect(reverse('search_map_single_object', kwargs={'modelPK':imageSetID,
                                                                                     'modelName':'Photo'}))
-        else: 
+        else:
             messages.error(request, 'The form is not valid')
             return render(request,
                           'xgds_image/imageEdit.html',
@@ -102,7 +102,7 @@ def editImage(request, imageSetID):
         return render(request,
                       'xgds_image/imageEdit.html',
                       {'form': form,
-                       'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')})                
+                       'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')})
 
 
 def updateImageInfo(request):
@@ -122,10 +122,10 @@ def updateImageInfo(request):
                 altitude =  form.cleaned_data['altitude']
                 heading =  form.cleaned_data['heading']
                 if (latitude or longitude or altitude or heading):
-                    if not imageSet.user_position:            
+                    if not imageSet.user_position:
                         imageSet.user_position = POSITION_MODEL.get().objects.create(timestamp= imageSet.acquisition_time,
                                                                                      serverTimestamp = imageSet.acquisition_time,
-                                                                                     latitude = latitude, 
+                                                                                     latitude = latitude,
                                                                                      longitude= longitude)
                     else:
                         imageSet.user_position.latitude =  latitude
@@ -144,7 +144,7 @@ def updateImageInfo(request):
             return HttpResponse(json.dumps([imageSet.toMapDict()], cls=DatetimeJsonEncoder),
                                 content_type="application/json"
                                 )
-        else: 
+        else:
             return HttpResponse(json.dumps({'status': 'error',
                                             'message': "Failed to save."}),
                                 content_type='application/json')
@@ -158,9 +158,9 @@ def deleteImages(request):
             imageSet.deleted = True
             imageSet.save()
         return HttpResponse(json.dumps({}), content_type = "application/json")
-    else: 
+    else:
         return HttpResponse(json.dumps({}), content_type = "application/json")
-    
+
 
 def createCameraResource(camera):
     ''' Create or retrieve resource instance for this exact camera
@@ -186,11 +186,11 @@ def getCameraObject(exif):
         cameras = CAMERA_MODEL.get().objects.filter(name=cameraName, serial=serial)
         if cameras.exists():
             return cameras[0]
-        else: 
+        else:
             return CAMERA_MODEL.get().objects.create(name = cameraName, serial=serial)
     return None
-    
-    
+
+
 def buildExifPosition(exif, camera, resource, exifTime, form_tz):
     '''
     Given the image's exif data and a camera object, 
@@ -203,17 +203,17 @@ def buildExifPosition(exif, camera, resource, exifTime, form_tz):
         gpsTimeStamp = TimeUtil.timeZoneToUtc(gpsTimeStamp)
     else:
         gpsTimeStamp = exifTime
-    
+
     if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
         #TODO this requires that the position model has heading and altitude ...
         position = POSITION_MODEL.get().objects.create(serverTimestamp=gpsTimeStamp,
                                                        timestamp= gpsTimeStamp,
-                                                       latitude = gpsLatLon[0], 
+                                                       latitude = gpsLatLon[0],
                                                        longitude= gpsLatLon[1],
                                                        heading= getHeading(exif),
                                                        altitude=getAltitude(exif))
         return position
-        
+
     return None
 
 
@@ -222,33 +222,33 @@ def getTrackPosition(timestamp, resource):
     Look up and return the closest tracked position if there is one.
     '''
     return getClosestPosition(timestamp=timestamp, resource=resource)
-        
+
 
 def getRotationValue(request):
     if request.method == 'POST':
-        postDict = request.POST.dict()        
+        postDict = request.POST.dict()
         imagePK = int(postDict['imagePK'])
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
         degrees = imageSet.rotation_degrees
-        return HttpResponse(json.dumps({'rotation_degrees': degrees}), 
+        return HttpResponse(json.dumps({'rotation_degrees': degrees}),
                             content_type='application/json')
-    else: 
-        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
-    
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+
 
 def saveRotationValue(request):
     if request.method == 'POST':
-        postDict = request.POST.dict()        
+        postDict = request.POST.dict()
         degrees = int(postDict['rotation_degrees'])
         imagePK = int(postDict['pk'])
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk = imagePK)
         imageSet.rotation_degrees = degrees
         imageSet.save()
-        return HttpResponse(json.dumps({'success': 'true'}), 
+        return HttpResponse(json.dumps({'success': 'true'}),
                             content_type='application/json')
-    else: 
-        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')  
-    
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+
 def checkForNewFiles(sdCardIp):
     print "Calling file loader @ %s..." % sdCardIp
     r = requests.get("http://%s/fileUpdate.lua" % sdCardIp)
@@ -276,7 +276,7 @@ def saveImage(request):
             # create and save a single image obj
             uploadedFile = request.FILES['file']
             newSingleImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
-            
+
             form_tz = form.getTimezone()
             resource = form.getResource()
             exifData = getExifData(newSingleImage)
@@ -287,13 +287,13 @@ def saveImage(request):
                 newSingleImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
             except:
                 pass
-                
+
             newSingleImage.fileSizeBytes = uploadedFile.size
 
             # get exif time
             exifTime  = None
             exifTimeString = getExifValue(exifData, 'DateTimeOriginal')
-            if not exifTimeString: 
+            if not exifTimeString:
                 exifTimeString = getExifValue(exifData, 'DateTime')
 
             if exifTimeString:
@@ -320,10 +320,10 @@ def saveImage(request):
                             exifTime = TimeUtil.timeZoneToUtc(localized_time)
             if not exifTime:
                 exifTime = datetime.now(pytz.utc)
-            # create a new image set instance       
-            
+            # create a new image set instance
+
             author = None
-            if request.user.is_authenticated():    
+            if request.user.is_authenticated():
                 author = request.user  # set user as image author
             elif 'username' in request.POST:
                 try:
@@ -331,7 +331,7 @@ def saveImage(request):
                     author = User.objects.get(username=username)
                 except:
                     author = User.objects.get(username='camera')
-            
+
             if 'object_id' in request.POST:
                 newImageSet = IMAGE_SET_MODEL.get()(pk=int(request.POST['object_id']))
             else:
@@ -342,10 +342,10 @@ def saveImage(request):
             fileName = uploadedFile.name
             newImageSet.name = fileName
             newImageSet.camera = getCameraObject(exifData)
-            
+
             newImageSet.track_position = getTrackPosition(exifTime, resource)
             newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, resource, exifTime, form_tz)
-            
+
             newImageSet.author = author
             newImageSet.resource = resource
             newImageSet.finish_initialization(request)
@@ -358,21 +358,21 @@ def saveImage(request):
                 totalTimeSinceNotify = nowTime - float(overallStartTime)
                 newImageSet.totalTimeSinceNotify = totalTimeSinceNotify
             newImageSet.save()
-            
+
             # link the "image set" to "image".
             newSingleImage.imageSet = newImageSet
             newSingleImage.save()
-            
+
             # relay if needed
             if 'relay' in request.POST:
-                # create the record for the datum 
+                # create the record for the datum
                 # fire a message for new data
                 addRelayFiles(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
-            
+
             # create a thumbnail
             thumbnailStream = createThumbnailFile(newSingleImage.file)
-            SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailStream, 
-                                                    raw = False, 
+            SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailStream,
+                                                    raw = False,
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
 
@@ -384,57 +384,34 @@ def saveImage(request):
 
             imageSetDict = newImageSet.toMapDict()
             # pass the image set to the client as json.
-            return HttpResponse(json.dumps({'success': 'true', 
-                                            'json': imageSetDict}, cls=DatetimeJsonEncoder), 
+            return HttpResponse(json.dumps({'success': 'true',
+                                            'json': imageSetDict}, cls=DatetimeJsonEncoder),
                                 content_type='application/json')
-        else: 
-            return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')  
+        else:
+            return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')
 
 
 def getTileState(request, imageSetPK):
     try:
         image = IMAGE_SET_MODEL.get().objects.get(pk=imageSetPK)
-        return HttpResponse(json.dumps({'pk': imageSetPK, 
+        return HttpResponse(json.dumps({'pk': imageSetPK,
                                         'create_deepzoom': image.create_deepzoom,
-                                        'deepzoom_file_url': image.deepzoom_file_url}), 
+                                        'deepzoom_file_url': image.deepzoom_file_url}),
                                         content_type='application/json')
     except Exception, e:
-        return HttpResponse(json.dumps({'pk': imageSetPK, 
-                                        'error': str(e)}), 
+        return HttpResponse(json.dumps({'pk': imageSetPK,
+                                        'error': str(e)}),
                                         content_type='application/json',
                                             status=404)
 
 
-# def saveAnnotations(request):
-#     print("holy python can print to console godbless")
-#     if request.method == 'POST':
-#
-#         # json.loads() <-- this throws an error?
-#
-#         postDict = request.POST.dict()
-#         # annotations = int(postDict['mapAnnotations'])
-#         annotations = postDict['mapAnnotations']
-#
-#         # new python object
-#         # object.save() and some majic happens
-#         return HttpResponse(json.dumps({'success': 'true'}),
-#                             content_type='application/json')
-#     else:
-#         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
-
 def saveAnnotations(request):
     if request.method == 'POST':
-        # data = json.loads(request.body)
         temp = request.POST.get('mapAnnotations', None)
         imagePK = request.POST.get('image_pk')
-        print 'got image pk passed back'
-        print imagePK
 
         #singleImage = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
         #data['author'] = request.user
-        
-        # print "save annotations"
-        # print temp
 
         mapAnnotations = json.loads(temp)
         result = []
@@ -442,29 +419,6 @@ def saveAnnotations(request):
         print "map annotations dictionary"
         print mapAnnotations
 
-
-        #Keep in a list
-        #text = TextAnnotation(a,b,d,c)
-        #can also store in database!!!!!!
-        #objects have a type
-
-
-        # print mapAnnotations[0]
-        # print mapAnnotations.__dict__
-        # print mapAnnotations[0].fill
-        # print mapAnnotations.object[0]
-        # print mapAnnotations.objects[0]
-        # print mapAnnotations.Object
-        # print mapAnnotations.Objects
-        # print mapAnnotations.Objects[0]
-        # print mapAnnotations[0]["fill"]
-        print mapAnnotations["objects"][0]
-
-        # print temp[0]
-        # print type(temp)
-
-        #can I use dot notation here?
-        #TODO: see what fields are necessary/redundant/unique
         for annotationJSON in mapAnnotations["objects"]:
             print 'building annotation'
             print annotationJSON['type']
@@ -507,12 +461,9 @@ def saveAnnotations(request):
 
             annotationModel.author = request.user
             annotationModel.image_id = imagePK
-            print 'about to save'
             annotationModel.save()
-            print 'saved'
             result.append(annotationModel)
 
-        #TODO return a json response of the result list to include PK
         return HttpResponse(json.dumps(mapAnnotations),
                             content_type='application/json')
 
@@ -522,5 +473,8 @@ def saveAnnotations(request):
 
 def getAnnotationsJson(request, imagePK):
     image =  SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
-    annotations = image.getAnnotations(); #DDICTIONARY VS QUERY SET
-    return JsonResponse(annotations, content_type='application/json', encoder=DatetimeJsonEncoder)
+    annotations = image.getAnnotations()
+    result = []
+    for a in annotations:
+        result.push(a.toJson())
+    return JsonResponse(result, content_type='application/json', encoder=DatetimeJsonEncoder)

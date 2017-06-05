@@ -24,8 +24,10 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.text import slugify
+
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
@@ -573,25 +575,45 @@ class AbstractAnnotation(models.Model):
         abstract = True
 
 
+    def getJsonType(self):
+        return 'Annotation'
+
+
+    def toJson(self):
+        result = model_to_dict(self)
+        result['annotationType'] = self.getJsonType()
+
+
 class TextAnnotation(AbstractAnnotation):
     content = models.CharField(max_length=512, default='')
     isBold = models.BooleanField(default=False)
     isItalics = models.BooleanField(default=False)
+
+    def getJsonType(self):
+        return 'Text'
 
 
 class EllipseAnnotation(AbstractAnnotation):
     radiusX = models.IntegerField()
     radiusY = models.IntegerField()
 
+    def getJsonType(self):
+        return 'Ellipse'
+
 
 class RectangleAnnotation(AbstractAnnotation):
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
 
+    def getJsonType(self):
+        return 'Rectangle'
+
 
 class ArrowAnnotation(AbstractAnnotation):
     points = models.CharField(max_length=256, default='[]') #store list as a string
 
+    def getJsonType(self):
+        return 'Arrow'
 
 ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
                                          [TextAnnotation,
