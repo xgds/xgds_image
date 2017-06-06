@@ -408,26 +408,16 @@ def getTileState(request, imageSetPK):
 def saveAnnotations(request):
     if request.method == 'POST':
         temp = request.POST.get('mapAnnotations', None)
-        imagePK = request.POST.get('image_pk')
-
-        #singleImage = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
-        #data['author'] = request.user
-
-        mapAnnotations = json.loads(temp) #IT"S LOADS THATS DOING IT (adding the u's)
-        mapAnnotationsNoLoads = temp
+        mapAnnotations = json.loads(temp)
 
         print "map annotations dictionary w/ loads"
         print mapAnnotations
-
-        print "map annotations dictionary W/O loads"
-        print mapAnnotationsNoLoads
 
         for annotationJSON in mapAnnotations["objects"]:
             print 'building annotation'
             print annotationJSON['type']
             if (annotationJSON["type"]=="rect"):
                 annotationModel = RectangleAnnotation()
-
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
 
@@ -437,9 +427,8 @@ def saveAnnotations(request):
                 annotationModel.radiusY = annotationJSON["ry"]
 
             elif (annotationJSON["type"]=="arrow"):
-                #do we need to store type? probably not
                 annotationModel = ArrowAnnotation()
-                annotationModel.points = json.dumps(annotationJSON["points"]) #TODO: might need to stringify this
+                annotationModel.points = json.dumps(annotationJSON["points"])
 
             elif (annotationJSON["type"]=="text"):
                 annotationModel = TextAnnotation()
@@ -463,7 +452,7 @@ def saveAnnotations(request):
             annotationModel.angle = annotationJSON["angle"]
 
             annotationModel.author = request.user
-            annotationModel.image_id = imagePK
+            annotationModel.image_id = request.POST.get('image_pk')
             annotationModel.save()
         return HttpResponse(json.dumps(mapAnnotations), #useless HttpResponse
                             content_type='application/json')
@@ -471,7 +460,7 @@ def saveAnnotations(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
-
+#pk, pointer
 def getAnnotationsJson(request, imagePK):
     image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
     annotations = image.getAnnotations()

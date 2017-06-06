@@ -7,12 +7,9 @@
         saveAnnotationsUrl = "{% url 'xgds_image_save_annotations' %}";
         loadAnnotationsUrl = "{% url 'xgds_image_get_annotations' 1 %}";
         <script type="text/javascript" src='{{ STATIC_URL }}xgds_image/js/imageAnnotation.js'></script>
-
-    {#<script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-annotations/dist/openseadragon-annotations.js'></script>#}
     {% endblock scripts %}
     {% block content %}
-    <h1>Emigre Sandbox beta</h1>
-
+    <h1>Fabricjs Sandbox beta</h1>
 
     <div class="btn-group" data-toggle="buttons">
         <label class="btn btn-primary active">
@@ -38,7 +35,6 @@
     <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     {% endblock content %}
     {% block jsInit %}
-
 
     {% endblock jsInit %}
 

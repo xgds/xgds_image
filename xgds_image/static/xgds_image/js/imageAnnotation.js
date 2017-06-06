@@ -357,7 +357,6 @@
             url: '/xgds_image/getAnnotations/1',
             datatype: 'json',
             success: function(data) {
-                //loop thru data here, calling addAnnotationToCanvas each iteration
                 console.log(data);
                 data.forEach(function(annotation) { //TODO: change name of the parameter
                     addAnnotationToCanvas(annotation);
@@ -374,18 +373,6 @@
         //TODO: fill out methods called below and add correct arguments
      */
     function addAnnotationToCanvas(annotationJson) {
-        console.log("inside annotationToCanvas: " + annotationJson);
-        console.log("annotation type: " + annotationJson["annotationType"]);
-        /*
-        callback
-         */
-
-        //call object get type() in models.py?
-        //call getJsonType() before serializing to json
-
-        //overlay.fabricCanvas().loadFromJSON(json);
-        console.log(annotationJson);
-        console.log("Annotation type is: " + annotationJson["annotationType"]);
         if (annotationJson["annotationType"]=="Rectangle") {
             addRectToCanvas(annotationJson);
         } else if(annotationJson["annotationType"]=="Ellipse") {
@@ -412,16 +399,6 @@
             width: annotationJson["width"],
             height: annotationJson["height"]
         });
-        //
-        //  rectangle = new fabric.Rect({
-        //     left: x,
-        //     top: y,
-        //     fill: 'blue',
-        //     width: 1,
-        //     height: 1
-        // });
-
-        // rectangle.setCoords()
         overlay.fabricCanvas().add(rect);
         overlay.fabricCanvas().renderAll();
     }
@@ -445,13 +422,6 @@
     }
 
     function addArrowToCanvas(annotationJson) {
-        console.log("THIS IS THE RECEIVED TRANSMISSION/JSON addArrowToCanvas receives");
-        console.log(annotationJson);
-
-        headlen = 100;
-        /* TODO: might need to save more stuff for arrows */
-        // var pointsJson = JSON.parse(annotationJson["points"]);
-        // pointsArray = JSON.parse(annotationJson["points"]);
         arrow = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
             left: annotationJson["left"],
             top: annotationJson["top"],
@@ -460,7 +430,7 @@
             originY: annotationJson["originY"],
             fill: annotationJson["fill"],
             angle: annotationJson["angle"]
-        }); /* remove points from json set and put in first initialization line */
+        });
         overlay.fabricCanvas().add(arrow);
         overlay.fabricCanvas().renderAll();
     }
@@ -499,6 +469,12 @@
         // overlay.fabricCanvas().add(circle);
         // overlay.fabricCanvas().renderAll();
     }
+
+/*
+TODO: edit, delete, pk
+edit/delete: mouse modes for manipulating annotations
+pk: store pk's in a pk-json dictionary to prevent duplicate loads and to manipulate from annotations list
+ */
 
 /* TODO:
 mouse modes

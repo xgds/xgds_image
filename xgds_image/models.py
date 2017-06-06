@@ -562,7 +562,6 @@ class AbstractAnnotation(models.Model):
     strokeWidth = models.PositiveIntegerField(default=2)
     angle = models.FloatField(default=0) #store shape rotation angle
 
-    #added, Tamar should check
     originX = models.CharField(max_length=16, default="left")
     originY = models.CharField(max_length=16, default="center")
     fill = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_fill', null=True, blank=True)
@@ -574,14 +573,13 @@ class AbstractAnnotation(models.Model):
     class Meta:
         abstract = True
 
-
     def getJsonType(self):
         return 'Annotation'
-
 
     def toJson(self):
         result = model_to_dict(self)
         result['annotationType'] = self.getJsonType()
+        result['pk'] = self.pk
         return result
 
 
@@ -611,7 +609,6 @@ class RectangleAnnotation(AbstractAnnotation):
 
 
 class ArrowAnnotation(AbstractAnnotation):
-    # points = models.CharField(max_length=1024, default='[]') #store list as a string
     points = models.TextField(default='[]')
 
     def getJsonType(self):
