@@ -37,7 +37,7 @@
      */
     var mouseMode = "OSD";
 
-    addRectToCanvas(1000, 1000);
+    // addRectToCanvas(1000, 1000);
 
     //Euclidean distance between (x1,y1) and (x2,y2)
     function distanceFormula(x1, y1, x2, y2) {
@@ -224,13 +224,12 @@
         return points;
     }
 
-
+    //TODO: only save from save button, not on unclick
     //fabricJS mouse-down event listener
     overlay.fabricCanvas().observe('mouse:down', function(o){
          console.log("EVENT TRIGERRED: fabricjs-mouse:down");
          console.log("mouse mode is " + getMouseMode());
          if(getMouseMode()=="addAnnotation") {
-             console.log("initializing circle!!!!!!!!!!!!!!!!!!!!!!!!");
              isDown = true;
              var pointer = overlay.fabricCanvas().getPointer(o.e);
              origX = pointer.x;
@@ -238,25 +237,24 @@
              // initializeCircle(pointer.x, pointer.y);
              // initializeRectangle(pointer.x, pointer.y);
              // initializeLine(pointer.x, pointer.y);
-             // initializeEllipse(pointer.x, pointer.y);
+             initializeEllipse(pointer.x, pointer.y);
              // initializeText(pointer.x, pointer.y);
              // initializeArrow(pointer.x, pointer.y);
-             drawArrow(pointer.x, pointer.y);
+             // drawArrow(pointer.x, pointer.y);
          }
     });
 
     //fabricJS mouse-move event listener
     overlay.fabricCanvas().observe('mouse:move', function(o){
-         console.log("EVENT TRIGERRED: fabricjs-mouse:move");
          if (!isDown) return;
          var pointer = overlay.fabricCanvas().getPointer(o.e);
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
          // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
          // updateLineEndpoint(pointer.x, pointer.y);
-         // updateEllipse(pointer.x, pointer.y);
+         updateEllipse(pointer.x, pointer.y);
          // updateTextContent(pointer.x, pointer.y);
-         updateArrow(pointer.x, pointer.y);
-         // overlay.fabricCanvas().renderAll();
+         // updateArrow(pointer.x, pointer.y);
+         overlay.fabricCanvas().renderAll();
     });
 
     //fabricJS mouse-up event listener
@@ -266,7 +264,7 @@
             setMouseMode("OSD");
         }
         isDown = false;
-        console.log(serializeToJSON());
+        serializeToJSON();
     });
 
     //OSD event listener. Currently not really used.
@@ -331,7 +329,6 @@
 
     function serializeToJSON() {
         console.log("attempting to serialize");
-        //need to get object type... either pass each object individually or save all on canvas
         $.ajax({
             type: "POST",
             url: '/xgds_image/saveAnnotations/', //TODO should be able to get this from url // maybe change the url/hard code it
@@ -341,7 +338,7 @@
                 image_pk: 1 // on the single image page it's app.options.modelPK, on the multi image page we have to get it from the selected item
             },
             success: function(data) {
-                 console.log(data)
+                 console.log("ajax return call json " + data);
             },
             error: function(a,b,c,d) {
                 console.log(a);
@@ -358,14 +355,11 @@
             success: function(data) {
                 //loop thru data here, calling addAnnotationToCanvas each iteration
                 console.log(data);
-                data.forEach(function(meself) {
+                data.forEach(function(meself) { //TODO: change name of the parameter
                     //is meself meself?
-                    console.log(meself);
+                    // console.log(meself);
+                    addAnnotationToCanvas(meself)
                 });
-
-                // for(i=0; i<data.length; i++) {
-                //
-                // }
             },
             error: function(a,b,c,d) {
                 console.log(a);
@@ -378,89 +372,131 @@
         //TODO: fill out methods called below and add correct arguments
      */
     function addAnnotationToCanvas(annotationJson) {
+        console.log("inside annotationToCanvas: " + annotationJson);
+        console.log("annotation type: " + annotationJson["annotationType"]);
+        /*
+        callback
+         */
+
+        //call object get type() in models.py?
+        //call getJsonType() before serializing to json
+
+
         //overlay.fabricCanvas().loadFromJSON(json);
-        if (annotationJSON["type"]=="rect") {
-            addRectToCanvas();
-        } else if(annotationJSON["type"]=="ellipse") {
-            addEllipseToCanvas();
-        } else if (annotationJSON["type"]=="arrow") {
-            addArrowToCanvas();
-        } else if (annotationJSON["type"]=="text") {
-            addTextToCanvas();
+        if (annotationJson["annotationType"]=="Rectangle") {
+            addRectToCanvas(annotationJson);
+        } else if(annotationJson["annotationType"]=="Ellipse") {
+            addEllipseToCanvas(annotationJson);
+        } else if(annotationJson["annotationType"]=="Arrow") {
+            addArrowToCanvas(annotationJson);
+        } else if(annotationJson["annotationType"]=="Text") {
+            addTextToCanvas(annotationJson);
         }else{
-            print
-            "That shape doesn't exist"
+            throw new Error("Tried to load an undefined shape to canvas (can only load rectangles, ellipses, arrows, lines");
         }
     }
 
-     //create a new rectangle and add to canvas
+    //create a new rectangle and add to canvas
     //TODO: arguments are wrong
-    function addRectToCanvas(x, y) {
+    function addRectToCanvas(annotationJson) {
+        console.log("Attempting to draw saved rectangle to canvas");
         var rect = new fabric.Rect({
-            left: x,
-            top: y,
-            fill: 'blue',
-            width: 1000,
-            height: 1000
+            left: annotationJson["left"],
+            top: annotationJson["top"],
+            stroke: annotationJson["stokeWidth"],
+            originX: annotationJson["originX"],
+            originY: annotationJson["originY"],
+            fill: "blue", //TODO: color dictionary reference isn't working, had to hard code it.
+            angle: annotationJson["angle"],
+            width: annotationJson["width"],
+            height: annotationJson["height"]
         });
+        //
+        //  rectangle = new fabric.Rect({
+        //     left: x,
+        //     top: y,
+        //     fill: 'blue',
+        //     width: 1,
+        //     height: 1
+        // });
+
+        // rectangle.setCoords()
         overlay.fabricCanvas().add(rect);
+        overlay.fabricCanvas().renderAll();
+
+
+    }
+
+    //TODO: arguments are wrong
+    function addEllipseToCanvas(annotationJson) {
+        console.log("Attempting to draw saved ellipse to canvas");
+        ellipse = new fabric.Ellipse({
+            left: annotationJson["left"],
+            top: annotationJson["top"],
+            stroke: annotationJson["stokeWidth"],
+            originX: annotationJson["originX"],
+            originY: annotationJson["originY"],
+            fill: annotationJson["fill"],
+            angle: annotationJson["angle"],
+            rx: annotationJson["radiusX"],
+            ry: annotationJson["radiusY"]
+        });
+        overlay.fabricCanvas().add(ellipse);
         overlay.fabricCanvas().renderAll();
     }
 
     //TODO: arguments are wrong
-    function addEllipseToCanvas() {
-        ellipse = new fabric.Ellipse({
-            left: x,
-            top: y,
-            radius: 1,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
-            selectable: true,
-            originX: 'center', originY: 'center'
-        });
-        overlay.fabricCanvas().add(ellipse);
-    }
-
-    //TODO: arguments are wrong
-    function addArrowToCanvas() {
+    function addArrowToCanvas(annotationJson) {
+        console.log("Attempting to draw saved arrow to canvas");
         headlen = 100;
-        arrow = new fabric.Polyline(calculateArrowPoints(origX,origY,x,y,headlen), {
-            fill: 'white',
-            stroke: 'black',
-            opacity: 1,
-            strokeWidth: 2,
-            originX: 'left',
-            originY: 'top',
-            selectable: true,
-            type: 'arrow'
-        });
+        /* TODO: might need to save more stuff for arrows */
+        arrow = new fabric.Polyline(annotationJson["points"], {
+            left: annotationJson["left"],
+            top: annotationJson["top"],
+            stroke: annotationJson["stokeWidth"],
+            originX: annotationJson["originX"],
+            originY: annotationJson["originY"],
+            fill: annotationJson["fill"],
+            angle: annotationJson["angle"]
+        }); /* remove points from json set and put in first initialization line */
+        overlay.fabricCanvas().add(arrow);
+        overlay.fabricCanvas().renderAll();
     }
 
     //TODO: arguments are wrong
-    function addTextToCanvas() {
+    function addTextToCanvas(annotationJson) {
+        console.log("Attempting to draw saved text to canvas");
         text = new fabric.Text("hello world", {
-            left: x,
-            top: y
+            left: annotationJson["left"],
+            top: annotationJson["top"],
+            stroke: annotationJson["stokeWidth"],
+            originX: annotationJson["originX"],
+            originY: annotationJson["originY"],
+            fill: annotationJson["fill"],
+            angle: annotationJson["angle"],
+            width: annotationJson["width"],
+            height: annotationJson["height"],
+            text: annotationJson["content"] //text should be the right field here
         });
         overlay.fabricCanvas().add(text);
+        overlay.fabricCanvas().renderAll();
     }
 
     //create a new circle and add it to canvas
-    //TODO: arguments are wrong
+    //TODO: still need to add standardized attribute/json list
     function addCircleToCanvas(x, y) {
-        var circle = new fabric.Circle({
-            left: x,
-            top: y,
-            radius: 225,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
-            selectable: true,
-            originX: 'center', originY: 'center'
-        });
-        overlay.fabricCanvas().add(circle);
-        overlay.fabricCanvas().renderAll();
+        // var circle = new fabric.Circle({
+        //     left: x,
+        //     top: y,
+        //     radius: 225,
+        //     strokeWidth: 1,
+        //     stroke: 'black',
+        //     fill: 'white',
+        //     selectable: true,
+        //     originX: 'center', originY: 'center'
+        // });
+        // overlay.fabricCanvas().add(circle);
+        // overlay.fabricCanvas().renderAll();
     }
 
 /* TODO:

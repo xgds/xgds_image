@@ -477,5 +477,6 @@ def getAnnotationsJson(request, imagePK):
     result = []
     for a in annotations:
         result.append(a.toJson())
-    #TODO: do we add imagepk to the response?
+    print "return size"
+    print len(result)
     return HttpResponse(json.dumps(result), content_type='application/json')
