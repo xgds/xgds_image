@@ -413,11 +413,14 @@ def saveAnnotations(request):
         #singleImage = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
         #data['author'] = request.user
 
-        mapAnnotations = json.loads(temp)
-        result = []
+        mapAnnotations = json.loads(temp) #IT"S LOADS THATS DOING IT (adding the u's)
+        mapAnnotationsNoLoads = temp
 
-        print "map annotations dictionary"
+        print "map annotations dictionary w/ loads"
         print mapAnnotations
+
+        print "map annotations dictionary W/O loads"
+        print mapAnnotationsNoLoads
 
         for annotationJSON in mapAnnotations["objects"]:
             print 'building annotation'
@@ -436,7 +439,7 @@ def saveAnnotations(request):
             elif (annotationJSON["type"]=="arrow"):
                 #do we need to store type? probably not
                 annotationModel = ArrowAnnotation()
-                annotationModel.points = annotationJSON["points"] #might yell at us for this line
+                annotationModel.points = json.dumps(annotationJSON["points"]) #TODO: might need to stringify this
 
             elif (annotationJSON["type"]=="text"):
                 annotationModel = TextAnnotation()
@@ -462,9 +465,7 @@ def saveAnnotations(request):
             annotationModel.author = request.user
             annotationModel.image_id = imagePK
             annotationModel.save()
-            result.append(annotationModel)
-
-        return HttpResponse(json.dumps(mapAnnotations),
+        return HttpResponse(json.dumps(mapAnnotations), #useless HttpResponse
                             content_type='application/json')
 
     else:
@@ -478,5 +479,6 @@ def getAnnotationsJson(request, imagePK):
     for a in annotations:
         result.append(a.toJson())
     print "return size"
+    print result
     print len(result)
     return HttpResponse(json.dumps(result), content_type='application/json')

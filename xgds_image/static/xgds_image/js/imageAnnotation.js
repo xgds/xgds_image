@@ -237,10 +237,10 @@
              // initializeCircle(pointer.x, pointer.y);
              // initializeRectangle(pointer.x, pointer.y);
              // initializeLine(pointer.x, pointer.y);
-             initializeEllipse(pointer.x, pointer.y);
+             // initializeEllipse(pointer.x, pointer.y);
              // initializeText(pointer.x, pointer.y);
              // initializeArrow(pointer.x, pointer.y);
-             // drawArrow(pointer.x, pointer.y);
+             drawArrow(pointer.x, pointer.y);
          }
     });
 
@@ -251,9 +251,9 @@
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
          // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
          // updateLineEndpoint(pointer.x, pointer.y);
-         updateEllipse(pointer.x, pointer.y);
+         // updateEllipse(pointer.x, pointer.y);
          // updateTextContent(pointer.x, pointer.y);
-         // updateArrow(pointer.x, pointer.y);
+         updateArrow(pointer.x, pointer.y);
          overlay.fabricCanvas().renderAll();
     });
 
@@ -359,10 +359,8 @@
             success: function(data) {
                 //loop thru data here, calling addAnnotationToCanvas each iteration
                 console.log(data);
-                data.forEach(function(meself) { //TODO: change name of the parameter
-                    //is meself meself?
-                    // console.log(meself);
-                    addAnnotationToCanvas(meself)
+                data.forEach(function(annotation) { //TODO: change name of the parameter
+                    addAnnotationToCanvas(annotation);
                 });
             },
             error: function(a,b,c,d) {
@@ -385,8 +383,9 @@
         //call object get type() in models.py?
         //call getJsonType() before serializing to json
 
-
         //overlay.fabricCanvas().loadFromJSON(json);
+        console.log(annotationJson);
+        console.log("Annotation type is: " + annotationJson["annotationType"]);
         if (annotationJson["annotationType"]=="Rectangle") {
             addRectToCanvas(annotationJson);
         } else if(annotationJson["annotationType"]=="Ellipse") {
@@ -400,8 +399,6 @@
         }
     }
 
-    //create a new rectangle and add to canvas
-    //TODO: arguments are wrong
     function addRectToCanvas(annotationJson) {
         console.log("Attempting to draw saved rectangle to canvas");
         var rect = new fabric.Rect({
@@ -427,11 +424,8 @@
         // rectangle.setCoords()
         overlay.fabricCanvas().add(rect);
         overlay.fabricCanvas().renderAll();
-
-
     }
 
-    //TODO: arguments are wrong
     function addEllipseToCanvas(annotationJson) {
         console.log("Attempting to draw saved ellipse to canvas");
         ellipse = new fabric.Ellipse({
@@ -445,16 +439,20 @@
             rx: annotationJson["radiusX"],
             ry: annotationJson["radiusY"]
         });
+        console.log("what does this pointer look like: " + annotationJson["fill"]);
         overlay.fabricCanvas().add(ellipse);
         overlay.fabricCanvas().renderAll();
     }
 
-    //TODO: arguments are wrong
     function addArrowToCanvas(annotationJson) {
-        console.log("Attempting to draw saved arrow to canvas");
+        console.log("THIS IS THE RECEIVED TRANSMISSION/JSON addArrowToCanvas receives");
+        console.log(annotationJson);
+
         headlen = 100;
         /* TODO: might need to save more stuff for arrows */
-        arrow = new fabric.Polyline(annotationJson["points"], {
+        // var pointsJson = JSON.parse(annotationJson["points"]);
+        // pointsArray = JSON.parse(annotationJson["points"]);
+        arrow = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: annotationJson["stokeWidth"],
@@ -467,7 +465,6 @@
         overlay.fabricCanvas().renderAll();
     }
 
-    //TODO: arguments are wrong
     function addTextToCanvas(annotationJson) {
         console.log("Attempting to draw saved text to canvas");
         text = new fabric.Text("hello world", {
@@ -476,7 +473,7 @@
             stroke: annotationJson["stokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
-            fill: annotationJson["fill"],
+            fill: annotationJson["fill"], //TODO: this is a pointer, need to access database to pull this color out
             angle: annotationJson["angle"],
             width: annotationJson["width"],
             height: annotationJson["height"],

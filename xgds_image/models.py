@@ -611,7 +611,8 @@ class RectangleAnnotation(AbstractAnnotation):
 
 
 class ArrowAnnotation(AbstractAnnotation):
-    points = models.CharField(max_length=256, default='[]') #store list as a string
+    # points = models.CharField(max_length=1024, default='[]') #store list as a string
+    points = models.TextField(default='[]')
 
     def getJsonType(self):
         return 'Arrow'
