@@ -500,7 +500,7 @@ def alterAnnotation(request):
         annotationModel.author = request.user
         annotationModel.image_id = request.POST.get('image_pk')
         annotationModel.save()
-    return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
+        return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
                         content_type='application/json')
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
