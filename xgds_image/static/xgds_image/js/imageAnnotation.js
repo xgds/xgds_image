@@ -291,6 +291,11 @@
 
     });
 
+    overlay.fabricCanvas().on('object:modified', function() {
+        alert("Seńor, un objecto fue modificido");
+        updateSerialization(overlay.fabricCanvas().getActiveObject());
+    });
+
     $("#addAnnotation").click(function() {
         setMouseMode("addAnnotation");
     });
@@ -303,6 +308,9 @@
        serializeToJSON();
     });
 
+    $('#editAnnotation').click(function() {
+        setMouseMode("editAnnotation");
+    });
 
 
     function setMouseMode(mode) {
@@ -320,6 +328,7 @@
             case "editAnnotation":
                 console.log("mousemode: editAnnotation");
                 mouseMode="editAnnotation";
+                viewer.setMouseNavEnabled(false);
                 break;
             default:
                 console.log(mode);
@@ -368,6 +377,27 @@
         });
     }
 
+    /* ugh should probably only re-serialize the modified object but that requires thinking */
+    function updateSerialization(fabricObject) {
+        console.log("serializing an individual fabric object");
+        console.log(fabricObject.toJSON());
+        /* pass json and pk to updateEntry function? */
+        $.ajax({
+            type: "POST",
+            url: '/xgda_image/alterAnnotation/',
+            datatype: 'json',
+            data: {
+                annotation: JSON.stringify(fabricObject),
+                image_pk: 1
+            },
+            success: function(data) {
+
+            },
+            error: function(a) {
+                console.log(a)
+            }
+        });
+    }
     /*
         Given an annotation model, add it to the canvas
         //TODO: fill out methods called below and add correct arguments

@@ -416,21 +416,21 @@ def saveAnnotations(request):
         for annotationJSON in mapAnnotations["objects"]:
             print 'building annotation'
             print annotationJSON['type']
-            if (annotationJSON["type"]=="rect"):
+            if annotationJSON["type"]=="rect":
                 annotationModel = RectangleAnnotation()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
 
-            elif (annotationJSON["type"]=="ellipse"):
+            elif annotationJSON["type"]=="ellipse":
                 annotationModel = EllipseAnnotation()
                 annotationModel.radiusX = annotationJSON["rx"]
                 annotationModel.radiusY = annotationJSON["ry"]
 
-            elif (annotationJSON["type"]=="arrow"):
+            elif annotationJSON["type"]=="arrow":
                 annotationModel = ArrowAnnotation()
                 annotationModel.points = json.dumps(annotationJSON["points"])
 
-            elif (annotationJSON["type"]=="text"):
+            elif annotationJSON["type"]=="text":
                 annotationModel = TextAnnotation()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
@@ -460,7 +460,56 @@ def saveAnnotations(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
-#pk, pointer
+#Is there a better way to do this? fair amount of reused code
+def alterAnnotation(request):
+    if request.method=='POST':
+        temp = request.POST.get('annotation', None)
+        newAnnotation = json.loads(temp)
+        annotationModel = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK) #this is wrong rn
+        if newAnnotation["type"] == "rect":
+            annotationModel.width = newAnnotation["width"]
+            annotationModel.height = newAnnotation["height"]
+
+        elif newAnnotation["type"] == "ellipse":
+            annotationModel.radiusX = newAnnotation["rx"]
+            annotationModel.radiusY = newAnnotation["ry"]
+
+        elif newAnnotation["type"] == "arrow":
+            annotationModel.points = json.dumps(newAnnotation["points"])
+
+        elif newAnnotation["type"] == "text":
+            annotationModel.width = newAnnotation["width"]
+            annotationModel.height = newAnnotation["height"]
+            annotationModel.content = newAnnotation["content"]  # not sure if this is where text content is stored
+
+        else:
+            print "That shape doesn't exist"
+            # your shape doesn't exist
+            # throw some kind of error
+
+            # add common variables
+        annotationModel.left = newAnnotation["left"]
+        annotationModel.top = newAnnotation["top"]
+        annotationModel.strokeWidth = newAnnotation["strokeWidth"]
+        annotationModel.strokeColor = newAnnotation.objects.get(pk=1)
+        annotationModel.originX = newAnnotation["originX"]
+        annotationModel.originY = newAnnotation["originY"]
+        annotationModel.fill = newAnnotation.objects.get(pk=1)
+        annotationModel.angle = newAnnotation["angle"]
+
+        annotationModel.author = request.user
+        annotationModel.image_id = request.POST.get('image_pk')
+        annotationModel.save()
+    return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
+                        content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+
+
+
+
+
+
 def getAnnotationsJson(request, imagePK):
     image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
     annotations = image.getAnnotations()
