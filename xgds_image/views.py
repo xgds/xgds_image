@@ -505,11 +505,6 @@ def alterAnnotation(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
-
-
-
-
-
 def getAnnotationsJson(request, imagePK):
     image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
     annotations = image.getAnnotations()
