@@ -264,7 +264,6 @@
             setMouseMode("OSD");
         }
         isDown = false;
-        serializeToJSON();
     });
 
     //OSD event listener. Currently not really used.
@@ -299,6 +298,11 @@
     $('#loadAnnotation').click(function() {
        deserializeFromJSON();
     });
+
+    $('#saveAnnotation').click(function() {
+       serializeToJSON();
+    });
+
 
 
     function setMouseMode(mode) {
