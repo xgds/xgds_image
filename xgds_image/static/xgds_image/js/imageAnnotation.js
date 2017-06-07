@@ -329,6 +329,10 @@
         setMouseMode("editAnnotation");
     });
 
+    $('#deleteAnnotation').click(function() {
+        deleteActiveAnnotation();
+    });
+
 
     function setMouseMode(mode) {
         switch(mode) {
@@ -416,6 +420,18 @@
             }
         });
     }
+
+    function deleteActiveAnnotation() {
+        var annotation = overlay.fabricCanvas.getActiveObject();
+        if (annotation["pk"] in annotationsDict) {
+            //delete from dict and database
+            delete annotationsDict[annotation["pk"]];
+            overlay.fabricCanvas.getActiveObject().remove();
+        }else{
+            //annotation not saved in database anyways
+        }
+    }
+
     /*
         Given an annotation model, add it to the canvas
         //TODO: fill out methods called below and add correct arguments
@@ -531,11 +547,6 @@
         // overlay.fabricCanvas().add(circle);
         // overlay.fabricCanvas().renderAll();
     }
-
-
-/*
-TODO: ajax not connecting to views.py :/
- */
 
 /*
 TODO: edit, delete, pk
