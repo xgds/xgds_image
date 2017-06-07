@@ -29,6 +29,12 @@
     var overlay = viewer.fabricjsOverlay();
     var arrow, arrowTemp, line, rectangle, circle, ellipse, text, isDown, origX, origY;
 
+    /*
+    Stores annotation primary key to annotation json mappings for all annotations currently drawn on the canvas {pk: annotation json}
+    Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
+     */
+    var annotationsDict = {};
+
     /* the mouse can be in 3 modes:
         1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
         2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
@@ -53,7 +59,8 @@
             stroke: "red",
             strokeWidth: 15,
             originX: 'center',
-            originY: 'center'
+            originY: 'center',
+            type: 'line'
         });
         overlay.fabricCanvas().add(line)
     }
@@ -71,7 +78,9 @@
             stroke: 'black',
             fill: 'white',
             selectable: true,
-            originX: 'center', originY: 'center'
+            originX: 'center',
+            originY: 'center',
+            type: 'ellipse'
         });
         overlay.fabricCanvas().add(ellipse);
     }
@@ -94,7 +103,8 @@
             fill: 'white',
             selectable: true,
             originX: 'center',
-            originY: 'center'
+            originY: 'center',
+            type: 'circle'
         });
         overlay.fabricCanvas().add(circle);
     }
@@ -111,7 +121,8 @@
             top: y,
             fill: 'blue',
             width: 1,
-            height: 1
+            height: 1,
+            type: 'rect'
         });
         overlay.fabricCanvas().add(rectangle);
     }
@@ -125,7 +136,8 @@
     function initializeText(x, y) {
         text = new fabric.Text("hello world", {
             left: x,
-            top: y
+            top: y,
+            type: 'text'
         });
         overlay.fabricCanvas().add(text);
     }
@@ -261,7 +273,12 @@
     overlay.fabricCanvas().on('mouse:up', function(o){
         console.log("EVENT TRIGERRED: fabricj-mouse:up");
         if(getMouseMode()=="addAnnotation") {
-            setMouseMode("OSD");
+            /* TODO:
+            Might have to check annotationsDict here?
+            Annoying because annotations here won't have a database pk
+
+            If they save and immediately redraw you'll get a duplicate :/
+             */
         }
         isDown = false;
     });
@@ -384,7 +401,7 @@
         /* pass json and pk to updateEntry function? */
         $.ajax({
             type: "POST",
-            url: '/xgda_image/alterAnnotation/',
+            url: '/xgds_image/alterAnnotation/1',
             datatype: 'json',
             data: {
                 annotation: JSON.stringify(fabricObject),
@@ -394,6 +411,7 @@
 
             },
             error: function(a) {
+                console.log("Ajax error");
                 console.log(a)
             }
         });
@@ -403,7 +421,17 @@
         //TODO: fill out methods called below and add correct arguments
      */
     function addAnnotationToCanvas(annotationJson) {
-        if (annotationJson["annotationType"]=="Rectangle") {
+        if(annotationJson["pk"] in annotationsDict) {
+            console.log("Annotation is already drawn on canvas, aborting load for this annotation");
+            return;
+        }else{
+            annotationsDict.push({
+                pk: annotationJson["pk"],
+                json: annotationJson
+            });
+        }
+
+        if(annotationJson["annotationType"]=="Rectangle") {
             addRectToCanvas(annotationJson);
         } else if(annotationJson["annotationType"]=="Ellipse") {
             addEllipseToCanvas(annotationJson);
@@ -427,7 +455,8 @@
             fill: "blue", //TODO: color dictionary reference isn't working, had to hard code it.
             angle: annotationJson["angle"],
             width: annotationJson["width"],
-            height: annotationJson["height"]
+            height: annotationJson["height"],
+            type: 'rect'
         });
         overlay.fabricCanvas().add(rect);
         overlay.fabricCanvas().renderAll();
@@ -444,7 +473,8 @@
             fill: annotationJson["fill"],
             angle: annotationJson["angle"],
             rx: annotationJson["radiusX"],
-            ry: annotationJson["radiusY"]
+            ry: annotationJson["radiusY"],
+            type: 'ellipse'
         });
         console.log("what does this pointer look like: " + annotationJson["fill"]);
         overlay.fabricCanvas().add(ellipse);
@@ -459,7 +489,8 @@
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
             fill: annotationJson["fill"],
-            angle: annotationJson["angle"]
+            angle: annotationJson["angle"],
+            type: 'arrow'
         });
         overlay.fabricCanvas().add(arrow);
         overlay.fabricCanvas().renderAll();
@@ -477,7 +508,8 @@
             angle: annotationJson["angle"],
             width: annotationJson["width"],
             height: annotationJson["height"],
-            text: annotationJson["content"] //text should be the right field here
+            text: annotationJson["content"], //text should be the right field here
+            type: 'text'
         });
         overlay.fabricCanvas().add(text);
         overlay.fabricCanvas().renderAll();
@@ -499,6 +531,11 @@
         // overlay.fabricCanvas().add(circle);
         // overlay.fabricCanvas().renderAll();
     }
+
+
+/*
+TODO: ajax not connecting to views.py :/
+ */
 
 /*
 TODO: edit, delete, pk

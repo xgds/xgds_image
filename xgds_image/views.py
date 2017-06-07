@@ -410,11 +410,10 @@ def saveAnnotations(request):
         temp = request.POST.get('mapAnnotations', None)
         mapAnnotations = json.loads(temp)
 
-        print "map annotations dictionary w/ loads"
-        print mapAnnotations
+
 
         for annotationJSON in mapAnnotations["objects"]:
-            print 'building annotation'
+            print "annotation type: {0}".format(annotationJSON["type"])
             print annotationJSON['type']
             if annotationJSON["type"]=="rect":
                 annotationModel = RectangleAnnotation()
@@ -438,6 +437,7 @@ def saveAnnotations(request):
 
             else:
                 print "That shape doesn't exist"
+                print "aha "
                 #your shape doesn't exist
                 #throw some kind of error
 
@@ -461,11 +461,12 @@ def saveAnnotations(request):
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
 #Is there a better way to do this? fair amount of reused code
-def alterAnnotation(request):
+def alterAnnotation(request, imagePK):
+    print "inside alterAnnotation()"
     if request.method=='POST':
         temp = request.POST.get('annotation', None)
         newAnnotation = json.loads(temp)
-        annotationModel = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK) #this is wrong rn
+        annotationModel = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK) #this is wrong rn TODO
         if newAnnotation["type"] == "rect":
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
@@ -491,10 +492,10 @@ def alterAnnotation(request):
         annotationModel.left = newAnnotation["left"]
         annotationModel.top = newAnnotation["top"]
         annotationModel.strokeWidth = newAnnotation["strokeWidth"]
-        annotationModel.strokeColor = newAnnotation.objects.get(pk=1)
+        annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)
         annotationModel.originX = newAnnotation["originX"]
         annotationModel.originY = newAnnotation["originY"]
-        annotationModel.fill = newAnnotation.objects.get(pk=1)
+        annotationModel.fill = AnnotationColor.objects.get(pk=1)
         annotationModel.angle = newAnnotation["angle"]
 
         annotationModel.author = request.user
@@ -512,6 +513,6 @@ def getAnnotationsJson(request, imagePK):
     for a in annotations:
         result.append(a.toJson())
     print "return size"
-    print result
+    # print result
     print len(result)
     return HttpResponse(json.dumps(result), content_type='application/json')

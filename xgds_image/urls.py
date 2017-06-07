@@ -32,5 +32,5 @@ urlpatterns = [
     url(r'^testpage$', TemplateView.as_view(template_name='xgds_image/test.html'), {}, 'test'),
     url(r'^saveAnnotations/$', views.saveAnnotations, {}, 'xgds_image_save_annotations'),
     url(r'^getAnnotations/(?P<imagePK>[\d]+)$', views.getAnnotationsJson, {}, 'xgds_image_get_annotations'),
-    url(r'^alterAnnotation/$', views.alterAnnotation, {}, 'xgds_image_alter_annotations'),
+    url(r'^alterAnnotation/(?P<imagePK>[\d]+)$', views.alterAnnotation, {}, 'xgds_image_alter_annotations'),
 ]
