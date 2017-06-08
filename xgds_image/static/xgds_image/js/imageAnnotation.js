@@ -317,18 +317,10 @@
         console.log("EVENT TRIGERRED: OSD-canvas-click")
     });
 
-    //Toggle map scrolling button.
-    $("#toggleMapScrolling").click(function() {
-        console.log("toggle dat map scrolling boi");
-        viewer.setMouseNavEnabled(false);
-        setMouseMode("addAnnotation");
-    })
-
     $("input[name='cursorMode']").change(function() {
         console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
-        var mode1 = $("input[name='cursorMode']").val();
-        mode1="addAnnotation";
-        setMouseMode(mode1);
+        var mode = $("input[name='cursorMode']:checked").val();
+        setMouseMode(mode);
     });
 
     $("input[name='annotationType']").change(function(){
@@ -353,30 +345,41 @@
        serializeToJSON();
     });
 
-    $('#editAnnotation').click(function() {
-        setMouseMode("editAnnotation");
-    });
-
     $('#deleteAnnotation').click(function() {
         deleteActiveAnnotation();
     });
 
+    //sets if you can interact with objects on the fabricjs canvas
+    function setFabricCanvasInteractivity(boolean) {
+        overlay.fabricCanvas().forEachObject(function(object){
+            object.selectable = boolean;
+        });
+    }
+
+    function deselectFabricObjects() {
+        overlay.fabricCanvas().deactivateAll().renderAll();
+    }
 
     function setMouseMode(mode) {
         switch(mode) {
             case "OSD":
                 console.log("mousemode: OSD");
-            mouseMode="OSD";
+                mouseMode="OSD";
+                setFabricCanvasInteractivity(false);
+                deselectFabricObjects();
                 viewer.setMouseNavEnabled(true);
                 break;
             case "addAnnotation":
                 console.log("mousemode: addAnnotation");
                 mouseMode="addAnnotation";
+                setFabricCanvasInteractivity(false);
+                deselectFabricObjects();
                 viewer.setMouseNavEnabled(false); //if we're in addAnnotation mode, don't set isDown to true -- actually, ONLY set to true if mode is addAnnotation
                 break;
             case "editAnnotation":
                 console.log("mousemode: editAnnotation");
                 mouseMode="editAnnotation";
+                setFabricCanvasInteractivity(true);
                 viewer.setMouseNavEnabled(false);
                 break;
             default:
@@ -424,10 +427,8 @@
     /* TODO
     RECAP: instead of passing in JSON.stringify(canvas) or JSON.stringify(object) we use its copy to avoid using fabricjs' toJSON functionality
      */
-    function serializeToJSON() {
+    function serializeToJSON() { //TODO: need to not save duplicate entries... maybe do that on the python side... just dont save if it has a pk? needs to coordinate from alterAnnotations()
         console.log("attempting to serialize");
-        // makeObjectCopy(JSON.stringify(overlay.fabricCanvas()));
-        //TODOWILLDO
         $.ajax({
             type: "POST",
             url: '/xgds_image/saveAnnotations/', //TODO should be able to get this from url // maybe change the url/hard code it
@@ -463,7 +464,7 @@
             }
         });
     }
-
+    
     /* ugh should probably only re-serialize the modified object but that requires thinking */
     function updateSerialization(fabricObject) {
         console.log("serializing an individual fabric object");
@@ -472,10 +473,13 @@
         var temp = duplicateObject(fabricObject);
         console.log("temp");
         console.log(temp);
-        console.log(JSON.stringify(temp));
 
-        /* pass json and pk to updateEntry function? */
-        //TODOWILLDO
+        if(!("pk" in fabricObject)) {
+            alert("You just made this annotation, click save to save it (maybe we should just turn autosave off for moving annotations");
+            return;
+        }
+
+        console.log(JSON.stringify(temp));
         $.ajax({
             type: "POST",
             url: '/xgds_image/alterAnnotation/',
@@ -679,31 +683,38 @@ xgds ref
 */
 
 /*
+possible solution: keep a list of newly added annotations + modified ones
+possible solution: serialize to database onChange or onCreate.
+TODO: check if text content is saved/loaded from database. make textbox scale
 
-TODO: it's loading a shit ton of annotations
-TODO: test save annotations button
+TODO: before serializingTOJson check if stuff is in database!!
+
+TODO: annotations are multiplying when loaded
+TODO:  mike dille     alterAnnotation() doesn't work on new annotations b/c no image/pk fields --RP
 TODO: set selectable/editable to false when adding annotations
 TODO: test save annotations with other shapes
-TODO: rect vs rectangle (ugh fabricjs uses rect)
-TODO: change mouse mode/model view on click/add annotation etc
-TODO: generalize duplicate function (only arrow works rn?)
-TODO: change all rect to rectangle
-TODO: change button group order and add necessary ones
+
+
 TODO: color picker
 TODO: all annotations on/off
 TODO: export canvas as picture
 TODO: load colors
 TODO: delete annotation
 TODO: colors dictionary
-TODO: add mouse modes
-TODO: add color picker
-TODO: convert to namespace (entire thing or split into smaller namespaces?)
-TODO: add try catch to views.py
-TODO: monitor
-TODO: prototyping
 
-TODO: Later
+
+TODO: add try catch to views.py
+
+
+TODO: LATER
 TODO: something wacko is happenign with stroke color in models
+TODO: release as an open source plugin
+TODO: rect vs rectangle (ugh fabricjs uses rect)
+
+TODO: monitor
+TODO: prototyping/javascript namespace
+
+
  */
 
 
