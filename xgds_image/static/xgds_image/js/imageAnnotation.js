@@ -2,7 +2,7 @@
     var viewer = OpenSeadragon({
         id:            "openseadragon1",
         prefixUrl:     prefixUrl,
-        showNavigator: true,
+        showNavigator: false,
         gestureSettingsMouse:   {
             clickToZoom: false
         },
@@ -42,6 +42,11 @@
         getters and setters are below
      */
     var mouseMode = "OSD";
+
+    /*
+    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
+     */
+    var annotationType = "arrow";
 
     // addRectToCanvas(1000, 1000);
 
@@ -87,7 +92,6 @@
 
     function updateEllipse(x, y) {
         var distance = distanceFormula(x,y,origX,origY);
-
         ellipse.set({rx: Math.abs(origX-x), ry:Math.abs(origY-y)});
     }
 
@@ -125,7 +129,7 @@
         overlay.fabricCanvas().add(rectangle);
     }
 
-    function updateRectangleWidth(x, y, origX, origY) {
+    function updateRectangleWidth(x, y) {
         var width = Math.abs(x-origX);
         var height = Math.abs(y-origY);
         rectangle.set({width: width, height: height});
@@ -192,7 +196,6 @@
         overlay.fabricCanvas().renderAll();
     }
 
-
     function calculateArrowPoints(x, y, headlen) {
         var angle = Math.atan2(y - origY, x - origX);
         var headlen = 100;  // arrow head size
@@ -242,13 +245,27 @@
              var pointer = overlay.fabricCanvas().getPointer(o.e);
              origX = pointer.x;
              origY = pointer.y;
+
+             switch(annotationType) {
+                 case "arrow":
+                     drawArrow(pointer.x, pointer.y); //TODO: change this to agree with naming scheme
+                     break;
+                 case "rectangle":
+                     initializeRectangle(pointer.x, pointer.y);
+                     break;
+                 case "ellipse":
+                     initializeEllipse(pointer.x, pointer.y);
+                     break;
+                 case "text":
+                     initializeText(pointer.x, pointer.y);
+                     break;
+                 default:
+                    console.log("welp, that shouldn't have happened. Undefined annotationType");
+                    throw new Error("Tried to switch to an undefined annotationType");
+             }
+             // other shapes we might want later
              // initializeCircle(pointer.x, pointer.y);
-             // initializeRectangle(pointer.x, pointer.y);
              // initializeLine(pointer.x, pointer.y);
-             // initializeEllipse(pointer.x, pointer.y);
-             // initializeText(pointer.x, pointer.y);
-             // initializeArrow(pointer.x, pointer.y);
-             drawArrow(pointer.x, pointer.y);
          }
     });
 
@@ -256,13 +273,27 @@
     overlay.fabricCanvas().observe('mouse:move', function(o){
          if (!isDown) return;
          var pointer = overlay.fabricCanvas().getPointer(o.e);
+
+         switch(annotationType) {
+             case "arrow":
+                 updateArrow(pointer.x, pointer.y); //TODO: change this to agree with naming scheme
+                 break;
+             case "rectangle":
+                 updateRectangleWidth(pointer.x, pointer.y);
+                 break;
+             case "ellipse":
+                 updateEllipse(pointer.x, pointer.y);
+                 break;
+             case "text":
+                 updateTextContent(pointer.x, pointer.y);
+                 break;
+             default:
+                console.log("welp, that shouldn't have happened. Undefined annotationType");
+                throw new Error("Tried to switch to an undefined annotationType");
+         }
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
-         // updateRectangleWidth(pointer.x, pointer.y, origX, origY);
          // updateLineEndpoint(pointer.x, pointer.y);
-         // updateEllipse(pointer.x, pointer.y);
-         // updateTextContent(pointer.x, pointer.y);
-         updateArrow(pointer.x, pointer.y);
-         overlay.fabricCanvas().renderAll();
+          overlay.fabricCanvas().renderAll();
     });
 
     //fabricJS mouse-up event listener
@@ -275,6 +306,7 @@
 
             If they save and immediately redraw you'll get a duplicate :/
              */
+            setMouseMode("OSD");
         }
         isDown = false;
     });
@@ -299,9 +331,10 @@
         setMouseMode(mode1);
     });
 
-    $("input[name='annotationShape']").change(function(){
-        console.log("annotationShape change detected: " + $("input[name='annotationShape']:checked").val());
-
+    $("input[name='annotationType']").change(function(){
+        // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
+        annotationType = $("input[name='annotationType']:checked").val();
+        console.log("annotation shape changed to: " + annotationType);
     });
 
     overlay.fabricCanvas().on('object:modified', function() {
@@ -477,7 +510,7 @@
     so we can use (pk in annotationsDict) later. But it might just set the value to undefined? idk gotta test
      */
     function deleteActiveAnnotation() {
-        var annotation = overlay.fabricCanvas.getActiveObject();
+        var annotation = overlay.fabricCanvas().getActiveObject();
         if (annotation["pk"] in annotationsDict) {
             //TODO: remove from database
             $.ajax({
@@ -642,22 +675,23 @@ xgds ref
 */
 
 /*
-TODO: still have an ajax error
+TODO: set selectable/editable to false when adding annotations
+TODO: change mouse mode/model view on click/add annotation etc
+TODO: generalize duplicate function (only arrow works rn?)
+TODO: change all rect to rectangle
+TODO: change button group order and add necessary ones
+TODO: color picker
+TODO: all annotations on/off
+TODO: export canvas as picture
+TODO: load colors
+TODO: delete annotation
 TODO: colors dictionary
 TODO: add mouse modes
 TODO: add color picker
 TODO: convert to namespace (entire thing or split into smaller namespaces?)
 TODO: add try catch to views.py
 TODO: monitor
-left, top, strokewidth, strokecolor, originX, originY, fill, angle <---- SHOULD ADD SELECTABLE
-
-line: default
-ellipse: rx, ry instead of radius
-circle: radius
-rect: width, height
-text: width, height, content
-arrow: points, type?
-
+TODO: prototyping
  */
 
 
