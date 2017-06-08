@@ -34,6 +34,7 @@ from django.http import HttpResponseRedirect,  HttpResponse, JsonResponse
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
+from django.forms.models import model_to_dict
 
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
@@ -461,12 +462,22 @@ def saveAnnotations(request):
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
 #Is there a better way to do this? fair amount of reused code
-def alterAnnotation(request, imagePK):
+def alterAnnotation(request):
     print "inside alterAnnotation()"
     if request.method=='POST':
         temp = request.POST.get('annotation', None)
         newAnnotation = json.loads(temp)
-        annotationModel = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK) #this is wrong rn TODO
+        print "temp"
+        print temp
+        try:
+            image = newAnnotation["image"]
+            pk = newAnnotation["pk"]
+            queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
+            annotationModel = queryResult[0]
+        except Exception as e:
+            print "406 exception threw as {0}".format(e)
+            return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json', status=406)
+
         if newAnnotation["type"] == "rect":
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
@@ -477,34 +488,24 @@ def alterAnnotation(request, imagePK):
 
         elif newAnnotation["type"] == "arrow":
             annotationModel.points = json.dumps(newAnnotation["points"])
-
-        elif newAnnotation["type"] == "text":
+        else: #it's text
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["content"]  # not sure if this is where text content is stored
 
-        else:
-            print "That shape doesn't exist"
-            # your shape doesn't exist
-            # throw some kind of error
-
             # add common variables
         annotationModel.left = newAnnotation["left"]
         annotationModel.top = newAnnotation["top"]
-        annotationModel.strokeWidth = newAnnotation["strokeWidth"]
         annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)
-        annotationModel.originX = newAnnotation["originX"]
-        annotationModel.originY = newAnnotation["originY"]
         annotationModel.fill = AnnotationColor.objects.get(pk=1)
         annotationModel.angle = newAnnotation["angle"]
 
-        annotationModel.author = request.user
-        annotationModel.image_id = request.POST.get('image_pk')
         annotationModel.save()
         return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
                         content_type='application/json')
     else:
-        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json', status=406)
+
 
 def getAnnotationsJson(request, imagePK):
     image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
@@ -516,3 +517,26 @@ def getAnnotationsJson(request, imagePK):
     # print result
     print len(result)
     return HttpResponse(json.dumps(result), content_type='application/json')
+
+
+def getAnnotationColorsJson(request):
+    colors = AnnotationColor.objects.all()
+    result = []
+    for color in colors:
+        result.append(model_to_dict(color))
+    return JsonResponse(result) #TODO: hopefully this json response works
+
+
+#this function seems slightly sketchy
+#TODO: this is untested
+def deleteAnnotation(request): #primary key?
+    try:
+        pk = request.POST.get('pk', None)
+        annotationModel = ANNOTATION_MANAGER.filter(pk=pk)
+    except:
+        return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json',
+                            status=406)
+    annotationModel.delete()
+
+
+

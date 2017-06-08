@@ -91,8 +91,6 @@
         ellipse.set({rx: Math.abs(origX-x), ry:Math.abs(origY-y)});
     }
 
-
-    //TODO: Create overloaded initializeCircle function
     function initializeCircle(x, y) {
         circle = new fabric.Circle({
             left: x,
@@ -154,7 +152,7 @@
     really drawing a polygon, not an arrow). Taken from https://jsfiddle.net/6e17oxc3/
     */
 
-    function drawArrow(x, y) { //TODO: order of points fed to calculateArrowPoints probably matters
+    function drawArrow(x, y) {
         var headlen = 100;  // arrow head size
         arrow = new fabric.Polyline(calculateArrowPoints(origX,origY,x,y,headlen), {
             fill: 'white',
@@ -170,15 +168,15 @@
     }
 
     function updateArrow(x, y) {
+        var headlen = 100; //arrow head size
         overlay.fabricCanvas().remove(arrow)
-        //TODO: dont forget to remove from canvas
         var angle = Math.atan2(y - origY, x - origX);
-        var headlen = 100;  // arrow head size TODO: this should not be manually put here
+
         // bring the line end back some to account for arrow head.
         x = x - (headlen) * Math.cos(angle);
         y = y - (headlen) * Math.sin(angle);
-        // calculate the points.
 
+        // calculate the points.
         var pointsArray = calculateArrowPoints(x, y, headlen);
         arrow = new fabric.Polyline(pointsArray, {
             fill: 'white',
@@ -194,8 +192,7 @@
         overlay.fabricCanvas().renderAll();
     }
 
-    //TODO: Refactor this to camelcaps
-    //TODO: TODO: this should not be manually put here
+
     function calculateArrowPoints(x, y, headlen) {
         var angle = Math.atan2(y - origY, x - origX);
         var headlen = 100;  // arrow head size
@@ -236,7 +233,6 @@
         return points;
     }
 
-    //TODO: only save from save button, not on unclick
     //fabricJS mouse-down event listener
     overlay.fabricCanvas().observe('mouse:down', function(o){
          console.log("EVENT TRIGERRED: fabricjs-mouse:down");
@@ -309,7 +305,6 @@
     });
 
     overlay.fabricCanvas().on('object:modified', function() {
-        alert("Seńor, un objecto fue modificido");
         updateSerialization(overlay.fabricCanvas().getActiveObject());
     });
 
@@ -361,14 +356,48 @@
         return mouseMode;
     }
 
+    /* TODO: This is where we yolo and assume overlay.fabricCanvas().toJson() will preserve the order of the objects when it converts to json */
+    function duplicateObject(object) {
+        var objectCopy = {
+            left: object["left"],
+            top: object["top"],
+            stroke: object["stokeWidth"],
+            originX: object["originX"],
+            originY: object["originY"],
+            fill: object["fill"],
+            angle: object["angle"],
+            type: object["type"],
+            pk: object["pk"],
+            image: object["image"],
+            points: object["points"] /* hacky fix */
+        };
+        /*TODO TODO TODO need to add parameters for ALL shapes rip */
+        /* TODO TODO TODO TODO TODO OKAY SO THE STRINGIFY WORKS NOW JUST MAKE SURE WE HAVE ENOUGH PARAMETERS TO MATCH VIEWS.PY GODLBLESS*/
+        return objectCopy;
+    }
+
+    function objectListToJsonList(list) {
+        var retval = [];
+        list.foreach(function(object){
+           retval.push(duplicateObject(object));
+        });
+        return JSON.stringify(retval);
+    }
+
+    /* TODO
+    RECAP: instead of passing in JSON.stringify(canvas) or JSON.stringify(object) we use its copy to avoid using fabricjs' toJSON functionality
+     */
     function serializeToJSON() {
         console.log("attempting to serialize");
+        // makeObjectCopy(JSON.stringify(overlay.fabricCanvas()));
+        //TODOWILLDO
         $.ajax({
             type: "POST",
             url: '/xgds_image/saveAnnotations/', //TODO should be able to get this from url // maybe change the url/hard code it
             datatype: 'json',
             data: {
-                mapAnnotations: JSON.stringify(overlay.fabricCanvas()),
+                mapAnnotations: JSON.stringify(overlay.fabricCanvas()), //TODO: can't just JSON.stringify, need to add our own fields
+                // mapAnnotations: objectListToJsonList(overlay.fabricCanvas().getObjects()),
                 image_pk: 1 // on the single image page it's app.options.modelPK, on the multi image page we have to get it from the selected item
             },
             success: function(data) {
@@ -401,14 +430,22 @@
     /* ugh should probably only re-serialize the modified object but that requires thinking */
     function updateSerialization(fabricObject) {
         console.log("serializing an individual fabric object");
-        console.log(fabricObject.toJSON());
+        console.log("fabricObject")
+        console.log(fabricObject);
+        var temp = duplicateObject(fabricObject);
+        console.log("temp");
+        console.log(temp);
+        console.log(JSON.stringify(temp));
+
         /* pass json and pk to updateEntry function? */
+        //TODOWILLDO
         $.ajax({
             type: "POST",
-            url: '/xgds_image/alterAnnotation/1',
+            url: '/xgds_image/alterAnnotation/',
             datatype: 'json',
             data: {
-                annotation: JSON.stringify(fabricObject),
+                //annotation: Json.stringify(fabricObject),
+                annotation: JSON.stringify(temp), //TODO: we're losing pk somewhere
                 image_pk: 1
             },
             success: function(data) {
@@ -421,30 +458,63 @@
         });
     }
 
+    function getAnnotationColors() {
+        $.ajax({
+            type: "POST",
+            url: '/xgds_image/getAnnotationColors/',
+            datatype: 'json',
+            success: function(data) {
+                console.log(data);
+            },
+            error: function(a) {
+                console.log("Ajax error");
+                console.log(a)
+            }
+        });
+    }
+
+    /* TODO: I think delete annotationsDict[annotation["pk]] should delete the key from the dictionary
+    so we can use (pk in annotationsDict) later. But it might just set the value to undefined? idk gotta test
+     */
     function deleteActiveAnnotation() {
         var annotation = overlay.fabricCanvas.getActiveObject();
         if (annotation["pk"] in annotationsDict) {
+            //TODO: remove from database
+            $.ajax({
+                type:"POST",
+                url: '/xgds_image/deleteAnnotation/',
+                datatype:"json",
+                data: {
+                  pk: annotation["pk"]
+                },
+                success: function(data) {
+                    console.log(data);
+                },
+                error: function(a) {
+                    console.log("Ajax error");
+                    console.log(a)
+                    throw new Error("Unable to delete the annotation's entry from the database");
+                }
+            });
+
             //delete from dict and database
             delete annotationsDict[annotation["pk"]];
             overlay.fabricCanvas.getActiveObject().remove();
         }else{
-            //annotation not saved in database anyways
+            //annotation not saved in database anyways, just remove from canvas
+            overlay.fabricCanvas.getActiveObject().remove();
         }
     }
 
     /*
         Given an annotation model, add it to the canvas
-        //TODO: fill out methods called below and add correct arguments
      */
     function addAnnotationToCanvas(annotationJson) {
         if(annotationJson["pk"] in annotationsDict) {
             console.log("Annotation is already drawn on canvas, aborting load for this annotation");
             return;
-        }else{
-            annotationsDict.push({
-                pk: annotationJson["pk"],
-                json: annotationJson
-            });
+        }else{ //otherwise, add annotation to annotationsDict and draw it by calling one of the addShapeToCanvas() functions below
+            annotationsDict[annotationJson["pk"]] = annotationJson;
         }
 
         if(annotationJson["annotationType"]=="Rectangle") {
@@ -472,7 +542,9 @@
             angle: annotationJson["angle"],
             width: annotationJson["width"],
             height: annotationJson["height"],
-            type: 'rect'
+            type: 'rect',
+            pk: annotationJson["pk"],
+            image: annotationJson["image"]
         });
         overlay.fabricCanvas().add(rect);
         overlay.fabricCanvas().renderAll();
@@ -490,7 +562,9 @@
             angle: annotationJson["angle"],
             rx: annotationJson["radiusX"],
             ry: annotationJson["radiusY"],
-            type: 'ellipse'
+            type: 'ellipse',
+            pk: annotationJson["pk"],
+            image: annotationJson["image"]
         });
         console.log("what does this pointer look like: " + annotationJson["fill"]);
         overlay.fabricCanvas().add(ellipse);
@@ -506,8 +580,12 @@
             originY: annotationJson["originY"],
             fill: annotationJson["fill"],
             angle: annotationJson["angle"],
-            type: 'arrow'
+            type: 'arrow',
+            pk: annotationJson["pk"],
+            image: annotationJson["image"]
         });
+        console.log("image and pk pls");
+        JSON.stringify(overlay.fabricCanvas());
         overlay.fabricCanvas().add(arrow);
         overlay.fabricCanvas().renderAll();
     }
@@ -525,7 +603,9 @@
             width: annotationJson["width"],
             height: annotationJson["height"],
             text: annotationJson["content"], //text should be the right field here
-            type: 'text'
+            type: 'text',
+            pk: annotationJson["pk"],
+            image: annotationJson["image"]
         });
         overlay.fabricCanvas().add(text);
         overlay.fabricCanvas().renderAll();
@@ -562,10 +642,13 @@ xgds ref
 */
 
 /*
-
+TODO: still have an ajax error
+TODO: colors dictionary
 TODO: add mouse modes
 TODO: add color picker
-
+TODO: convert to namespace (entire thing or split into smaller namespaces?)
+TODO: add try catch to views.py
+TODO: monitor
 left, top, strokewidth, strokecolor, originX, originY, fill, angle <---- SHOULD ADD SELECTABLE
 
 line: default
