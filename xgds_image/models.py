@@ -554,7 +554,6 @@ class AnnotationColor(models.Model):
     name = models.CharField(max_length=16, db_index=True)
     hex = models.CharField(max_length=16)
 
-
 class AbstractAnnotation(models.Model):
     left = models.IntegerField(null=False, blank=False)
     top = models.IntegerField(null=False, blank=False)

@@ -434,7 +434,7 @@ def saveAnnotations(request):
                 annotationModel = TextAnnotation()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
-                annotationModel.content = annotationJSON["content"] #not sure if this is where text content is stored
+                annotationModel.content = annotationJSON["text"] #not sure if this is where text content is stored
 
             else:
                 print "That shape doesn't exist"
@@ -491,7 +491,7 @@ def alterAnnotation(request):
         else: #it's text
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
-            annotationModel.content = newAnnotation["content"]  # not sure if this is where text content is stored
+            annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
 
             # add common variables
         annotationModel.left = newAnnotation["left"]

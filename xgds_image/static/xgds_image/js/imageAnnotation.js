@@ -389,23 +389,27 @@
         return mouseMode;
     }
 
-    /* TODO: This is where we yolo and assume overlay.fabricCanvas().toJson() will preserve the order of the objects when it converts to json */
+
     function duplicateObject(object) {
         var objectCopy = {
             left: object["left"],
             top: object["top"],
-            stroke: object["stokeWidth"],
+            stroke: object["stoke"], /* changed strokeWidth to stroke */
+            strokeWidth: object["strokeWidth"],
             originX: object["originX"],
-            originY: object["originY"],
+            originY: object["originY"],  /*             */
             fill: object["fill"],
             angle: object["angle"],
             type: object["type"],
+            points: object["points"], /* hacky fix */
+            text: object["text"],
+            rx: object["rx"],
+            ry: object["ry"],
+            height: object["height"],
+            width: object["width"],
             pk: object["pk"],
-            image: object["image"],
-            points: object["points"] /* hacky fix */
+            image: object["image"]
         };
-        /*TODO TODO TODO need to add parameters for ALL shapes rip */
-        /* TODO TODO TODO TODO TODO OKAY SO THE STRINGIFY WORKS NOW JUST MAKE SURE WE HAVE ENOUGH PARAMETERS TO MATCH VIEWS.PY GODLBLESS*/
         return objectCopy;
     }
 
@@ -675,7 +679,12 @@ xgds ref
 */
 
 /*
+
+TODO: it's loading a shit ton of annotations
+TODO: test save annotations button
 TODO: set selectable/editable to false when adding annotations
+TODO: test save annotations with other shapes
+TODO: rect vs rectangle (ugh fabricjs uses rect)
 TODO: change mouse mode/model view on click/add annotation etc
 TODO: generalize duplicate function (only arrow works rn?)
 TODO: change all rect to rectangle
@@ -692,6 +701,9 @@ TODO: convert to namespace (entire thing or split into smaller namespaces?)
 TODO: add try catch to views.py
 TODO: monitor
 TODO: prototyping
+
+TODO: Later
+TODO: something wacko is happenign with stroke color in models
  */
 
 
