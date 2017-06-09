@@ -411,8 +411,6 @@ def saveAnnotations(request):
         temp = request.POST.get('mapAnnotations', None)
         mapAnnotations = json.loads(temp)
 
-
-
         for annotationJSON in mapAnnotations["objects"]:
             print "annotation type: {0}".format(annotationJSON["type"])
             print annotationJSON['type']
@@ -538,5 +536,47 @@ def deleteAnnotation(request): #primary key?
                             status=406)
     annotationModel.delete()
 
+def addAnnotation(request):
+    if request.method == 'POST':
+        print "inside addAnnotation()"
+        temp = request.POST.get('annotation', None)
+        newAnnotation = json.loads(temp)
 
+        if newAnnotation["type"] == "rect":
+            annotationModel = RectangleAnnotation()
+            annotationModel.width = newAnnotation["width"]
+            annotationModel.height = newAnnotation["height"]
+
+        elif newAnnotation["type"] == "ellipse":
+            annotationModel = EllipseAnnotation()
+            annotationModel.radiusX = newAnnotation["rx"]
+            annotationModel.radiusY = newAnnotation["ry"]
+
+        elif newAnnotation["type"] == "arrow":
+            annotationModel = ArrowAnnotation()
+            annotationModel.points = json.dumps(newAnnotation["points"])
+        else:  # it's text
+            annotationModel = TextAnnotation()
+            annotationModel.width = newAnnotation["width"]
+            annotationModel.height = newAnnotation["height"]
+            annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
+
+        # add common variables
+        annotationModel.left = newAnnotation["left"]
+        annotationModel.top = newAnnotation["top"]
+        annotationModel.strokeWidth = newAnnotation["strokeWidth"]
+        annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)
+        annotationModel.originX = newAnnotation["originX"]
+        annotationModel.originY = newAnnotation["originY"]
+        annotationModel.fill = AnnotationColor.objects.get(pk=1)
+        annotationModel.angle = newAnnotation["angle"]
+
+        annotationModel.author = request.user
+        annotationModel.image_id = request.POST.get('image_pk')
+        annotationModel.save()
+        return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
+                            content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
+                            status=406)
 

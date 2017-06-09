@@ -27,7 +27,8 @@
 
     //fabricjs-openseadragon annotation object
     var overlay = viewer.fabricjsOverlay();
-    var arrow, arrowTemp, line, rectangle, circle, ellipse, text, isDown, origX, origY;
+    var arrow, line, rectangle, circle, ellipse, text, isDown, origX, origY;
+    var currentAnnotationType = "arrow"; //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
 
     /*
     Stores annotation primary key to annotation json mappings for all annotations currently drawn on the canvas {pk: annotation json}
@@ -67,11 +68,13 @@
             originY: 'center',
             type: 'line'
         });
+        currentAnnotationType = line;
         overlay.fabricCanvas().add(line)
     }
 
     function updateLineEndpoint(x, y) {
         line.set({x2:x, y2:y});
+        currentAnnotationType = line;
     }
 
     function initializeEllipse(x, y) {
@@ -87,12 +90,14 @@
             originY: 'center',
             type: 'ellipse'
         });
+        currentAnnotationType = ellipse
         overlay.fabricCanvas().add(ellipse);
     }
 
     function updateEllipse(x, y) {
         var distance = distanceFormula(x,y,origX,origY);
         ellipse.set({rx: Math.abs(origX-x), ry:Math.abs(origY-y)});
+        currentAnnotationType = ellipse
     }
 
     function initializeCircle(x, y) {
@@ -108,6 +113,7 @@
             originY: 'center',
             type: 'circle'
         });
+        currentAnnotationType = circle;
         overlay.fabricCanvas().add(circle);
     }
 
@@ -115,6 +121,7 @@
     function updateCircleRadius(x, y, origX, origY) {
         var radius = distanceFormula(x, y, origX, origY);
         circle.set({radius: radius});
+        currentAnnotationType = circle;
     }
 
     function initializeRectangle(x, y) {
@@ -126,6 +133,7 @@
             height: 1,
             type: 'rect'
         });
+        currentAnnotationType = rectangle;
         overlay.fabricCanvas().add(rectangle);
     }
 
@@ -133,14 +141,17 @@
         var width = Math.abs(x-origX);
         var height = Math.abs(y-origY);
         rectangle.set({width: width, height: height});
+        currentAnnotationType=rectangle;
     }
 
     function initializeText(x, y) {
+        currentAnnotationType = "text";
         text = new fabric.Text("hello world", {
             left: x,
             top: y,
             type: 'text'
         });
+        currentAnnotationType=text;
         overlay.fabricCanvas().add(text);
     }
 
@@ -148,6 +159,7 @@
         var width = Math.abs(x-origX);
         var height = Math.abs(y-origY);
         text.set({width: width, height: height})
+        currentAnnotationType=text;
     }
 
     /*
@@ -168,6 +180,7 @@
             selectable: true,
             type: 'arrow'
         });
+        currentAnnotationType = arrow;
         overlay.fabricCanvas().add(arrow);
     }
 
@@ -192,6 +205,7 @@
             selectable: true,
             type: 'arrow'
         });
+        currentAnnotationType=arrow;
         overlay.fabricCanvas().add(arrow);
         overlay.fabricCanvas().renderAll();
     }
@@ -306,6 +320,8 @@
 
             If they save and immediately redraw you'll get a duplicate :/
              */
+            console.log("serialize that");
+            createNewSerialization(currentAnnotationType);
             setMouseMode("OSD");
         }
         isDown = false;
@@ -464,7 +480,28 @@
             }
         });
     }
-    
+
+    function createNewSerialization(fabricObject) {
+        var temp = duplicateObject(fabricObject);
+        $.ajax({
+            type: "POST",
+            url: '/xgds_image/addAnnotation/',
+            datatype: 'json',
+            data: {
+                annotation: JSON.stringify(temp),
+                image_pk: 1
+            },
+            success: function(data) {
+
+            },
+            error: function(e) {
+                console.log("Ajax error");
+                console.log(e);
+            }
+        });
+
+    }
+
     /* ugh should probably only re-serialize the modified object but that requires thinking */
     function updateSerialization(fabricObject) {
         console.log("serializing an individual fabric object");
@@ -474,10 +511,10 @@
         console.log("temp");
         console.log(temp);
 
-        if(!("pk" in fabricObject)) {
-            alert("You just made this annotation, click save to save it (maybe we should just turn autosave off for moving annotations");
-            return;
-        }
+        // if(!("pk" in fabricObject)) {
+        //     alert("You just made this annotation, click save to save it (maybe we should just turn autosave off for moving annotations");
+        //     return;
+        // }
 
         console.log(JSON.stringify(temp));
         $.ajax({
@@ -685,6 +722,14 @@ xgds ref
 /*
 possible solution: keep a list of newly added annotations + modified ones
 possible solution: serialize to database onChange or onCreate.
+
+
+TODO TODO TODO TODO TODO  connect creation of new annotations here to addAnnotations() in views.py
+
+
+
+
+
 TODO: check if text content is saved/loaded from database. make textbox scale
 
 TODO: before serializingTOJson check if stuff is in database!!
@@ -693,7 +738,8 @@ TODO: annotations are multiplying when loaded
 TODO:  mike dille     alterAnnotation() doesn't work on new annotations b/c no image/pk fields --RP
 TODO: set selectable/editable to false when adding annotations
 TODO: test save annotations with other shapes
-
+TODO: clean up JSONresponse vs HTTP response
+TODO: wacko rectangle drawing behavior
 
 TODO: color picker
 TODO: all annotations on/off
