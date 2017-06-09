@@ -577,7 +577,7 @@
 
             //delete from dict and database
             delete annotationsDict[annotation["pk"]];
-            overlay.fabricCanvas.getActiveObject().remove();
+            overlay.fabricCanvas().getActiveObject().remove();
         }else{
             //annotation not saved in database anyways, just remove from canvas
             overlay.fabricCanvas.getActiveObject().remove();
@@ -724,13 +724,11 @@ possible solution: keep a list of newly added annotations + modified ones
 possible solution: serialize to database onChange or onCreate.
 
 
-TODO TODO TODO TODO TODO  connect creation of new annotations here to addAnnotations() in views.py
-
-
 
 
 
 TODO: check if text content is saved/loaded from database. make textbox scale
+TODO: make sure delete works (now everything should have a pk).
 
 TODO: before serializingTOJson check if stuff is in database!!
 

@@ -524,17 +524,16 @@ def getAnnotationColorsJson(request):
         result.append(model_to_dict(color))
     return JsonResponse(result) #TODO: hopefully this json response works
 
-
-#this function seems slightly sketchy
-#TODO: this is untested
-def deleteAnnotation(request): #primary key?
+def deleteAnnotation(request):
     try:
         pk = request.POST.get('pk', None)
-        annotationModel = ANNOTATION_MANAGER.filter(pk=pk)
+        queryResult = ANNOTATION_MANAGER.filter(pk=pk)
     except:
         return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json',
                             status=406)
+    annotationModel = queryResult[0]
     annotationModel.delete()
+    return HttpResponse('')
 
 def addAnnotation(request):
     if request.method == 'POST':
