@@ -27,7 +27,7 @@
 
     //fabricjs-openseadragon annotation object
     var overlay = viewer.fabricjsOverlay();
-    var arrow, line, rectangle, circle, ellipse, text, isDown, origX, origY;
+    var arrow, line, rectangle, circle, ellipse, text, isDown, textboxPreview, origX, origY;
     var currentAnnotationType = "arrow"; //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
 
     /*
@@ -144,13 +144,35 @@
         currentAnnotationType=rectangle;
     }
 
-    function initializeText(x, y) {
-        currentAnnotationType = "text";
-        text = new fabric.Text("hello world", {
+    function initializeTextboxPreview(x, y) {
+        textboxPreview = new fabric.Rect({
             left: x,
             top: y,
-            type: 'text'
+            fill: "",
+            strokeWidth: 5,
+            stroke: 'black',
+            width: 1,
+            height: 1,
+            type: 'textboxPreview'
         });
+        currentAnnotationType = textboxPreview;
+        overlay.fabricCanvas().add(textboxPreview);
+    }
+
+    function updateTextboxPreview(x, y) {
+        var width = Math.abs(x-origX);
+        var height = Math.abs(y-origY);
+        textboxPreview.set({width: width, height: height});
+        currentAnnotationType = textboxPreview
+    }
+    function initializeText(x, y) {
+        text = new fabric.Textbox('MyText', {
+            width: 150,
+            top: y,
+            left: x,
+            fontSize: 100,
+            textAlign: 'center'
+        }); //TODO: remove the fixed width stuff
         currentAnnotationType=text;
         overlay.fabricCanvas().add(text);
     }
@@ -271,7 +293,8 @@
                      initializeEllipse(pointer.x, pointer.y);
                      break;
                  case "text":
-                     initializeText(pointer.x, pointer.y);
+                     // initializeText(pointer.x, pointer.y);
+                     initializeTextboxPreview(pointer.x, pointer.y);
                      break;
                  default:
                     console.log("welp, that shouldn't have happened. Undefined annotationType");
@@ -299,7 +322,8 @@
                  updateEllipse(pointer.x, pointer.y);
                  break;
              case "text":
-                 updateTextContent(pointer.x, pointer.y);
+                 // updateTextContent(pointer.x, pointer.y);
+                 updateTextboxPreview(pointer.x, pointer.y);
                  break;
              default:
                 console.log("welp, that shouldn't have happened. Undefined annotationType");
@@ -308,6 +332,15 @@
          // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
          // updateLineEndpoint(pointer.x, pointer.y);
           overlay.fabricCanvas().renderAll();
+    });
+
+    /* event listener that handles resizing the textbox based on amount of text */
+    overlay.fabricCanvas().on('text:changed', function(opt) {
+        var t1 = opt.target;
+        if (t1.width > t1.fixedWidth) {
+            t1.fontSize *= t1.fixedWidth / (t1.width + 1);
+            t1.width = t1.fixedWidth;
+        }
     });
 
     //fabricJS mouse-up event listener
@@ -320,17 +353,21 @@
 
             If they save and immediately redraw you'll get a duplicate :/
              */
+
+            //TODONOW: if textbox mode, add textbox and serialize that. delete bounding rectangle.
             console.log("serialize that");
-            createNewSerialization(currentAnnotationType);
+            //need to draw textbox here
+            var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
+            createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
             setMouseMode("OSD");
+            //TODO: manually set menu mousemode back to OSD mode to correspond w/ previous line.
+                        //             $("input[name='cursorMode']").prop('checked, ')
+                        //               var mode = $("input[name='cursorMode']:checked").val();
+                        //               $('.myCheckbox').prop('checked', true);
+                        // $('.myCheckbox').prop('checked', false);
+
         }
         isDown = false;
-    });
-
-    //OSD event listener. Currently not really used.
-    viewer.addHandler('canvas-click', function(event) {
-        var pointer = overlay.fabricCanvas().getPointer(event.e);
-        console.log("EVENT TRIGERRED: OSD-canvas-click")
     });
 
     $("input[name='cursorMode']").change(function() {
@@ -440,10 +477,11 @@
         return JSON.stringify(retval);
     }
 
-    /* TODO
-    RECAP: instead of passing in JSON.stringify(canvas) or JSON.stringify(object) we use its copy to avoid using fabricjs' toJSON functionality
-     */
+    //TODO: pretty sure I can delete this but keep around a bit longer
     function serializeToJSON() { //TODO: need to not save duplicate entries... maybe do that on the python side... just dont save if it has a pk? needs to coordinate from alterAnnotations()
+        throw new Error("serializeToJson is depreciated! Don't use this function");
+        return;
+
         console.log("attempting to serialize");
         $.ajax({
             type: "POST",
@@ -481,7 +519,26 @@
         });
     }
 
-    function createNewSerialization(fabricObject) {
+    function createNewSerialization(fabricObject, x, y) {
+        console.log("these are the coordinates son");
+        console.log("x:" + x + "y:" + y);
+        if(fabricObject.type=="textboxPreview") {
+            text = new fabric.Textbox('MyText', {
+                width: x-origX,
+                top: origY,
+                left: origX,
+                fontSize: 100,
+                textAlign: 'center'
+            }); //TODO: remove the fixed width stuff
+            currentAnnotationType=text;
+            overlay.fabricCanvas().add(text);
+            textboxPreview.remove();
+            fabricObject = text;
+            //create textbox
+            //maybe delete textbox
+            //perhaps tie the rectanglepreview box to this object
+        }
+
         var temp = duplicateObject(fabricObject);
         $.ajax({
             type: "POST",
@@ -707,7 +764,6 @@
     }
 
 /*
-TODO: edit, delete, pk
 edit/delete: mouse modes for manipulating annotations
 pk: store pk's in a pk-json dictionary to prevent duplicate loads and to manipulate from annotations list
  */
@@ -720,40 +776,39 @@ xgds ref
 */
 
 /*
-possible solution: keep a list of newly added annotations + modified ones
-possible solution: serialize to database onChange or onCreate.
 
-
-
-
+TODO: look into textboxes. Fabricjs textboxes are absolute trash.
+TODO: rectangle preview textbox
+TODO: select textbox editable after added to canvas
+TODO: change checked to reflect state of mousemode
 
 TODO: check if text content is saved/loaded from database. make textbox scale
+
 TODO: make sure delete works (now everything should have a pk).
-
-TODO: before serializingTOJson check if stuff is in database!!
-
-TODO: annotations are multiplying when loaded
-TODO:  mike dille     alterAnnotation() doesn't work on new annotations b/c no image/pk fields --RP
-TODO: set selectable/editable to false when adding annotations
-TODO: test save annotations with other shapes
-TODO: clean up JSONresponse vs HTTP response
-TODO: wacko rectangle drawing behavior
-
 TODO: color picker
 TODO: all annotations on/off
 TODO: export canvas as picture
 TODO: load colors
 TODO: delete annotation
 TODO: colors dictionary
+TODO: should I be storing a list of objects on the js side so that show/hide annotations works quickly?
 
 
+
+TODO: wacko rectangle drawing behavior
 TODO: add try catch to views.py
+TODO: clean up JSONresponse vs HTTP response
+
+
+
+
 
 
 TODO: LATER
 TODO: something wacko is happenign with stroke color in models
 TODO: release as an open source plugin
 TODO: rect vs rectangle (ugh fabricjs uses rect)
+
 
 TODO: monitor
 TODO: prototyping/javascript namespace
