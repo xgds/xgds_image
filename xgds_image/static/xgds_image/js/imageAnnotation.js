@@ -155,6 +155,7 @@
             height: 1,
             type: 'textboxPreview'
         });
+
         currentAnnotationType = textboxPreview;
         overlay.fabricCanvas().add(textboxPreview);
     }
@@ -274,7 +275,7 @@
 
     //fabricJS mouse-down event listener
     overlay.fabricCanvas().observe('mouse:down', function(o){
-         console.log("EVENT TRIGERRED: fabricjs-mouse:down");
+         // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
          console.log("mouse mode is " + getMouseMode());
          if(getMouseMode()=="addAnnotation") {
              isDown = true;
@@ -341,11 +342,12 @@
             t1.fontSize *= t1.fixedWidth / (t1.width + 1);
             t1.width = t1.fixedWidth;
         }
+        //TODONOW call alterannotation here?
     });
 
     //fabricJS mouse-up event listener
     overlay.fabricCanvas().on('mouse:up', function(o){
-        console.log("EVENT TRIGERRED: fabricj-mouse:up");
+        // console.log("EVENT TRIGERRED: fabricj-mouse:up");
         if(getMouseMode()=="addAnnotation") {
             /* TODO:
             Might have to check annotationsDict here?
@@ -354,8 +356,6 @@
             If they save and immediately redraw you'll get a duplicate :/
              */
 
-            //TODONOW: if textbox mode, add textbox and serialize that. delete bounding rectangle.
-            console.log("serialize that");
             //need to draw textbox here
             var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
             createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
@@ -445,7 +445,6 @@
         return mouseMode;
     }
 
-
     function duplicateObject(object) {
         var objectCopy = {
             left: object["left"],
@@ -520,8 +519,6 @@
     }
 
     function createNewSerialization(fabricObject, x, y) {
-        console.log("these are the coordinates son");
-        console.log("x:" + x + "y:" + y);
         if(fabricObject.type=="textboxPreview") {
             text = new fabric.Textbox('MyText', {
                 width: x-origX,
@@ -529,7 +526,7 @@
                 left: origX,
                 fontSize: 100,
                 textAlign: 'center'
-            }); //TODO: remove the fixed width stuff
+            });
             currentAnnotationType=text;
             overlay.fabricCanvas().add(text);
             textboxPreview.remove();
@@ -540,6 +537,8 @@
         }
 
         var temp = duplicateObject(fabricObject);
+        console.log("add annotation dump");
+        console.log(temp);
         $.ajax({
             type: "POST",
             url: '/xgds_image/addAnnotation/',
@@ -549,23 +548,23 @@
                 image_pk: 1
             },
             success: function(data) {
-
+                console.log("successfully added annotation");
+                console.log(data["pk"]);
+                fabricObject.set({pk: data["pk"], image: data["image_pk"]}); //TODONOW: is it image or image_pk?
             },
             error: function(e) {
                 console.log("Ajax error");
                 console.log(e);
             }
         });
-
     }
 
-    /* ugh should probably only re-serialize the modified object but that requires thinking */
     function updateSerialization(fabricObject) {
         console.log("serializing an individual fabric object");
         console.log("fabricObject")
         console.log(fabricObject);
         var temp = duplicateObject(fabricObject);
-        console.log("temp");
+        console.log("alter annotation dump");
         console.log(temp);
 
         // if(!("pk" in fabricObject)) {
@@ -580,7 +579,7 @@
             datatype: 'json',
             data: {
                 //annotation: Json.stringify(fabricObject),
-                annotation: JSON.stringify(temp), //TODO: we're losing pk somewhere
+                annotation: JSON.stringify(temp),
                 image_pk: 1
             },
             success: function(data) {
@@ -651,7 +650,7 @@
         }else{ //otherwise, add annotation to annotationsDict and draw it by calling one of the addShapeToCanvas() functions below
             annotationsDict[annotationJson["pk"]] = annotationJson;
         }
-
+        //TODONOW: if an object has just been created it has no pk in its json js side.
         if(annotationJson["annotationType"]=="Rectangle") {
             addRectToCanvas(annotationJson);
         } else if(annotationJson["annotationType"]=="Ellipse") {
@@ -727,7 +726,7 @@
 
     function addTextToCanvas(annotationJson) {
         console.log("Attempting to draw saved text to canvas");
-        text = new fabric.Text("hello world", {
+        text = new fabric.Textbox("hello world", {
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: annotationJson["stokeWidth"],
@@ -740,7 +739,9 @@
             text: annotationJson["content"], //text should be the right field here
             type: 'text',
             pk: annotationJson["pk"],
-            image: annotationJson["image"]
+            image: annotationJson["image"],
+            textAlign: 'center',
+            fontSize: 100 //Font size is static for now
         });
         overlay.fabricCanvas().add(text);
         overlay.fabricCanvas().renderAll();
@@ -777,8 +778,13 @@ xgds ref
 
 /*
 
-TODO: look into textboxes. Fabricjs textboxes are absolute trash.
-TODO: rectangle preview textbox
+TODO: add printlns to views and the js file. console prints correct annotation[text] content. but views only gets "MyText" :/
+the js side appears to be good...
+
+TODO: make sure textbox content is being updated correctly in annotationJson passed thru
+TODO: store text in django database (text->content transition might be iffy)
+TODO: de-hardcode image_pk
+
 TODO: select textbox editable after added to canvas
 TODO: change checked to reflect state of mousemode
 

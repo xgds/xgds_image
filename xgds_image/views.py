@@ -468,7 +468,7 @@ def alterAnnotation(request):
         print "temp"
         print temp
         try:
-            image = newAnnotation["image"]
+            image = request.POST.get('image_pk')
             pk = newAnnotation["pk"]
             queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
             annotationModel = queryResult[0]
@@ -489,6 +489,8 @@ def alterAnnotation(request):
         else: #it's text
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
+            print "alterAnnotation!!!!!! textbox content"
+            print newAnnotation["text"]
             annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
 
             # add common variables
@@ -558,6 +560,8 @@ def addAnnotation(request):
             annotationModel = TextAnnotation()
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
+            print "TEXT TEXT TEXT"
+            print newAnnotation["text"]
             annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
 
         # add common variables
@@ -573,7 +577,8 @@ def addAnnotation(request):
         annotationModel.author = request.user
         annotationModel.image_id = request.POST.get('image_pk')
         annotationModel.save()
-        return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
+
+        return HttpResponse(json.dumps(annotationModel.toJson()),
                             content_type='application/json')
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
