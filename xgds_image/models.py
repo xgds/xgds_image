@@ -586,6 +586,8 @@ class TextAnnotation(AbstractAnnotation):
     content = models.CharField(max_length=512, default='')
     isBold = models.BooleanField(default=False)
     isItalics = models.BooleanField(default=False)
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
 
     def getJsonType(self):
         return 'Text'

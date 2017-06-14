@@ -476,29 +476,29 @@
         return JSON.stringify(retval);
     }
 
-    //TODO: pretty sure I can delete this but keep around a bit longer
-    function serializeToJSON() { //TODO: need to not save duplicate entries... maybe do that on the python side... just dont save if it has a pk? needs to coordinate from alterAnnotations()
-        throw new Error("serializeToJson is depreciated! Don't use this function");
-        return;
-
-        console.log("attempting to serialize");
-        $.ajax({
-            type: "POST",
-            url: '/xgds_image/saveAnnotations/', //TODO should be able to get this from url // maybe change the url/hard code it
-            datatype: 'json',
-            data: {
-                mapAnnotations: JSON.stringify(overlay.fabricCanvas()), //TODO: can't just JSON.stringify, need to add our own fields
-                // mapAnnotations: objectListToJsonList(overlay.fabricCanvas().getObjects()),
-                image_pk: 1 // on the single image page it's app.options.modelPK, on the multi image page we have to get it from the selected item
-            },
-            success: function(data) {
-                 console.log("ajax return call json " + data);
-            },
-            error: function(a,b,c,d) {
-                console.log(a);
-            }
-        });
-    }
+    // //TODO: pretty sure I can delete this but keep around a bit longer
+    // function serializeToJSON() { //TODO: need to not save duplicate entries... maybe do that on the python side... just dont save if it has a pk? needs to coordinate from alterAnnotations()
+    //     throw new Error("serializeToJson is depreciated! Don't use this function");
+    //     return;
+    //
+    //     console.log("attempting to serialize");
+    //     $.ajax({
+    //         type: "POST",
+    //         url: '/xgds_image/saveAnnotations/', //TODO should be able to get this from url // maybe change the url/hard code it
+    //         datatype: 'json',
+    //         data: {
+    //             mapAnnotations: JSON.stringify(overlay.fabricCanvas()), //TODO: can't just JSON.stringify, need to add our own fields
+    //             // mapAnnotations: objectListToJsonList(overlay.fabricCanvas().getObjects()),
+    //             image_pk: 1 // on the single image page it's app.options.modelPK, on the multi image page we have to get it from the selected item
+    //         },
+    //         success: function(data) {
+    //              console.log("ajax return call json " + data);
+    //         },
+    //         error: function(a,b,c,d) {
+    //             console.log(a);
+    //         }
+    //     });
+    // }
 
     //TODO: should probably change the name of this function
     function deserializeFromJSON() {
@@ -508,7 +508,7 @@
             datatype: 'json',
             success: function(data) {
                 console.log(data);
-                data.forEach(function(annotation) { //TODO: change name of the parameter
+                data.forEach(function(annotation) {
                     addAnnotationToCanvas(annotation);
                 });
             },
@@ -719,13 +719,14 @@
             image: annotationJson["image"]
         });
         console.log("image and pk pls");
-        JSON.stringify(overlay.fabricCanvas());
         overlay.fabricCanvas().add(arrow);
         overlay.fabricCanvas().renderAll();
     }
 
     function addTextToCanvas(annotationJson) {
         console.log("Attempting to draw saved text to canvas");
+        console.log("text annotation object");
+        console.log(annotationJson);
         text = new fabric.Textbox("hello world", {
             left: annotationJson["left"],
             top: annotationJson["top"],
@@ -734,15 +735,22 @@
             originY: annotationJson["originY"],
             fill: annotationJson["fill"], //TODO: this is a pointer, need to access database to pull this color out
             angle: annotationJson["angle"],
-            width: annotationJson["width"],
+            // width: annotationJson["width"],
             height: annotationJson["height"],
-            text: annotationJson["content"], //text should be the right field here
-            type: 'text',
+            text: annotationJson["content"], //text should be the right field here //todonow: this may be the wrong thing to call it.
+            type: 'text', //TODO todonow todowill what have we got here
             pk: annotationJson["pk"],
             image: annotationJson["image"],
             textAlign: 'center',
             fontSize: 100 //Font size is static for now
         });
+        console.log("textbox width (this is causing the error: " + annotationJson["width"]);
+        //yup, we got some redundant parametesr here son.
+        //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
+        //the width is undef. textbox no field width.
+
+
+        console.log("IT's GETTIN HERE BOI");
         overlay.fabricCanvas().add(text);
         overlay.fabricCanvas().renderAll();
     }
@@ -777,6 +785,21 @@ xgds ref
 */
 
 /*
+TODO: text content doesn't change on creation
+TODO: select text after adding it to canvas, stay in edit mode
+
+
+aw shit. 2 problems
+1.) database text content isn't making it back out to the js side correctly
+2.) modifications to text aren't make it back
+TODO: still have the problem of text ot being sent correctly to the back.
+
+
+
+
+TODO: add blank lines to text to make rectangle the right size
+
+TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
 
 TODO: add printlns to views and the js file. console prints correct annotation[text] content. but views only gets "MyText" :/
 the js side appears to be good...
@@ -814,7 +837,7 @@ TODO: LATER
 TODO: something wacko is happenign with stroke color in models
 TODO: release as an open source plugin
 TODO: rect vs rectangle (ugh fabricjs uses rect)
-
+TODO: namespace/organize all of this to be opensourceable
 
 TODO: monitor
 TODO: prototyping/javascript namespace

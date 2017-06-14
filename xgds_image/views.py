@@ -558,10 +558,12 @@ def addAnnotation(request):
             annotationModel.points = json.dumps(newAnnotation["points"])
         else:  # it's text
             annotationModel = TextAnnotation()
+            print "does it exist tho "
+            print newAnnotation["width"]
+            print "does it tho "
+            print newAnnotation["height"]
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
-            print "TEXT TEXT TEXT"
-            print newAnnotation["text"]
             annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
 
         # add common variables
