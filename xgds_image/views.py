@@ -524,7 +524,8 @@ def getAnnotationColorsJson(request):
     result = []
     for color in colors:
         result.append(model_to_dict(color))
-    return JsonResponse(result) #TODO: hopefully this json response works
+    return HttpResponse(json.dumps(result), content_type='application/json');
+    # return JsonResponse(result) #TODO: hopefully this json response works
 
 def deleteAnnotation(request):
     try:
@@ -562,7 +563,7 @@ def addAnnotation(request):
             print newAnnotation["width"]
             print "does it tho "
             print newAnnotation["height"]
-            annotationModel.width = newAnnotation["width"]
+            annotationModel.width = newAnnotation["width"] #added with as a field and MANUALLY added the column in MariaDB. May want to double check functionality after prep migrations
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
 

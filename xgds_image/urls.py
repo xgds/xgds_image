@@ -33,7 +33,7 @@ urlpatterns = [
     url(r'^saveAnnotations/$', views.saveAnnotations, {}, 'xgds_image_save_annotations'),
     url(r'^getAnnotations/(?P<imagePK>[\d]+)$', views.getAnnotationsJson, {}, 'xgds_image_get_annotations'),
     url(r'^alterAnnotation/$', views.alterAnnotation, {}, 'xgds_image_alter_annotations'),
-    url(r'^getAnnotationColorsJson/$', views.getAnnotationColorsJson, {}, 'xgds_image_get_annotation_colors'),
+    url(r'^getAnnotationColors/$', views.getAnnotationColorsJson, {}, 'xgds_image_get_annotation_colors'),
     url(r'^deleteAnnotation/$', views.deleteAnnotation, {}, 'xgds_image_delete_annotation'),
     url(r'^addAnnotation/$', views.addAnnotation, {}, 'xgds_image_add_annotation'),
 ]

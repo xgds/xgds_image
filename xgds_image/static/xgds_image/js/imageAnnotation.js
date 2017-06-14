@@ -36,6 +36,13 @@
      */
     var annotationsDict = {};
 
+    /*
+     Stores a dictionary of pre-set (string)color -> (string)hex pairs.
+     Loaded through ajax on document.onReady()
+     */
+    var colorsDictionary = {};
+
+
     /* the mouse can be in 3 modes:
         1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
         2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
@@ -49,7 +56,10 @@
      */
     var annotationType = "arrow";
 
-    // addRectToCanvas(1000, 1000);
+    $(document).ready(function() {
+        //load colors dictionary
+        getAnnotationColors();
+    });
 
     //Euclidean distance between (x1,y1) and (x2,y2)
     function distanceFormula(x1, y1, x2, y2) {
@@ -421,6 +431,8 @@
                 setFabricCanvasInteractivity(false);
                 deselectFabricObjects();
                 viewer.setMouseNavEnabled(true);
+                // $('#viewerWrapper').css('cursor', 'crosshair');
+                document.getElementById("viewerWrapper").style.cursor="crosshair";
                 break;
             case "addAnnotation":
                 console.log("mousemode: addAnnotation");
@@ -433,6 +445,8 @@
                 console.log("mousemode: editAnnotation");
                 mouseMode="editAnnotation";
                 setFabricCanvasInteractivity(true);
+                // $('#viewerWrapper').css('cursor', 'wait');
+                document.getElementById("viewerWrapper").style.cursor="pointer";
                 viewer.setMouseNavEnabled(false);
                 break;
             default:
@@ -593,12 +607,15 @@
     }
 
     function getAnnotationColors() {
+        console.log("JSON response w/ color dictionary incoming");
         $.ajax({
             type: "POST",
             url: '/xgds_image/getAnnotationColors/',
             datatype: 'json',
-            success: function(data) {
-                console.log(data);
+            success: function(colorsJson) {
+                colorsJson.forEach(function(color) {
+                    colorsDictionary[color["id"]]={name: color["name"], hex: color["hex"]};
+                });
             },
             error: function(a) {
                 console.log("Ajax error");
@@ -735,7 +752,7 @@
             originY: annotationJson["originY"],
             fill: annotationJson["fill"], //TODO: this is a pointer, need to access database to pull this color out
             angle: annotationJson["angle"],
-            // width: annotationJson["width"],
+            width: annotationJson["width"],
             height: annotationJson["height"],
             text: annotationJson["content"], //text should be the right field here //todonow: this may be the wrong thing to call it.
             type: 'text', //TODO todonow todowill what have we got here
@@ -785,51 +802,34 @@ xgds ref
 */
 
 /*
-TODO: text content doesn't change on creation
+DONE: colors dictionary now populates
+
 TODO: select text after adding it to canvas, stay in edit mode
+TODO: add blank lines to text to make rectangle the right size <-- this one really annoys me but seems quite annoying to fix as well
+TODO: add intuitive mouse controls <-- for some reason mousemode isn't responding in the openseadragon viewer
+TODO: fill color
 
-
-aw shit. 2 problems
-1.) database text content isn't making it back out to the js side correctly
-2.) modifications to text aren't make it back
-TODO: still have the problem of text ot being sent correctly to the back.
-
-
-
-
-TODO: add blank lines to text to make rectangle the right size
+TODO: ask tamar how to organize... all of this
 
 TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
 
 TODO: add printlns to views and the js file. console prints correct annotation[text] content. but views only gets "MyText" :/
 the js side appears to be good...
 
-TODO: make sure textbox content is being updated correctly in annotationJson passed thru
-TODO: store text in django database (text->content transition might be iffy)
 TODO: de-hardcode image_pk
 
-TODO: select textbox editable after added to canvas
-TODO: change checked to reflect state of mousemode
 
-TODO: check if text content is saved/loaded from database. make textbox scale
-
-TODO: make sure delete works (now everything should have a pk).
 TODO: color picker
 TODO: all annotations on/off
 TODO: export canvas as picture
 TODO: load colors
-TODO: delete annotation
 TODO: colors dictionary
 TODO: should I be storing a list of objects on the js side so that show/hide annotations works quickly?
-
 
 
 TODO: wacko rectangle drawing behavior
 TODO: add try catch to views.py
 TODO: clean up JSONresponse vs HTTP response
-
-
-
 
 
 
