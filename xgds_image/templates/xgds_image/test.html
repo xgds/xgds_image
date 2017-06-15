@@ -4,6 +4,9 @@
     {{ block.super }}
         <script type="text/javascript" src='{{ EXTERNAL_URL }}fabric.js/dist/fabric.min.js'></script>
         <script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
+        <script type="text/javascript" src='{{ EXTERNAL_URL }}spectrum/spectrum.js'></script>
+        <link rel="stylesheet" type="text/css" href='{{ EXTERNAL_URL }}spectrum/spectrum.css'>
+{#        <script type="text/css" src='{{ EXTERNAL_URL }}'spectrum/>spectrum.css'></script>#}
         saveAnnotationsUrl = "{% url 'xgds_image_save_annotations' %}";
         loadAnnotationsUrl = "{% url 'xgds_image_get_annotations' 1 %}";
         <script type="text/javascript" src='{{ STATIC_URL }}xgds_image/js/imageAnnotation.js'></script>
@@ -34,7 +37,7 @@
     <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="loadAnnotation">Load Annotation</button>
     <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="saveAnnotation">Save Annotations</button>
     <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="deleteAnnotation">Delete Selected Annotation</button>
-
+    <input type='text' id="colorPicker"/>
     <div id="viewerWrapper">
             <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
     </div>

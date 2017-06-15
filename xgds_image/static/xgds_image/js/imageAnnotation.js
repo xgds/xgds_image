@@ -412,6 +412,18 @@
         deleteActiveAnnotation();
     });
 
+    //Color picker
+    $("#colorPicker").spectrum({
+        showPaletteOnly: true,
+        showPalette:true,
+        color: 'blanchedalmond',
+        palette: [
+            ['black', 'white', 'blanchedalmond',
+            'rgb(255, 128, 0);', 'hsv 100 70 50'],
+            ['red', 'yellow', 'green', 'blue', 'violet']
+        ]
+    });
+
     //sets if you can interact with objects on the fabricjs canvas
     function setFabricCanvasInteractivity(boolean) {
         overlay.fabricCanvas().forEachObject(function(object){
@@ -795,6 +807,14 @@ pk: store pk's in a pk-json dictionary to prevent duplicate loads and to manipul
  */
 
 /* TODO:
+
+The four big things left I think are
+1.) color picker (all the backend (i.e. dictionaries) is set up. Just need to connect to some kind of front end UI).
+2.) Export canvas as an image
+3.) turn annotations on/off
+4.)
+
+
 mouse modes
 serialization
 color pallete
