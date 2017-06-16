@@ -83,7 +83,7 @@
                                    A N N O T A T I O N S (Initializers and Updaters)
 
      *****************************************************************************************************************/
-
+    //annotations
     //Euclidean distance between (x1,y1) and (x2,y2)
     function distanceFormula(x1, y1, x2, y2) {
         var xDist = Math.pow((x1-x2),2);
@@ -314,6 +314,7 @@
                                                E V E N T  L I S T E N E R S
 
      *****************************************************************************************************************/
+    //event listeners
     //fabricJS mouse-down event listener
     overlay.fabricCanvas().observe('mouse:down', function(o){
          // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
@@ -402,6 +403,41 @@
         console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
         var mode = $("input[name='cursorMode']:checked").val();
         setMouseMode(mode);
+    });
+
+     $("input[name='annotationsOnOrOff']").change(function() {
+        var onOff = $("input[name='annotationsOnOrOff']:checked").val();
+        var objects = overlay.fabricCanvas().getObjects();
+        if(onOff=="off") {
+            for(var i=0; i<objects.length; i++) {
+                //set all objects as invisible and lock in position
+                objects[i].visible=false;
+                objects[i].lockMovementX=true;
+                objects[i].lockMovementY=true;
+                objects[i].lockRotation=true;
+                objects[i].lockScalingFlip=true;
+                objects[i].lockScalingX=true;
+                objects[i].lockScalingY=true;
+                objects[i].lockSkewingX=true;
+                objects[i].lockSkewingY=true;
+                objects[i].lockUniScaling=true;
+            }
+        }else{
+            //set all objects as visible and unlock
+            for(var i=0; i<objects.length; i++) {
+                objects[i].visible=true;
+                objects[i].lockMovementX=false;
+                objects[i].lockMovementY=false;
+                objects[i].lockRotation=false;
+                objects[i].lockScalingFlip=false;
+                objects[i].lockScalingX=false;
+                objects[i].lockScalingY=false;
+                objects[i].lockSkewingX=false;
+                objects[i].lockSkewingY=false;
+                objects[i].lockUniScaling=false;
+            }
+        }
+        overlay.fabricCanvas().renderAll();
     });
 
     $("input[name='annotationType']").change(function(){
@@ -925,8 +961,7 @@ COLOR STUFF
 TODO: fill color
 TODO: colorPicker.onChange -> getColor -> setGlobalColor variable (always pointer)
 TODO: load color palette colorset from colorsDictionary
-TODO: set default color annotation to be white--should be colorDictionary[0].name
-TODO: set fill/stroke to currentAnnotationColor in createNewSerialization
+TODO: set default color annotation to be white--instead it should be colorDictionary[0].name
 TODO: make sure all colors are in canonical form (e.g. rgb(r,g,b)
 
 CURSOR STUFF
@@ -939,30 +974,19 @@ TODO: should we have an option to save w/ or w/o annotations?
 Right now we have two images. Annotations w/ transparent background and the OSD view. Can either try to set background on the fabricjs canvas and export that
 OR blend the two images.
 
+
+MISCELLANEOUS
+TODO: all annotations on/off
+TODO: de-hardcode image_pk
 TODO: Standardize initialization settings
+TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
+
+
 
 
 TODO: ask tamar how to organize... all of this
 
-TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
 
-TODO: add printlns to views and the js file. console prints correct annotation[text] content. but views only gets "MyText" :/
-the js side appears to be good...
-
-TODO: de-hardcode image_pk
-
-
-TODO: color picker
-TODO: all annotations on/off
-TODO: export canvas as picture
-TODO: load colors
-TODO: colors dictionary
-TODO: should I be storing a list of objects on the js side so that show/hide annotations works quickly?
-TODO: load colors correctly
-
-TODO: wacko rectangle drawing behavior
-TODO: add try catch to views.py
-TODO: clean up JSONresponse vs HTTP response
 
 
 
@@ -974,6 +998,10 @@ TODO: namespace/organize all of this to be opensourceable <--- events section in
 
 TODO: monitor
 TODO: prototyping/javascript namespace
+TODO: wacko rectangle drawing behavior
+TODO: add try catch to views.py
+TODO: clean up JSONresponse vs HTTP response
+
 
 
  */
