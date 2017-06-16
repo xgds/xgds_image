@@ -56,10 +56,33 @@
      */
     var annotationType = "arrow";
 
+    /*
+    Default annotation color to draw annotations in
+     */
+    var currentAnnotationColor = "white";
+
     $(document).ready(function() {
+        //Color picker (should this be onLoad?)
+        $("#colorPicker").spectrum({
+            showPaletteOnly: true,
+            showPalette:true,
+            color: 'blanchedalmond', //I think this is the default color
+            palette: [
+                ['black', 'white', 'blanchedalmond',
+                'rgb(255, 128, 0);', 'hsv 100 70 50'],
+                ['red', 'yellow', 'green', 'blue', 'violet']
+            ]
+        });
         //load colors dictionary
         getAnnotationColors();
+
     });
+
+     /****************************************************************************************************************
+
+                                   A N N O T A T I O N S (Initializers and Updaters)
+
+     *****************************************************************************************************************/
 
     //Euclidean distance between (x1,y1) and (x2,y2)
     function distanceFormula(x1, y1, x2, y2) {
@@ -73,7 +96,7 @@
             left: x,
             top: y,
             stroke: "red",
-            strokeWidth: 15,
+            strokeWidth: 25,
             originX: 'center',
             originY: 'center',
             type: 'line'
@@ -92,9 +115,9 @@
             left: x,
             top: y,
             radius: 1,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
+            strokeWidth: 25,
+            stroke: currentAnnotationColor,
+            fill: '',
             selectable: true,
             originX: 'center',
             originY: 'center',
@@ -115,9 +138,9 @@
             left: x,
             top: y,
             radius: 1,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
+            strokeWidth: 25,
+            stroke: currentAnnotationColor,
+            fill: '',
             selectable: true,
             originX: 'center',
             originY: 'center',
@@ -138,7 +161,9 @@
         rectangle = new fabric.Rect({
             left: x,
             top: y,
-            fill: 'blue',
+            fill: '',
+            strokeWidth: 25,
+            stroke: currentAnnotationColor,
             width: 1,
             height: 1,
             type: 'rect'
@@ -159,8 +184,8 @@
             left: x,
             top: y,
             fill: "",
-            strokeWidth: 5,
-            stroke: 'black',
+            strokeWidth: 25,
+            stroke: currentAnnotationColor,
             width: 1,
             height: 1,
             type: 'textboxPreview'
@@ -176,6 +201,7 @@
         textboxPreview.set({width: width, height: height});
         currentAnnotationType = textboxPreview
     }
+
     function initializeText(x, y) {
         text = new fabric.Textbox('MyText', {
             width: 150,
@@ -204,7 +230,7 @@
     function drawArrow(x, y) {
         var headlen = 100;  // arrow head size
         arrow = new fabric.Polyline(calculateArrowPoints(origX,origY,x,y,headlen), {
-            fill: 'white',
+            fill: currentAnnotationColor,
             stroke: 'black',
             opacity: 1,
             strokeWidth: 2,
@@ -283,6 +309,11 @@
         return points;
     }
 
+    /****************************************************************************************************************
+
+                                               E V E N T  L I S T E N E R S
+
+     *****************************************************************************************************************/
     //fabricJS mouse-down event listener
     overlay.fabricCanvas().observe('mouse:down', function(o){
          // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
@@ -311,9 +342,6 @@
                     console.log("welp, that shouldn't have happened. Undefined annotationType");
                     throw new Error("Tried to switch to an undefined annotationType");
              }
-             // other shapes we might want later
-             // initializeCircle(pointer.x, pointer.y);
-             // initializeLine(pointer.x, pointer.y);
          }
     });
 
@@ -340,8 +368,6 @@
                 console.log("welp, that shouldn't have happened. Undefined annotationType");
                 throw new Error("Tried to switch to an undefined annotationType");
          }
-         // updateCircleRadius(pointer.x, pointer.y, origX, origY); //do I need to pass this or can I access it as a member? in general, need to clarify b/w member obj.
-         // updateLineEndpoint(pointer.x, pointer.y);
           overlay.fabricCanvas().renderAll();
     });
 
@@ -352,20 +378,12 @@
             t1.fontSize *= t1.fixedWidth / (t1.width + 1);
             t1.width = t1.fixedWidth;
         }
-        //TODONOW call alterannotation here?
     });
 
     //fabricJS mouse-up event listener
     overlay.fabricCanvas().on('mouse:up', function(o){
         // console.log("EVENT TRIGERRED: fabricj-mouse:up");
         if(getMouseMode()=="addAnnotation") {
-            /* TODO:
-            Might have to check annotationsDict here?
-            Annoying because annotations here won't have a database pk
-
-            If they save and immediately redraw you'll get a duplicate :/
-             */
-
             //need to draw textbox here
             var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
             createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
@@ -405,24 +423,94 @@
     });
 
     $('#saveAnnotation').click(function() {
-       serializeToJSON();
+       // serializeToJSON();
+        //TODONOW: set background as correct image
+        var img = viewer.drawer.canvas.toDataURL("image/png");
+        window.open(img);
+        window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
+        overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
+        // overlay.fabricCanvas().setBackgroundColor({source: 'https://localhost/static/basaltApp/css/logo.png'}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
+
+        // var img = new Image();
+        // img.setAttribute('crossOrigin', 'anonymous');
+        // img.src = "http://fabricjs.com/assets/escheresque_ste.png";
+        // overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
+
+        //TODO: remove background image here
+       console.log("blow on past taht error");
     });
 
     $('#deleteAnnotation').click(function() {
         deleteActiveAnnotation();
     });
 
-    //Color picker
-    $("#colorPicker").spectrum({
-        showPaletteOnly: true,
-        showPalette:true,
-        color: 'blanchedalmond',
-        palette: [
-            ['black', 'white', 'blanchedalmond',
-            'rgb(255, 128, 0);', 'hsv 100 70 50'],
-            ['red', 'yellow', 'green', 'blue', 'violet']
-        ]
+    $('#saveImage').click(function() {
+        var img = new Image();
+        // img.onload = function(){
+        //    overlay.fabricCanvas().setBackgroundImage(img.src, overlay.fabricCanvas().renderAll.bind(canvas), {
+        //             originX: 'left',
+        //             originY: 'top',
+        //             left: 0,
+        //             top: 0
+        //     });
+        // };
+        // img.src = "http://fabricjs.com/assets/escheresque_ste.png";
+
+        //gets the annotations
+        // window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
+        var annotation = overlay.fabricCanvas().toDataURL({format: 'image/png'});
+
+        //gets the OSD image
+        var osdView = viewer.drawer.canvas.toDataURL("image/png");
+
+        //somehow blend
+        var canvas = document.getElementById("openseadragon-container");
+        var context = canvas.getContext('2d');
+
+        var imageObj1 = new Image();
+        imageObj1.src = annotation;
+        imageObj1.onload = function() {
+            context.drawImage(imageObj1, x, y);
+        };
+
+        var imageObj2 = new Image();
+        imageObj2.src = osdView;
+        imageObj2.onload = function() {
+            context.drawImage(imageObj2, x, y);
+        };
+
+
+        //open
+        // window.open(canvas.toDataURL());
+
+
+
+        // var data = overlay.fabricCanvas().toDataURL({format:'png'});
+        // var img = new Image();
+        // img.src = data;
+        // window.open(img);
+    })
+
+   $("#colorPicker").on('change.spectrum', function(e, tinycolor) {
+        currentAnnotationColor = tinycolor;
+        console.log("currentAnnotationColor is: " + currentAnnotationColor);
+
     });
+
+    //set the color pallet
+    function populateColorPicker() {
+        console.log("inside color picker");
+        console.log(colorsDictionary.length);
+        console.log(colorsDictionary.length);
+        for(var i=0; i<colorsDictionary.length; i++) {
+            $("#colorPicker").spectrum("set", colorsDictionary[i].hex);
+            //this only stores the value of the color, doesn't keep a name with it
+            //doesn't matter, since we can go hex->name later anyways
+            //need to build this unique array string structure
+            console.log("reaching sir");
+        }
+    }
+
 
     //sets if you can interact with objects on the fabricjs canvas
     function setFabricCanvasInteractivity(boolean) {
@@ -565,6 +653,8 @@
         var temp = duplicateObject(fabricObject);
         console.log("add annotation dump");
         console.log(temp);
+
+        //TODO: set the color of the object to currentAnnotationColor
         $.ajax({
             type: "POST",
             url: '/xgds_image/addAnnotation/',
@@ -628,6 +718,7 @@
                 colorsJson.forEach(function(color) {
                     colorsDictionary[color["id"]]={name: color["name"], hex: color["hex"]};
                 });
+                populateColorPicker();
             },
             error: function(a) {
                 console.log("Ajax error");
@@ -824,10 +915,32 @@ xgds ref
 /*
 DONE: colors dictionary now populates
 
+TEXTBOX STUFF
 TODO: select text after adding it to canvas, stay in edit mode
 TODO: add blank lines to text to make rectangle the right size <-- this one really annoys me but seems quite annoying to fix as well
 TODO: add intuitive mouse controls <-- for some reason mousemode isn't responding in the openseadragon viewer
+
+
+COLOR STUFF
 TODO: fill color
+TODO: colorPicker.onChange -> getColor -> setGlobalColor variable (always pointer)
+TODO: load color palette colorset from colorsDictionary
+TODO: set default color annotation to be white--should be colorDictionary[0].name
+TODO: set fill/stroke to currentAnnotationColor in createNewSerialization
+TODO: make sure all colors are in canonical form (e.g. rgb(r,g,b)
+
+CURSOR STUFF
+TODO: inspect element and see if pointer/cursor mode is actually being attached
+
+EXPORT AS IMAGE
+TODO: export canvas as an image
+TODO: should we have an option to save w/ or w/o annotations?
+
+Right now we have two images. Annotations w/ transparent background and the OSD view. Can either try to set background on the fabricjs canvas and export that
+OR blend the two images.
+
+TODO: Standardize initialization settings
+
 
 TODO: ask tamar how to organize... all of this
 
@@ -845,7 +958,7 @@ TODO: export canvas as picture
 TODO: load colors
 TODO: colors dictionary
 TODO: should I be storing a list of objects on the js side so that show/hide annotations works quickly?
-
+TODO: load colors correctly
 
 TODO: wacko rectangle drawing behavior
 TODO: add try catch to views.py
@@ -857,7 +970,7 @@ TODO: LATER
 TODO: something wacko is happenign with stroke color in models
 TODO: release as an open source plugin
 TODO: rect vs rectangle (ugh fabricjs uses rect)
-TODO: namespace/organize all of this to be opensourceable
+TODO: namespace/organize all of this to be opensourceable <--- events section in spectrumjs has a good example
 
 TODO: monitor
 TODO: prototyping/javascript namespace
