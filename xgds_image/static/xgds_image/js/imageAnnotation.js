@@ -62,20 +62,14 @@
     var currentAnnotationColor = "white";
 
     $(document).ready(function() {
-        //Color picker (should this be onLoad?)
-        $("#colorPicker").spectrum({
+        //color picker
+        var spectrumOptions = {
             showPaletteOnly: true,
             showPalette:true,
-            color: 'blanchedalmond', //I think this is the default color
-            palette: [
-                ['black', 'white', 'blanchedalmond',
-                'rgb(255, 128, 0);', 'hsv 100 70 50'],
-                ['red', 'yellow', 'green', 'blue', 'violet']
-            ]
-        });
-        //load colors dictionary
-        getAnnotationColors();
-
+            palette: getPaletteColors(),
+            color: colorsDictionary[Object.keys(colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
+        };
+        $("#colorPicker").spectrum(spectrumOptions);
     });
 
      /****************************************************************************************************************
@@ -255,7 +249,7 @@
         // calculate the points.
         var pointsArray = calculateArrowPoints(x, y, headlen);
         arrow = new fabric.Polyline(pointsArray, {
-            fill: 'white',
+            fill: currentAnnotationColor,
             stroke: 'black',
             opacity: 1,
             strokeWidth: 2,
@@ -389,7 +383,7 @@
             var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
             createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
             setMouseMode("OSD");
-            //TODO: manually set menu mousemode back to OSD mode to correspond w/ previous line.
+            $("#navigateImage").click();
                         //             $("input[name='cursorMode']").prop('checked, ')
                         //               var mode = $("input[name='cursorMode']:checked").val();
                         //               $('.myCheckbox').prop('checked', true);
@@ -464,7 +458,9 @@
         var img = viewer.drawer.canvas.toDataURL("image/png");
         window.open(img);
         window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
-        overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
+
+
+        // overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
         // overlay.fabricCanvas().setBackgroundColor({source: 'https://localhost/static/basaltApp/css/logo.png'}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
 
         // var img = new Image();
@@ -532,21 +528,6 @@
         console.log("currentAnnotationColor is: " + currentAnnotationColor);
 
     });
-
-    //set the color pallet
-    function populateColorPicker() {
-        console.log("inside color picker");
-        console.log(colorsDictionary.length);
-        console.log(colorsDictionary.length);
-        for(var i=0; i<colorsDictionary.length; i++) {
-            $("#colorPicker").spectrum("set", colorsDictionary[i].hex);
-            //this only stores the value of the color, doesn't keep a name with it
-            //doesn't matter, since we can go hex->name later anyways
-            //need to build this unique array string structure
-            console.log("reaching sir");
-        }
-    }
-
 
     //sets if you can interact with objects on the fabricjs canvas
     function setFabricCanvasInteractivity(boolean) {
@@ -750,17 +731,44 @@
             type: "POST",
             url: '/xgds_image/getAnnotationColors/',
             datatype: 'json',
+            async: false,
             success: function(colorsJson) {
                 colorsJson.forEach(function(color) {
                     colorsDictionary[color["id"]]={name: color["name"], hex: color["hex"]};
                 });
-                populateColorPicker();
             },
             error: function(a) {
                 console.log("Ajax error");
                 console.log(a)
             }
         });
+    }
+
+    /*
+        Populate colorsDictionary through getAnnotationColors()
+        Return array for spectrum color picker palette
+     */
+    function getPaletteColors() {
+        getAnnotationColors(); //now the dictionary should be full
+
+        var retval = [];
+
+        var row1 = [];
+        var row2 = [];
+
+        var theKeys = Object.keys(colorsDictionary);
+
+        for(var i=0; i<theKeys.length; i=i+2){
+            console.log("row : " + i + ': ' +  colorsDictionary[theKeys[i]].hex);
+            row1.push(colorsDictionary[theKeys[i]].hex);
+            if (i + 1 < theKeys.length){
+                row2.push(colorsDictionary[theKeys[i+1]].hex);
+            }
+        }
+        retval.push(row1);
+        retval.push(row2);
+
+        return retval;
     }
 
     /* TODO: I think delete annotationsDict[annotation["pk]] should delete the key from the dictionary
@@ -905,7 +913,6 @@
         //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
         //the width is undef. textbox no field width.
 
-
         console.log("IT's GETTIN HERE BOI");
         overlay.fabricCanvas().add(text);
         overlay.fabricCanvas().renderAll();
@@ -955,38 +962,31 @@ TEXTBOX STUFF
 TODO: select text after adding it to canvas, stay in edit mode
 TODO: add blank lines to text to make rectangle the right size <-- this one really annoys me but seems quite annoying to fix as well
 TODO: add intuitive mouse controls <-- for some reason mousemode isn't responding in the openseadragon viewer
+TODO: yellow box, scale text, insert text here
 
 
 COLOR STUFF
-TODO: fill color
-TODO: colorPicker.onChange -> getColor -> setGlobalColor variable (always pointer)
-TODO: load color palette colorset from colorsDictionary
+*** TODO: load color palette colorset from colorsDictionary
 TODO: set default color annotation to be white--instead it should be colorDictionary[0].name
-TODO: make sure all colors are in canonical form (e.g. rgb(r,g,b)
+TODO: make sure all colors are in canonical form (e.g. rgb(r,g,b))
 
 CURSOR STUFF
 TODO: inspect element and see if pointer/cursor mode is actually being attached
 
 EXPORT AS IMAGE
-TODO: export canvas as an image
-TODO: should we have an option to save w/ or w/o annotations?
+**TODO: export canvas as an image
 
 Right now we have two images. Annotations w/ transparent background and the OSD view. Can either try to set background on the fabricjs canvas and export that
 OR blend the two images.
 
 
 MISCELLANEOUS
-TODO: all annotations on/off
-TODO: de-hardcode image_pk
+***TODO: de-hardcode image_pk
 TODO: Standardize initialization settings
-TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
-
-
-
-
+TODO: xgds_image_annotation namespace
 TODO: ask tamar how to organize... all of this
-
-
+TODO: add css
+****TODO: image_pk automation
 
 
 
@@ -1003,6 +1003,8 @@ TODO: add try catch to views.py
 TODO: clean up JSONresponse vs HTTP response
 
 
+SHOULD BE RESOLVED BUT KEEP AN EYE OUT
+TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
 
  */
 
