@@ -682,12 +682,16 @@ function createNewSerialization(fabricObject, x, y) {
         //maybe delete textbox
         //perhaps tie the rectanglepreview box to this object
     }
-    console.log("BEFORE");
     console.log(fabricObject);
-    console.log("inserting into database: " + getColorIdFromHex(fabricObject["stroke"])); //THE CORRECT COLOR IS HERE BUT DOESN'T REACH DATABASE
-    fabricObject["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-    console.log("AFTER");
-    console.log(fabricObject);
+    if(fabricObject.type == "arrow") {
+        fabricObject["fill"] = getColorIdFromHex(fabricObject["fill"]);
+        fabricObject["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+
+    }else{
+        fabricObject["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
+        fabricObject["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+    }
+
 
     var temp = duplicateObject(fabricObject);
     console.log("add annotation dump");
@@ -861,7 +865,6 @@ function addAnnotationToCanvas(annotationJson) {
     } else { //otherwise, add annotation to annotationsDict and draw it by calling one of the addShapeToCanvas() functions below
         annotationsDict[annotationJson["pk"]] = annotationJson;
     }
-    //TODONOW: if an object has just been created it has no pk in its json js side.
     if (annotationJson["annotationType"] == "Rectangle") {
         addRectToCanvas(annotationJson);
     } else if (annotationJson["annotationType"] == "Ellipse") {
@@ -930,7 +933,7 @@ function addArrowToCanvas(annotationJson) {
         strokeWidth: annotationJson["strokeWidth"],
         originX: annotationJson["originX"],
         originY: annotationJson["originY"],
-        fill: colorsDictionary[annotationJson["strokeColor"]].hex,
+        fill: colorsDictionary[annotationJson["fill"]].hex,
         angle: annotationJson["angle"],
         type: 'arrow',
         pk: annotationJson["pk"],
