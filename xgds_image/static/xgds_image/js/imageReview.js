@@ -235,6 +235,7 @@ $.extend(xgds_image,{
 //				return;
 //			}
 			this.removeViewer();
+			//TODO WILLIAM put in some clearAnnotations
 		} 
 		// try removing the raw image
 		try {
@@ -323,6 +324,8 @@ $.extend(xgds_image,{
 				}
 				
 			});
+			//TODO William put in the call to construction the annotation stuff
+			// xgds_image_annotations.initialize(imageJson, this.viewer);
 		} catch (err) {
 			console.log(err);
 			debugger;

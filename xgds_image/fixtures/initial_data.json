@@ -13,7 +13,7 @@
         "model": "xgds_image.AnnotationColor",
         "fields": {
             "name": "red",
-            "hex": "FF0000"
+            "hex": "#FF0000"
         }
     },
     {
@@ -21,7 +21,7 @@
         "model": "xgds_image.AnnotationColor",
         "fields": {
             "name": "green",
-            "hex": "00FF00"
+            "hex": "#00FF00"
         }
     },
     {
@@ -29,7 +29,7 @@
         "model": "xgds_image.AnnotationColor",
         "fields": {
             "name": "blue",
-            "hex": "0000FF"
+            "hex": "#0000FF"
         }
     }
 ]

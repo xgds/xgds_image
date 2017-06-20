@@ -542,8 +542,8 @@ def addAnnotation(request):
     if request.method == 'POST':
         print "inside addAnnotation()"
         temp = request.POST.get('annotation', None)
+        print temp
         newAnnotation = json.loads(temp)
-
         if newAnnotation["type"] == "rect":
             annotationModel = RectangleAnnotation()
             annotationModel.width = newAnnotation["width"]
@@ -571,10 +571,11 @@ def addAnnotation(request):
         annotationModel.left = newAnnotation["left"]
         annotationModel.top = newAnnotation["top"]
         annotationModel.strokeWidth = newAnnotation["strokeWidth"]
-        annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)
+        # annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)  # THIS IS THE PROBLEM LINE
+        annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"]);
         annotationModel.originX = newAnnotation["originX"]
         annotationModel.originY = newAnnotation["originY"]
-        annotationModel.fill = AnnotationColor.objects.get(pk=1)
+        annotationModel.fill = AnnotationColor.objects.get(pk=1)  #only time this would occur is if the shape is an arrow
         annotationModel.angle = newAnnotation["angle"]
 
         annotationModel.author = request.user
