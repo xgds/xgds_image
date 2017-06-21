@@ -678,22 +678,19 @@ function createNewSerialization(fabricObject, x, y) {
         overlay.fabricCanvas().add(text);
         textboxPreview.remove();
         fabricObject = text;
-        //create textbox
-        //maybe delete textbox
-        //perhaps tie the rectanglepreview box to this object
     }
     console.log(fabricObject);
-    if(fabricObject.type == "arrow") {
-        fabricObject["fill"] = getColorIdFromHex(fabricObject["fill"]);
-        fabricObject["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
-
-    }else{
-        fabricObject["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-        fabricObject["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
-    }
-
 
     var temp = duplicateObject(fabricObject);
+     if(fabricObject.type == "arrow") {
+        temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+        temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+
+    }else{
+        temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
+        temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+    }
+    
     console.log("add annotation dump");
     console.log(temp);
 
@@ -706,8 +703,6 @@ function createNewSerialization(fabricObject, x, y) {
             image_pk: 1
         },
         success: function (data) {
-            console.log("successfully added annotation");
-            console.log(data["pk"]);
             fabricObject.set({pk: data["pk"], image: data["image_pk"]});
         },
         error: function (e) {
@@ -718,23 +713,20 @@ function createNewSerialization(fabricObject, x, y) {
 }
 
 function updateSerialization(fabricObject) {
-    console.log("serializing an individual fabric object");
-    console.log("fabricObject")
-    console.log(fabricObject);
-
-    //convert annotation stroke from hex to django pk
-    //should we check if getColorIdFromHex returns null here?
-    // fabricObject["stroke"] = colorsDictionary[getColorIdFromHex(fabricObject["stroke"])].pk;
-
     var temp = duplicateObject(fabricObject);
+
+     if(fabricObject.type == "arrow") {
+        //TODO: this is a pointer already.
+        temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+        temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+
+    }else{
+        temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
+        temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+    }
+
     console.log("alter annotation dump");
     console.log(temp);
-
-    // if(!("pk" in fabricObject)) {
-    //     alert("You just made this annotation, click save to save it (maybe we should just turn autosave off for moving annotations");
-    //     return;
-    // }
-
     console.log(JSON.stringify(temp));
     $.ajax({
         type: "POST",
@@ -768,7 +760,6 @@ function getAnnotationColors() {
             colorsJson.forEach(function (color) {
                 colorsDictionary[color["id"]] = {name: color["name"], hex: color["hex"], id: color["id"]};
             });
-            //TODO: I think this results in undef
             currentAnnotationColor = colorsDictionary[Object.keys(colorsDictionary)[0]].hex;
         },
         error: function (a) {
@@ -822,9 +813,6 @@ function getPaletteColors() {
     return retval;
 }
 
-/* TODO: I think delete annotationsDict[annotation["pk]] should delete the key from the dictionary
- so we can use (pk in annotationsDict) later. But it might just set the value to undefined? idk gotta test
- */
 function deleteActiveAnnotation() {
     var annotation = overlay.fabricCanvas().getActiveObject();
     if (annotation["pk"] in annotationsDict) {
@@ -1030,8 +1018,14 @@ Make cursor cooporate
 
 arrow stroke always being black causes an issue
 text should change color w/ color picker
+alterAnnotation doesn't work correctly
+tie menu to controls
 
-
+good lordy what did I break
+can't unclick from editAnnotations (sometimes) <----- this is definitely a getColorIdFromHex() undef issue
+can't click annotations
+zoom breaks annotations (fill). This is because stroke is a number instead of the fill. Make sure js side always preserves HEX
+just a lot of cleaning up in general needed
 
 
 TEXTBOX STUFF

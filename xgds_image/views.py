@@ -559,13 +559,11 @@ def addAnnotation(request):
             annotationModel.points = json.dumps(newAnnotation["points"])
         else:  # it's text
             annotationModel = TextAnnotation()
-            print "does it exist tho "
             print newAnnotation["width"]
-            print "does it tho "
             print newAnnotation["height"]
-            annotationModel.width = newAnnotation["width"] #added with as a field and MANUALLY added the column in MariaDB. May want to double check functionality after prep migrations
+            annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
-            annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
+            annotationModel.content = newAnnotation["text"]
 
         # add common variables
         annotationModel.left = newAnnotation["left"]
