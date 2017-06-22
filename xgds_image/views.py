@@ -489,17 +489,15 @@ def alterAnnotation(request):
         else: #it's text
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
-            print "alterAnnotation!!!!!! textbox content"
             print newAnnotation["text"]
             annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
 
-            # add common variables
+        # add common variables
         annotationModel.left = newAnnotation["left"]
         annotationModel.top = newAnnotation["top"]
-        annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)
-        annotationModel.fill = AnnotationColor.objects.get(pk=1)
+        annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"])
+        annotationModel.fill = AnnotationColor.objects.get(pk=newAnnotation["fill"])
         annotationModel.angle = newAnnotation["angle"]
-
         annotationModel.save()
         return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
                         content_type='application/json')
@@ -569,7 +567,6 @@ def addAnnotation(request):
         annotationModel.left = newAnnotation["left"]
         annotationModel.top = newAnnotation["top"]
         annotationModel.strokeWidth = newAnnotation["strokeWidth"]
-        # annotationModel.strokeColor = AnnotationColor.objects.get(pk=1)  # THIS IS THE PROBLEM LINE
         annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"]);
         annotationModel.originX = newAnnotation["originX"]
         annotationModel.originY = newAnnotation["originY"]

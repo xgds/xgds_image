@@ -690,7 +690,7 @@ function createNewSerialization(fabricObject, x, y) {
         temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
         temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
     }
-    
+
     console.log("add annotation dump");
     console.log(temp);
 
@@ -718,10 +718,12 @@ function updateSerialization(fabricObject) {
      if(fabricObject.type == "arrow") {
         //TODO: this is a pointer already.
         temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+        console.log("updated color as " + getColorIdFromHex(fabricObject["fill"]));
         temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
     }else{
         temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
+        console.log("updated color as " + getColorIdFromHex(fabricObject["stroke"]));
         temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
     }
 
@@ -1023,8 +1025,8 @@ tie menu to controls
 
 good lordy what did I break
 can't unclick from editAnnotations (sometimes) <----- this is definitely a getColorIdFromHex() undef issue
-can't click annotations
-zoom breaks annotations (fill). This is because stroke is a number instead of the fill. Make sure js side always preserves HEX
+can't click annotations -- seems like fabricCanvas sometimes goes behind the OSD canvas. Occlusion of sorts.
+ now annotaitons all turn red on load bruhhhh (oh, only if you alter annotation and then save. So it's in updateSerialization()
 just a lot of cleaning up in general needed
 
 
