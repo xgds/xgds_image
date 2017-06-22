@@ -214,7 +214,8 @@ function initializeText(x, y) {
         top: y,
         left: x,
         fontSize: 100,
-        textAlign: 'center'
+        textAlign: 'center',
+        type: 'text'
     }); //TODO: remove the fixed width stuff
     currentAnnotationType = text;
     overlay.fabricCanvas().add(text);
@@ -672,7 +673,10 @@ function createNewSerialization(fabricObject, x, y) {
             top: origY,
             left: origX,
             fontSize: 100,
-            textAlign: 'center'
+            stroke: currentAnnotationColor,
+            fill: currentAnnotationColor,
+            textAlign: 'center',
+            type: 'text'
         });
         currentAnnotationType = text;
         overlay.fabricCanvas().add(text);
@@ -682,11 +686,14 @@ function createNewSerialization(fabricObject, x, y) {
     console.log(fabricObject);
 
     var temp = duplicateObject(fabricObject);
-     if(fabricObject.type == "arrow") {
+    if(fabricObject.type == "arrow") { //arrow only needs fill
         temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
         temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
-    }else{
+    }else if (fabricObject.type == "text") { //text needs both stroke and fill
+         temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
+         temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+    } else { //everything else only needs stroke
         temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
         temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
     }
@@ -715,15 +722,15 @@ function createNewSerialization(fabricObject, x, y) {
 function updateSerialization(fabricObject) {
     var temp = duplicateObject(fabricObject);
 
-     if(fabricObject.type == "arrow") {
-        //TODO: this is a pointer already.
+    if(fabricObject.type == "arrow") { //arrow only needs fill
         temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
-        console.log("updated color as " + getColorIdFromHex(fabricObject["fill"]));
         temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
-    }else{
+    }else if (fabricObject.type == "text") { //text needs both stroke and fill
         temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-        console.log("updated color as " + getColorIdFromHex(fabricObject["stroke"]));
+        temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+    } else { //everything else only needs stroke
+        temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
         temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
     }
 
@@ -945,7 +952,7 @@ function addTextToCanvas(annotationJson) {
         strokeWidth: annotationJson["strokeWidth"],
         originX: annotationJson["originX"],
         originY: annotationJson["originY"],
-        fill: annotationJson["fill"], //TODO: this is a pointer, need to access database to pull this color out
+        fill: colorsDictionary[annotationJson["fill"]].hex,
         angle: annotationJson["angle"],
         width: annotationJson["width"],
         height: annotationJson["height"],
@@ -1018,15 +1025,10 @@ Make textboxes nicer
 Make cursor cooporate
 
 
-arrow stroke always being black causes an issue
 text should change color w/ color picker
-alterAnnotation doesn't work correctly
 tie menu to controls
-
-good lordy what did I break
-can't unclick from editAnnotations (sometimes) <----- this is definitely a getColorIdFromHex() undef issue
+add bordercolor to django db
 can't click annotations -- seems like fabricCanvas sometimes goes behind the OSD canvas. Occlusion of sorts.
- now annotaitons all turn red on load bruhhhh (oh, only if you alter annotation and then save. So it's in updateSerialization()
 just a lot of cleaning up in general needed
 
 

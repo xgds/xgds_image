@@ -570,7 +570,7 @@ def addAnnotation(request):
         annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"]);
         annotationModel.originX = newAnnotation["originX"]
         annotationModel.originY = newAnnotation["originY"]
-        annotationModel.fill = AnnotationColor.objects.get(pk=newAnnotation["fill"])  #only time this would occur is if the shape is an arrow
+        annotationModel.fill = AnnotationColor.objects.get(pk=newAnnotation["fill"])
         annotationModel.angle = newAnnotation["angle"]
 
         annotationModel.author = request.user
