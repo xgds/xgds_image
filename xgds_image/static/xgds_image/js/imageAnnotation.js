@@ -469,9 +469,39 @@ $('#loadAnnotation').click(function () {
 $('#saveAnnotation').click(function () {
     // serializeToJSON();
     //TODONOW: set background as correct image
-    var img = viewer.drawer.canvas.toDataURL("image/png");
-    window.open(img);
-    window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
+    var img1 = viewer.drawer.canvas.toDataURL("image/png");
+    var img2 = overlay.fabricCanvas().toDataURL({format: 'image/png'});
+
+    // window.open(img1);
+    // window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
+
+    console.log("INITIAL IMAGE SIZES")
+    console.log(img1.length);
+    console.log(img2.length);
+
+
+    $.ajax({
+        type: "POST",
+        url: '/xgds_image/mergeImages/',
+        datatype: 'json',
+        data: {
+            image1: img1,
+            image2: img2
+        },
+        success: function (data) {
+            console.log("IMAGE MERGE SUCCESS");
+            console.log(data.length);
+
+            console.log("logged data");
+
+            var dataURI = "data:image/png;base64," + data;
+            window.open(dataURI);
+        },
+        error: function (e) {
+            console.log("Ajax error");
+            console.log(e);
+        }
+    });
 
 
     // overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
@@ -654,7 +684,6 @@ function deserializeFromJSON() {
             console.log(data);
             data.forEach(function (annotation) {
                 //convert django pk/id to hex color
-                console.log("deserialize object");
                 console.log(annotation);
                 // annotation["stroke"] = colorsDictionary[annotation["strokeColor"]].hex;
                 addAnnotationToCanvas(annotation);
@@ -675,6 +704,7 @@ function createNewSerialization(fabricObject, x, y) {
             fontSize: 100,
             stroke: currentAnnotationColor,
             fill: currentAnnotationColor,
+            borderColor: currentAnnotationColor,
             textAlign: 'center',
             type: 'text'
         });
@@ -876,7 +906,6 @@ function addAnnotationToCanvas(annotationJson) {
 }
 
 function addRectToCanvas(annotationJson) {
-    console.log("Attempting to draw saved rectangle to canvas");
     var rect = new fabric.Rect({
         left: annotationJson["left"],
         top: annotationJson["top"],
@@ -897,9 +926,6 @@ function addRectToCanvas(annotationJson) {
 }
 
 function addEllipseToCanvas(annotationJson) {
-    console.log("Attempting to draw saved ellipse to canvas");
-    console.log(annotationJson);
-
     ellipse = new fabric.Ellipse({
         left: annotationJson["left"],
         top: annotationJson["top"],
@@ -915,7 +941,6 @@ function addEllipseToCanvas(annotationJson) {
         pk: annotationJson["pk"],
         image: annotationJson["image"]
     });
-    console.log("what does this pointer look like: " + annotationJson["fill"]);
     overlay.fabricCanvas().add(ellipse);
     overlay.fabricCanvas().renderAll();
 }
@@ -942,7 +967,6 @@ function addArrowToCanvas(annotationJson) {
 }
 
 function addTextToCanvas(annotationJson) {
-    console.log("Attempting to draw saved text to canvas");
     console.log("text annotation object");
     console.log(annotationJson);
     text = new fabric.Textbox("hello world", {
@@ -953,6 +977,7 @@ function addTextToCanvas(annotationJson) {
         originX: annotationJson["originX"],
         originY: annotationJson["originY"],
         fill: colorsDictionary[annotationJson["fill"]].hex,
+        borderColor: colorsDictionary[annotationJson["fill"]].hex,
         angle: annotationJson["angle"],
         width: annotationJson["width"],
         height: annotationJson["height"],
@@ -968,7 +993,6 @@ function addTextToCanvas(annotationJson) {
     //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
     //the width is undef. textbox no field width.
 
-    console.log("IT's GETTIN HERE BOI");
     overlay.fabricCanvas().add(text);
     overlay.fabricCanvas().renderAll();
 }
@@ -1025,9 +1049,7 @@ Make textboxes nicer
 Make cursor cooporate
 
 
-text should change color w/ color picker
 tie menu to controls
-add bordercolor to django db
 can't click annotations -- seems like fabricCanvas sometimes goes behind the OSD canvas. Occlusion of sorts.
 just a lot of cleaning up in general needed
 

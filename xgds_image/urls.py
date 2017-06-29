@@ -36,4 +36,5 @@ urlpatterns = [
     url(r'^getAnnotationColors/$', views.getAnnotationColorsJson, {}, 'xgds_image_get_annotation_colors'),
     url(r'^deleteAnnotation/$', views.deleteAnnotation, {}, 'xgds_image_delete_annotation'),
     url(r'^addAnnotation/$', views.addAnnotation, {}, 'xgds_image_add_annotation'),
+    url(r'^mergeImages/$', views.mergeImages, {}, 'xgds_image_merge_images')
 ]

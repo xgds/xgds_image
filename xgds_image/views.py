@@ -557,8 +557,6 @@ def addAnnotation(request):
             annotationModel.points = json.dumps(newAnnotation["points"])
         else:  # it's text
             annotationModel = TextAnnotation()
-            print newAnnotation["width"]
-            print newAnnotation["height"]
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["text"]
@@ -567,7 +565,7 @@ def addAnnotation(request):
         annotationModel.left = newAnnotation["left"]
         annotationModel.top = newAnnotation["top"]
         annotationModel.strokeWidth = newAnnotation["strokeWidth"]
-        annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"]);
+        annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"])
         annotationModel.originX = newAnnotation["originX"]
         annotationModel.originY = newAnnotation["originY"]
         annotationModel.fill = AnnotationColor.objects.get(pk=newAnnotation["fill"])
@@ -579,6 +577,70 @@ def addAnnotation(request):
 
         return HttpResponse(json.dumps(annotationModel.toJson()),
                             content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
+                            status=406)
+
+def mergeImages(request):
+    if request.method == 'POST':
+        temp1 = request.POST.get('image1', None)
+        temp2 = request.POST.get('image2', None)
+
+
+        print "MERGE IMAGES WHOOOOO"
+
+
+        from PIL import Image
+        from io import BytesIO
+        import base64
+
+        # background = Image.open(temp1)
+        # foreground = Image.open(temp2)
+        print "Length of temp1"
+        print len(temp1)
+        print "Length of temp2"
+        print len(temp2)
+
+        temp1 = temp1[22:]
+        temp2 = temp2[22:]
+
+        print "Length of temp1 shorter"
+        print len(temp1)
+        print "Length of temp2 shorter"
+        print len(temp2)
+
+        print "temp1"
+        print temp1
+        print "temp2"
+        print temp2
+
+        background = Image.open(BytesIO(base64.b64decode(temp1)))
+        foreground = Image.open(BytesIO(base64.b64decode(temp2)))
+
+        background.paste(foreground, (0, 0), foreground)
+        background.show()
+
+        print "merged image"
+        print background
+
+        buf = BytesIO()
+
+        background.save(buf, format='png')
+        buf.seek(0)
+        background.save("/tmp/background_decoded.png")
+        bufEncode = BytesIO()
+        base64.encode(buf, bufEncode)
+
+        response = HttpResponse(bufEncode, content_type="application/base64")
+
+        background.save(response, 'png')
+        background.save("/tmp/background_encoded.png")
+        print "returning response"
+        return response
+        # return HttpResponse(background)
+
+        #show in img tag in js side
+
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
                             status=406)
