@@ -488,14 +488,46 @@ $('#saveAnnotation').click(function () {
             image1: img1,
             image2: img2
         },
-        success: function (data) {
+        success: function (data) {  //do we have to index data?
             console.log("IMAGE MERGE SUCCESS");
-            console.log(data.length);
+            window.open("data:image/png;base64," + data);
 
-            console.log("logged data");
+            // put in image tag and see if black bars/transparency still there
 
-            var dataURI = "data:image/png;base64," + data;
-            window.open(dataURI);
+            
+            // var rawResponse = data;
+            // var b64response = btoa(unescape(encodeURIComponent(rawResponse)));
+            // var output = "data:image/png;base64," + b64response;
+            //
+            // var outputImage = new Image();
+            // outputImage.src = output;
+            // window.open(outputImage);
+
+
+            // var w = window.open("");
+            // w.document.write(output.outerHTML);
+
+
+
+            console.log("length");
+            console.log(output.length);
+            // window.open(output)
+
+            // console.log(data.length);
+            // console.log(typeof(data));
+            console.log("output");
+            console.log(output.substring(0, 2000));
+            // console.log("output");
+            // console.log(output);
+            console.log("length");
+            console.log(output.length);
+            // window.open(data);
+            // console.log(data);
+            // data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABkAAAASwCAYAAACjAYaXAAAgAElEQV  <--- optimal data format
+            // data:image/png;base64,%EF%BF%BDPNG%1A%00%00%00IHDR%00%       <---- idek what this is but it's not base64 (bc E %'s)
+            // var dataURI = "data:image/png;base64," + data;
+            // window.open(dataURI);
+            // console.log(data.toDataURL);
         },
         error: function (e) {
             console.log("Ajax error");
@@ -513,7 +545,6 @@ $('#saveAnnotation').click(function () {
     // overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
 
     //TODO: remove background image here
-    console.log("blow on past taht error");
 });
 
 $('#deleteAnnotation').click(function () {

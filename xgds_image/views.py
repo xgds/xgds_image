@@ -511,7 +511,6 @@ def getAnnotationsJson(request, imagePK):
     result = []
     for a in annotations:
         result.append(a.toJson())
-    print "return size"
     # print result
     print len(result)
     return HttpResponse(json.dumps(result), content_type='application/json')
@@ -586,33 +585,12 @@ def mergeImages(request):
         temp1 = request.POST.get('image1', None)
         temp2 = request.POST.get('image2', None)
 
-
-        print "MERGE IMAGES WHOOOOO"
-
-
         from PIL import Image
         from io import BytesIO
         import base64
 
-        # background = Image.open(temp1)
-        # foreground = Image.open(temp2)
-        print "Length of temp1"
-        print len(temp1)
-        print "Length of temp2"
-        print len(temp2)
-
-        temp1 = temp1[22:]
-        temp2 = temp2[22:]
-
-        print "Length of temp1 shorter"
-        print len(temp1)
-        print "Length of temp2 shorter"
-        print len(temp2)
-
-        print "temp1"
-        print temp1
-        print "temp2"
-        print temp2
+        temp1 = temp1[22:]  # remove data:image/png;base64, (22 characters long)
+        temp2 = temp2[22:]  # this is pure base64 bitstream
 
         background = Image.open(BytesIO(base64.b64decode(temp1)))
         foreground = Image.open(BytesIO(base64.b64decode(temp2)))
@@ -623,21 +601,51 @@ def mergeImages(request):
         print "merged image"
         print background
 
-        buf = BytesIO()
-
-        background.save(buf, format='png')
-        buf.seek(0)
+        print "image format"
+        print background.format
         background.save("/tmp/background_decoded.png")
-        bufEncode = BytesIO()
-        base64.encode(buf, bufEncode)
 
-        response = HttpResponse(bufEncode, content_type="application/base64")
+        imgByteArr = BytesIO()
+        background.save(imgByteArr, format='PNG')
+        imgByteArr = imgByteArr.getvalue()
 
-        background.save(response, 'png')
-        background.save("/tmp/background_encoded.png")
-        print "returning response"
-        return response
+        # buf = BytesIO()
+        # background.save(buf, format='png')
+        # buf.seek(0)
+        #
+        # bufEncode = BytesIO()
+        # base64.encode(buf, bufEncode)
+
+        # response = HttpResponse(bufEncode, content_type="application/base64")
+        #
+        # background.save(response, 'png')
+        # background.save("/tmp/background_encoded.png")
+
+        # might want to reappend data:image/png;base64, here
+
+        # this is a pngimagefile... hmm..
+        # background = BytesIO(base64.b64encode(background))  # dont' think we need to encode beacuse content_type="image/png"
+        background64 = BytesIO(base64.b64encode(imgByteArr))
+
+        # print "encoded background"
+        # print backgrounde
+
+#*******************************************************************************************************************
         # return HttpResponse(background)
+        # encoded = base64.b64encode(open(background, "rb").read())
+        # retval = []
+        # retval.append(encoded)
+        # return HttpResponse(json.dumps(retval), content_type="application/json")
+#*******************************************************************************************************************
+        # response = HttpResponse(content_type="image/png")
+        # background64.save(response, 'PNG')  # was just background initially
+        # return response
+        myfile = open("/tmp/base64Image.txt", "w")
+        myfile.write(base64.b64encode(imgByteArr))
+        myfile.close()
+        return HttpResponse(base64.b64encode(imgByteArr), content_type="application/base64")
+
+
 
         #show in img tag in js side
 
