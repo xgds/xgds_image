@@ -43,7 +43,7 @@ var arrow, line, rectangle, circle, ellipse, text, isDown, textboxPreview, origX
 var currentAnnotationType = "arrow"; //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
 
 /*
- Stores annotation primary key to annotation json mappings for all annotations currently drawn on the canvas {pk: annotation json}
+ Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
  Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
  */
 var annotationsDict = {};
@@ -58,7 +58,7 @@ var colorsDictionary = {};
 /* the mouse can be in 3 modes:
  1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
  2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
- 3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw on clicK)
+ 3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
  getters and setters are below
  */
 var mouseMode = "OSD";
@@ -97,25 +97,6 @@ function distanceFormula(x1, y1, x2, y2) {
     return Math.sqrt(xDist + yDist);
 }
 
-function initializeLine(x, y) {
-    line = new fabric.Line([x, y, x, y], {
-        left: x,
-        top: y,
-        stroke: "red",
-        strokeWidth: 25,
-        originX: 'center',
-        originY: 'center',
-        type: 'line'
-    });
-    currentAnnotationType = line;
-    overlay.fabricCanvas().add(line)
-}
-
-function updateLineEndpoint(x, y) {
-    line.set({x2: x, y2: y});
-    currentAnnotationType = line;
-}
-
 function initializeEllipse(x, y) {
     ellipse = new fabric.Ellipse({
         left: x,
@@ -139,29 +120,6 @@ function updateEllipse(x, y) {
     currentAnnotationType = ellipse
 }
 
-function initializeCircle(x, y) {
-    circle = new fabric.Circle({
-        left: x,
-        top: y,
-        radius: 1,
-        strokeWidth: 25,
-        stroke: currentAnnotationColor,
-        fill: '',
-        selectable: true,
-        originX: 'center',
-        originY: 'center',
-        type: 'circle'
-    });
-    currentAnnotationType = circle;
-    overlay.fabricCanvas().add(circle);
-}
-
-//TODO: should I update the circle member variable automatically or pass in the object to modify?
-function updateCircleRadius(x, y, origX, origY) {
-    var radius = distanceFormula(x, y, origX, origY);
-    circle.set({radius: radius});
-    currentAnnotationType = circle;
-}
 
 function initializeRectangle(x, y) {
     rectangle = new fabric.Rect({
@@ -208,25 +166,6 @@ function updateTextboxPreview(x, y) {
     currentAnnotationType = textboxPreview
 }
 
-function initializeText(x, y) {
-    text = new fabric.Textbox('MyText', {
-        width: 150,
-        top: y,
-        left: x,
-        fontSize: 100,
-        textAlign: 'center',
-        type: 'text'
-    }); //TODO: remove the fixed width stuff
-    currentAnnotationType = text;
-    overlay.fabricCanvas().add(text);
-}
-
-function updateTextContent(x, y) {
-    var width = Math.abs(x - origX);
-    var height = Math.abs(y - origY);
-    text.set({width: width, height: height})
-    currentAnnotationType = text;
-}
 
 /*
  Arrows are initialized in a strange way. Arrows aren't provided by fabricjs so you need to create them yourself. We do this by
@@ -331,10 +270,9 @@ overlay.fabricCanvas().observe('mouse:down', function (o) {
         var pointer = overlay.fabricCanvas().getPointer(o.e);
         origX = pointer.x;
         origY = pointer.y;
-
         switch (annotationType) {
             case "arrow":
-                drawArrow(pointer.x, pointer.y); //TODO: change this to agree with naming scheme
+                drawArrow(pointer.x, pointer.y);
                 break;
             case "rectangle":
                 initializeRectangle(pointer.x, pointer.y);
@@ -360,7 +298,7 @@ overlay.fabricCanvas().observe('mouse:move', function (o) {
 
     switch (annotationType) {
         case "arrow":
-            updateArrow(pointer.x, pointer.y); //TODO: change this to agree with naming scheme
+            updateArrow(pointer.x, pointer.y);
             break;
         case "rectangle":
             updateRectangleWidth(pointer.x, pointer.y);
@@ -369,7 +307,6 @@ overlay.fabricCanvas().observe('mouse:move', function (o) {
             updateEllipse(pointer.x, pointer.y);
             break;
         case "text":
-            // updateTextContent(pointer.x, pointer.y);
             updateTextboxPreview(pointer.x, pointer.y);
             break;
         default:
@@ -392,22 +329,18 @@ overlay.fabricCanvas().on('text:changed', function (opt) {
 overlay.fabricCanvas().on('mouse:up', function (o) {
     // console.log("EVENT TRIGERRED: fabricj-mouse:up");
     if (getMouseMode() == "addAnnotation") {
-        //need to draw textbox here
         var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
+
+        // save annotation to database
         createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
         setMouseMode("OSD");
-        $("#navigateImage").click();
-        //             $("input[name='cursorMode']").prop('checked, ')
-        //               var mode = $("input[name='cursorMode']:checked").val();
-        //               $('.myCheckbox').prop('checked', true);
-        // $('.myCheckbox').prop('checked', false);
-
+        $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
     }
     isDown = false;
 });
 
 $("input[name='cursorMode']").change(function () {
-    console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
+    // console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
     var mode = $("input[name='cursorMode']:checked").val();
     setMouseMode(mode);
 });
@@ -461,146 +394,42 @@ $("#addAnnotation").click(function () {
     setMouseMode("addAnnotation");
 });
 
-//TODO: rename
 $('#loadAnnotation').click(function () {
-    deserializeFromJSON();
+    getAnnotations();
 });
 
-$('#saveAnnotation').click(function () {
-    // serializeToJSON();
-    //TODONOW: set background as correct image
-    var img1 = viewer.drawer.canvas.toDataURL("image/png");
-    var img2 = overlay.fabricCanvas().toDataURL({format: 'image/png'});
-
-    // window.open(img1);
-    // window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
-
-    console.log("INITIAL IMAGE SIZES")
-    console.log(img1.length);
-    console.log(img2.length);
-
+$('#downloadScreenshot').click(function () {
+    var OSD_layer = viewer.drawer.canvas.toDataURL("image/png");
+    var annotations = overlay.fabricCanvas().toDataURL({format: 'image/png'});
 
     $.ajax({
         type: "POST",
         url: '/xgds_image/mergeImages/',
         datatype: 'json',
         data: {
-            image1: img1,
-            image2: img2
+            image1: OSD_layer,
+            image2: annotations
         },
         success: function (data) {  //do we have to index data?
             console.log("IMAGE MERGE SUCCESS");
             window.open("data:image/png;base64," + data);
-
             // put in image tag and see if black bars/transparency still there
 
-            
-            // var rawResponse = data;
-            // var b64response = btoa(unescape(encodeURIComponent(rawResponse)));
-            // var output = "data:image/png;base64," + b64response;
-            //
-            // var outputImage = new Image();
-            // outputImage.src = output;
-            // window.open(outputImage);
-
-
-            // var w = window.open("");
-            // w.document.write(output.outerHTML);
-
-
-
-            console.log("length");
-            console.log(output.length);
-            // window.open(output)
-
-            // console.log(data.length);
-            // console.log(typeof(data));
-            console.log("output");
-            console.log(output.substring(0, 2000));
-            // console.log("output");
-            // console.log(output);
-            console.log("length");
-            console.log(output.length);
-            // window.open(data);
-            // console.log(data);
-            // data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABkAAAASwCAYAAACjAYaXAAAgAElEQV  <--- optimal data format
-            // data:image/png;base64,%EF%BF%BDPNG%1A%00%00%00IHDR%00%       <---- idek what this is but it's not base64 (bc E %'s)
-            // var dataURI = "data:image/png;base64," + data;
-            // window.open(dataURI);
-            // console.log(data.toDataURL);
         },
         error: function (e) {
             console.log("Ajax error");
             console.log(e);
         }
     });
-
-
-    // overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
-    // overlay.fabricCanvas().setBackgroundColor({source: 'https://localhost/static/basaltApp/css/logo.png'}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
-
-    // var img = new Image();
-    // img.setAttribute('crossOrigin', 'anonymous');
-    // img.src = "http://fabricjs.com/assets/escheresque_ste.png";
-    // overlay.fabricCanvas().setBackgroundColor({source: img}, overlay.fabricCanvas().renderAll.bind(overlay.fabricCanvas()));
-
-    //TODO: remove background image here
 });
 
 $('#deleteAnnotation').click(function () {
     deleteActiveAnnotation();
 });
 
-$('#saveImage').click(function () {
-    var img = new Image();
-    // img.onload = function(){
-    //    overlay.fabricCanvas().setBackgroundImage(img.src, overlay.fabricCanvas().renderAll.bind(canvas), {
-    //             originX: 'left',
-    //             originY: 'top',
-    //             left: 0,
-    //             top: 0
-    //     });
-    // };
-    // img.src = "http://fabricjs.com/assets/escheresque_ste.png";
-
-    //gets the annotations
-    // window.open(overlay.fabricCanvas().toDataURL({format: 'image/png'}));
-    var annotation = overlay.fabricCanvas().toDataURL({format: 'image/png'});
-
-    //gets the OSD image
-    var osdView = viewer.drawer.canvas.toDataURL("image/png");
-
-    //somehow blend
-    var canvas = document.getElementById("openseadragon-container");
-    var context = canvas.getContext('2d');
-
-    var imageObj1 = new Image();
-    imageObj1.src = annotation;
-    imageObj1.onload = function () {
-        context.drawImage(imageObj1, x, y);
-    };
-
-    var imageObj2 = new Image();
-    imageObj2.src = osdView;
-    imageObj2.onload = function () {
-        context.drawImage(imageObj2, x, y);
-    };
-
-
-    //open
-    // window.open(canvas.toDataURL());
-
-
-    // var data = overlay.fabricCanvas().toDataURL({format:'png'});
-    // var img = new Image();
-    // img.src = data;
-    // window.open(img);
-})
-
 $("#colorPicker").on('change.spectrum', function (e, color) {
     currentAnnotationColor = color.toHexString(); //convert to hex
     console.log("currentAnnotationColor is: " + currentAnnotationColor);
-
 });
 
 //sets if you can interact with objects on the fabricjs canvas
@@ -657,11 +486,11 @@ function duplicateObject(object) {
         stroke: object["stroke"],
         strokeWidth: object["strokeWidth"],
         originX: object["originX"],
-        originY: object["originY"], /*             */
+        originY: object["originY"],
         fill: object["fill"],
         angle: object["angle"],
         type: object["type"],
-        points: object["points"], /* hacky fix */
+        points: object["points"],
         text: object["text"],
         rx: object["rx"],
         ry: object["ry"],
@@ -681,32 +510,8 @@ function objectListToJsonList(list) {
     return JSON.stringify(retval);
 }
 
-// //TODO: pretty sure I can delete this but keep around a bit longer
-// function serializeToJSON() { //TODO: need to not save duplicate entries... maybe do that on the python side... just dont save if it has a pk? needs to coordinate from alterAnnotations()
-//     throw new Error("serializeToJson is depreciated! Don't use this function");
-//     return;
-//
-//     console.log("attempting to serialize");
-//     $.ajax({
-//         type: "POST",
-//         url: '/xgds_image/saveAnnotations/', //TODO should be able to get this from url // maybe change the url/hard code it
-//         datatype: 'json',
-//         data: {
-//             mapAnnotations: JSON.stringify(overlay.fabricCanvas()), //TODO: can't just JSON.stringify, need to add our own fields
-//             // mapAnnotations: objectListToJsonList(overlay.fabricCanvas().getObjects()),
-//             image_pk: 1 // on the single image page it's app.options.modelPK, on the multi image page we have to get it from the selected item
-//         },
-//         success: function(data) {
-//              console.log("ajax return call json " + data);
-//         },
-//         error: function(a,b,c,d) {
-//             console.log(a);
-//         }
-//     });
-// }
-
 //TODO: should probably change the name of this function
-function deserializeFromJSON() {
+function getAnnotations() {
     $.ajax({
         type: "POST",
         url: '/xgds_image/getAnnotations/1',
@@ -720,7 +525,7 @@ function deserializeFromJSON() {
                 addAnnotationToCanvas(annotation);
             });
         },
-        error: function (a, b, c, d) {
+        error: function (a) {
             console.log(a);
         }
     });
@@ -1028,61 +833,37 @@ function addTextToCanvas(annotationJson) {
     overlay.fabricCanvas().renderAll();
 }
 
-//create a new circle and add it to canvas
-//TODO: still need to add standardized attribute/json list
-function addCircleToCanvas(x, y) {
-    // var circle = new fabric.Circle({
-    //     left: x,
-    //     top: y,
-    //     radius: 225,
-    //     strokeWidth: 1,
-    //     stroke: 'black',
-    //     fill: 'white',
-    //     selectable: true,
-    //     originX: 'center', originY: 'center'
-    // });
-    // overlay.fabricCanvas().add(circle);
-    // overlay.fabricCanvas().renderAll();
-}
-
 /*
-edit/delete: mouse modes for manipulating annotations
-pk: store pk's in a pk-json dictionary to prevent duplicate loads and to manipulate from annotations list
- */
-
-/* TODO:
-
-The four big things left I think are
-1.) color picker (all the backend (i.e. dictionaries) is set up. Just need to connect to some kind of front end UI).
-2.) Export canvas as an image
-3.) turn annotations on/off
-
-
-mouse modes
-serialization
-color pallete
-xgds ref
-*/
-
-/*
-
-CURRENT STATUS
-
-Critical Features
-preserve colors when loading -- (1.) update createNewSerialization 2.) update deserializeFromJson)
-export image
-image_pk/generalization stuff
-
-
-
 Nice Stuff
 Make textboxes nicer
 Make cursor cooporate
 
-
 tie menu to controls
 can't click annotations -- seems like fabricCanvas sometimes goes behind the OSD canvas. Occlusion of sorts.
 just a lot of cleaning up in general needed
+
+
+Add lines:
+
+function initializeLine(x, y) {
+    line = new fabric.Line([x, y, x, y], {
+        left: x,
+        top: y,
+        stroke: "red",
+        strokeWidth: 25,
+        originX: 'center',
+        originY: 'center',
+        type: 'line'
+    });
+    currentAnnotationType = line;
+    overlay.fabricCanvas().add(line)
+}
+
+function updateLineEndpoint(x, y) {
+    line.set({x2: x, y2: y});
+    currentAnnotationType = line;
+}
+
 
 
 TEXTBOX STUFF

@@ -50,6 +50,10 @@ from geocamUtil.loader import LazyGetModelByName
 
 from geocamTrack.utils import getClosestPosition
 
+from PIL import Image
+from io import BytesIO
+import base64
+
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
@@ -585,70 +589,30 @@ def mergeImages(request):
         temp1 = request.POST.get('image1', None)
         temp2 = request.POST.get('image2', None)
 
-        from PIL import Image
-        from io import BytesIO
-        import base64
-
         temp1 = temp1[22:]  # remove data:image/png;base64, (22 characters long)
         temp2 = temp2[22:]  # this is pure base64 bitstream
 
+        # decode base 64 bitstream for PIL
         background = Image.open(BytesIO(base64.b64decode(temp1)))
         foreground = Image.open(BytesIO(base64.b64decode(temp2)))
 
+        # PIL paste foreground on background
         background.paste(foreground, (0, 0), foreground)
-        background.show()
 
-        print "merged image"
-        print background
-
-        print "image format"
-        print background.format
-        background.save("/tmp/background_decoded.png")
-
+        # Save background into Byte Array/Stream
         imgByteArr = BytesIO()
         background.save(imgByteArr, format='PNG')
         imgByteArr = imgByteArr.getvalue()
 
-        # buf = BytesIO()
-        # background.save(buf, format='png')
-        # buf.seek(0)
-        #
-        # bufEncode = BytesIO()
-        # base64.encode(buf, bufEncode)
-
-        # response = HttpResponse(bufEncode, content_type="application/base64")
-        #
-        # background.save(response, 'png')
-        # background.save("/tmp/background_encoded.png")
-
-        # might want to reappend data:image/png;base64, here
-
-        # this is a pngimagefile... hmm..
-        # background = BytesIO(base64.b64encode(background))  # dont' think we need to encode beacuse content_type="image/png"
+        # Encode in base 64 for HttpResponse
         background64 = BytesIO(base64.b64encode(imgByteArr))
 
-        # print "encoded background"
-        # print backgrounde
-
-#*******************************************************************************************************************
-        # return HttpResponse(background)
-        # encoded = base64.b64encode(open(background, "rb").read())
-        # retval = []
-        # retval.append(encoded)
-        # return HttpResponse(json.dumps(retval), content_type="application/json")
-#*******************************************************************************************************************
-        # response = HttpResponse(content_type="image/png")
-        # background64.save(response, 'PNG')  # was just background initially
-        # return response
-        myfile = open("/tmp/base64Image.txt", "w")
-        myfile.write(base64.b64encode(imgByteArr))
-        myfile.close()
+        # Image debugging lines
+        # background.save("/tmp/background_decoded.png")
+        # myfile = open("/tmp/base64Image.txt", "w")
+        # myfile.write(base64.b64encode(imgByteArr))
+        # myfile.close()
         return HttpResponse(base64.b64encode(imgByteArr), content_type="application/base64")
-
-
-
-        #show in img tag in js side
-
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
                             status=406)
