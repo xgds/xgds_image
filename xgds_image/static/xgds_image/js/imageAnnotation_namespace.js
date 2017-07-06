@@ -1,6 +1,55 @@
 var xgds_image_annotation = xgds_image_annotation || {};
 
 $.extend(xgds_image_annotation, {
+    /*  Global Variables  */
+
+    //fabricjs-openseadragon annotation object
+    overlay: viewer.fabricjsOverlay(),
+    arrow: "",
+    line: "",
+    rectangle: "",
+    circle: "",
+    ellipse: "",
+    text: "",
+    isDown: "",
+    textboxPreview: "",
+    origX: "",
+    origY: "",
+
+    currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
+
+    /*
+     Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
+     Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
+     */
+    annotationsDict: {},
+
+
+    /*
+     Stores a dictionary of pre-set (string)color -> (string)hex pairs.
+     Loaded through ajax on document.onReady()
+     */
+    colorsDictionary: {},
+
+
+    /* the mouse can be in 3 modes:
+     1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
+     2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
+     3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
+     getters and setters are below
+     */
+    mouseMode: "OSD",
+
+    /*
+     Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
+     */
+    annotationType: "arrow",
+
+    /*
+     Default annotation color to draw annotations in
+     */
+    currentAnnotationColor: "white",
+
     initialize: function(imageJson, osdViewer) {
         //imageJson.pk is the pk of the image you want to work with now.
         // if you were already initialized before, clear stuff
@@ -34,44 +83,6 @@ $.extend(xgds_image_annotation, {
                 }
             }],
         });
-
-        //TODO: might not be right scope
-
-        //fabricjs-openseadragon annotation object
-        var overlay = viewer.fabricjsOverlay();
-        var arrow, line, rectangle, circle, ellipse, text, isDown, textboxPreview, origX, origY;
-        var currentAnnotationType = "arrow"; //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
-
-        /*
-         Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
-         Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
-         */
-        var annotationsDict = {};
-
-        /*
-         Stores a dictionary of pre-set (string)color -> (string)hex pairs.
-         Loaded through ajax on document.onReady()
-         */
-        var colorsDictionary = {};
-
-
-        /* the mouse can be in 3 modes:
-         1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
-         2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
-         3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
-         getters and setters are below
-         */
-        var mouseMode = "OSD";
-
-        /*
-         Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
-         */
-        var annotationType = "arrow";
-
-        /*
-         Default annotation color to draw annotations in
-         */
-        var currentAnnotationColor = "white";
 
         //color picker
         var spectrumOptions = {
