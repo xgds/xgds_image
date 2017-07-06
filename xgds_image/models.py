@@ -560,7 +560,8 @@ class AbstractAnnotation(models.Model):
     strokeColor = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_strokeColor', default=1)
     strokeWidth = models.PositiveIntegerField(default=2)
     angle = models.FloatField(default=0)  # store shape rotation angle
-
+    scaleX = models.FloatField(default=1)
+    scaleY = models.FloatField(default=1)
     originX = models.CharField(max_length=16, default="left")
     originY = models.CharField(max_length=16, default="center")
     fill = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_fill', null=True, blank=True)
@@ -586,8 +587,8 @@ class TextAnnotation(AbstractAnnotation):
     content = models.CharField(max_length=512, default='')
     isBold = models.BooleanField(default=False)
     isItalics = models.BooleanField(default=False)
-    width = models.PositiveIntegerField()
-    height = models.PositiveIntegerField()
+    width = models.PositiveIntegerField(default=1)
+    height = models.PositiveIntegerField(default=1)
 
 
     def getJsonType(self):

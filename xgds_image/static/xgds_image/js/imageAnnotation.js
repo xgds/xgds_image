@@ -108,6 +108,8 @@ function initializeEllipse(x, y) {
         selectable: true,
         originX: 'center',
         originY: 'center',
+        scaleX: 1,
+        scaleY: 1,
         type: 'ellipse'
     });
     currentAnnotationType = ellipse
@@ -130,6 +132,8 @@ function initializeRectangle(x, y) {
         stroke: currentAnnotationColor,
         width: 1,
         height: 1,
+        scaleX: 1,
+        scaleY: 1,
         type: 'rect'
     });
     currentAnnotationType = rectangle;
@@ -182,6 +186,8 @@ function drawArrow(x, y) {
         strokeWidth: 2,
         originX: 'left',
         originY: 'top',
+        scaleX: 1,
+        scaleY: 1,
         selectable: true,
         type: 'arrow'
     });
@@ -490,6 +496,8 @@ function duplicateObject(object) {
         fill: object["fill"],
         angle: object["angle"],
         type: object["type"],
+        scaleX: object["scaleX"],
+        scaleY: object["scaleY"],
         points: object["points"],
         text: object["text"],
         rx: object["rx"],
@@ -542,6 +550,8 @@ function createNewSerialization(fabricObject, x, y) {
             fill: currentAnnotationColor,
             borderColor: currentAnnotationColor,
             textAlign: 'center',
+            scaleX: 1,
+            scaleY: 1,
             type: 'text'
         });
         currentAnnotationType = text;
@@ -754,6 +764,8 @@ function addRectToCanvas(annotationJson) {
         width: annotationJson["width"],
         height: annotationJson["height"],
         type: 'rect',
+        scaleX: annotationJson["scaleX"],
+        scaleY: annotationJson["scaleY"],
         pk: annotationJson["pk"],
         image: annotationJson["image"]
     });
@@ -774,6 +786,8 @@ function addEllipseToCanvas(annotationJson) {
         rx: annotationJson["radiusX"],
         ry: annotationJson["radiusY"],
         type: 'ellipse',
+        scaleX: annotationJson["scaleX"],
+        scaleY: annotationJson["scaleY"],
         pk: annotationJson["pk"],
         image: annotationJson["image"]
     });
@@ -794,6 +808,8 @@ function addArrowToCanvas(annotationJson) {
         fill: colorsDictionary[annotationJson["fill"]].hex,
         angle: annotationJson["angle"],
         type: 'arrow',
+        scaleX: annotationJson["scaleX"],
+        scaleY: annotationJson["scaleY"],
         pk: annotationJson["pk"],
         image: annotationJson["image"]
     });
@@ -818,7 +834,9 @@ function addTextToCanvas(annotationJson) {
         width: annotationJson["width"],
         height: annotationJson["height"],
         text: annotationJson["content"], //text should be the right field here //todonow: this may be the wrong thing to call it.
-        type: 'text', //TODO todonow todowill what have we got here
+        type: 'text',
+        scaleX: annotationJson["scaleX"],
+        scaleY: annotationJson["scaleY"],
         pk: annotationJson["pk"],
         image: annotationJson["image"],
         textAlign: 'center',
@@ -864,7 +882,7 @@ function updateLineEndpoint(x, y) {
     currentAnnotationType = line;
 }
 
-
+TODO: Can either implement scaling saving or prevent scaling and just create a new shape
 
 TEXTBOX STUFF
 TODO: select text after adding it to canvas, stay in edit mode

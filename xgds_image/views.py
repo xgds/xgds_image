@@ -440,7 +440,6 @@ def saveAnnotations(request):
 
             else:
                 print "That shape doesn't exist"
-                print "aha "
                 #your shape doesn't exist
                 #throw some kind of error
 
@@ -453,6 +452,8 @@ def saveAnnotations(request):
             annotationModel.originY = annotationJSON["originY"]
             annotationModel.fill = AnnotationColor.objects.get(pk=1)
             annotationModel.angle = annotationJSON["angle"]
+            annotationModel.scaleX = annotationJson["scaleX"]
+            annotationModel.scaleY = annotationJson["scaleY"]
 
             annotationModel.author = request.user
             annotationModel.image_id = request.POST.get('image_pk')
@@ -502,6 +503,8 @@ def alterAnnotation(request):
         annotationModel.strokeColor = AnnotationColor.objects.get(pk=newAnnotation["stroke"])
         annotationModel.fill = AnnotationColor.objects.get(pk=newAnnotation["fill"])
         annotationModel.angle = newAnnotation["angle"]
+        annotationModel.scaleX = newAnnotation["scaleX"]
+        annotationModel.scaleY = newAnnotation["scaleY"]
         annotationModel.save()
         return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
                         content_type='application/json')
@@ -573,6 +576,8 @@ def addAnnotation(request):
         annotationModel.originY = newAnnotation["originY"]
         annotationModel.fill = AnnotationColor.objects.get(pk=newAnnotation["fill"])
         annotationModel.angle = newAnnotation["angle"]
+        annotationModel.scaleX = newAnnotation["scaleX"]
+        annotationModel.scaleY = newAnnotation["scaleY"]
 
         annotationModel.author = request.user
         annotationModel.image_id = request.POST.get('image_pk')
@@ -583,7 +588,8 @@ def addAnnotation(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
                             status=406)
-
+# Pastes the annotation canvas image onto the OSD canvas image to get a new "downloadable" image of annotations + OSD
+# canvas combined.
 def mergeImages(request):
     if request.method == 'POST':
         temp1 = request.POST.get('image1', None)
