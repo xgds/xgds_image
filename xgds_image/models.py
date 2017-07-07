@@ -617,11 +617,23 @@ class ArrowAnnotation(AbstractAnnotation):
     def getJsonType(self):
         return 'Arrow'
 
+
+class AnnotatedImage(models.Model):
+    imageBinary = models.FileField(upload_to=settings.XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR)
+    width = models.PositiveIntegerField(default=250)
+    height = models.PositiveIntegerField(default=250)
+    author = models.ForeignKey(User)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
+    image = models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL,
+                              related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+
+
 ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
                                          [TextAnnotation,
                                           EllipseAnnotation,
                                           RectangleAnnotation,
-                                          ArrowAnnotation
+                                          ArrowAnnotation,
+                                          AnnotatedImage
                                           ])
 
 
