@@ -2,6 +2,63 @@ var xgds_image_annotation = xgds_image_annotation || {};
 
 $.extend(xgds_image_annotation, {
     /*  Global Variables  */
+    helloWorld: function() {
+        console.log("Hello World!");
+    },
+
+    // initialize viewer
+    viewer: OpenSeadragon({
+        id: "openseadragon1",
+        prefixUrl: prefixUrl,
+        showNavigator: false,
+        gestureSettingsMouse: {
+            clickToZoom: false
+        },
+        clickToZoom: "false",
+        tileSources: [{
+            Image: {
+                //Need to change [tile_format="jpg", image_quality=0.85,]
+                //Plus any other changes in deepzoom.py we make
+                xmlns: "http://schemas.microsoft.com/deepzoom/2009",
+                Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
+                TileSize: "128",
+                Overlap: "2",
+                Format: "png",
+                ServerFormat: "Default",
+                Size: {
+                    Width: "4928",
+                    Height: "3280",
+                }
+            }
+        }],
+    }),
+
+
+//     var viewer = OpenSeadragon({
+//         id: "openseadragon1",
+//         prefixUrl: prefixUrl,
+//         showNavigator: false,
+//         gestureSettingsMouse: {
+//             clickToZoom: false
+//         },
+//         clickToZoom: "false",
+//         tileSources: [{
+//             Image: {
+//                 //Need to change [tile_format="jpg", image_quality=0.85,]
+//                 //Plus any other changes in deepzoom.py we make
+//                 xmlns: "http://schemas.microsoft.com/deepzoom/2009",
+//                 Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
+//                 TileSize: "128",
+//                 Overlap: "2",
+//                 Format: "png",
+//                 ServerFormat: "Default",
+//                 Size: {
+//                     Width: "4928",
+//                     Height: "3280",
+//             }
+//         }
+//     }],
+// });
 
     //fabricjs-openseadragon annotation object
     overlay: viewer.fabricjsOverlay(),
@@ -50,39 +107,16 @@ $.extend(xgds_image_annotation, {
      */
     currentAnnotationColor: "white",
 
+    toggleMenuBar: function() {
+
+    },
+
     initialize: function(imageJson, osdViewer) {
         //imageJson.pk is the pk of the image you want to work with now.
         // if you were already initialized before, clear stuff
         // set your pk to be imageJson.pk
         this.imagePK = imageJson.pk;
         var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
-
-        // initialize viewer
-        var viewer = OpenSeadragon({
-            id: "openseadragon1",
-            prefixUrl: prefixUrl,
-            showNavigator: false,
-            gestureSettingsMouse: {
-                clickToZoom: false
-            },
-            clickToZoom: "false",
-            tileSources: [{
-                Image: {
-                    //Need to change [tile_format="jpg", image_quality=0.85,]
-                    //Plus any other changes in deepzoom.py we make
-                    xmlns: "http://schemas.microsoft.com/deepzoom/2009",
-                    Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
-                    TileSize: "128",
-                    Overlap: "2",
-                    Format: "png",
-                    ServerFormat: "Default",
-                    Size: {
-                        Width: "4928",
-                        Height: "3280",
-                    }
-                }
-            }],
-        });
 
         //color picker
         var spectrumOptions = {
@@ -845,9 +879,9 @@ $('#downloadScreenshot').click(function () {
             image1: OSD_layer,
             image2: annotations
         },
-        success: function (data) {  //do we have to index data?
+        success: function (base64string) {  //do we have to index data?
             console.log("IMAGE MERGE SUCCESS");
-            window.open("data:image/png;base64," + data);
+            window.open("data:image/png;base64," + base64string);
             // put in image tag and see if black bars/transparency still there
 
         },
@@ -876,6 +910,195 @@ function objectListToJsonList(list) {
     });
     return JSON.stringify(retval);
 }
+
+
+
+
+
+
+/****************************************************************************************************************
+
+ E V E N T  L I S T E N E R S
+
+ *****************************************************************************************************************/
+//event listeners
+//fabricJS mouse-down event listener
+overlay.fabricCanvas().observe('mouse:down', function (o) {
+    // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
+    console.log("mouse mode is " + getMouseMode());
+    if (getMouseMode() == "addAnnotation") {
+        isDown = true;
+        var pointer = overlay.fabricCanvas().getPointer(o.e);
+        origX = pointer.x;
+        origY = pointer.y;
+        switch (annotationType) {
+            case "arrow":
+                drawArrow(pointer.x, pointer.y);
+                break;
+            case "rectangle":
+                initializeRectangle(pointer.x, pointer.y);
+                break;
+            case "ellipse":
+                initializeEllipse(pointer.x, pointer.y);
+                break;
+            case "text":
+                // initializeText(pointer.x, pointer.y);
+                initializeTextboxPreview(pointer.x, pointer.y);
+                break;
+            default:
+                console.log("welp, that shouldn't have happened. Undefined annotationType");
+                throw new Error("Tried to switch to an undefined annotationType");
+        }
+    }
+});
+
+//fabricJS mouse-move event listener
+overlay.fabricCanvas().observe('mouse:move', function (o) {
+    if (!isDown) return;
+    var pointer = overlay.fabricCanvas().getPointer(o.e);
+
+    switch (annotationType) {
+        case "arrow":
+            updateArrow(pointer.x, pointer.y);
+            break;
+        case "rectangle":
+            updateRectangleWidth(pointer.x, pointer.y);
+            break;
+        case "ellipse":
+            updateEllipse(pointer.x, pointer.y);
+            break;
+        case "text":
+            updateTextboxPreview(pointer.x, pointer.y);
+            break;
+        default:
+            console.log("welp, that shouldn't have happened. Undefined annotationType");
+            throw new Error("Tried to switch to an undefined annotationType");
+    }
+    overlay.fabricCanvas().renderAll();
+});
+
+/* event listener that handles resizing the textbox based on amount of text */
+overlay.fabricCanvas().on('text:changed', function (opt) {
+    var t1 = opt.target;
+    if (t1.width > t1.fixedWidth) {
+        t1.fontSize *= t1.fixedWidth / (t1.width + 1);
+        t1.width = t1.fixedWidth;
+    }
+});
+
+//fabricJS mouse-up event listener
+overlay.fabricCanvas().on('mouse:up', function (o) {
+    // console.log("EVENT TRIGERRED: fabricj-mouse:up");
+    if (getMouseMode() == "addAnnotation") {
+        var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
+
+        // save annotation to database
+        createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
+        setMouseMode("OSD");
+        $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
+    }
+    isDown = false;
+});
+
+$("input[name='cursorMode']").change(function () {
+    // console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
+    var mode = $("input[name='cursorMode']:checked").val();
+    setMouseMode(mode);
+});
+
+$("input[name='annotationsOnOrOff']").change(function () {
+    var onOff = $("input[name='annotationsOnOrOff']:checked").val();
+    var objects = overlay.fabricCanvas().getObjects();
+    if (onOff == "off") {
+        for (var i = 0; i < objects.length; i++) {
+            //set all objects as invisible and lock in position
+            objects[i].visible = false;
+            objects[i].lockMovementX = true;
+            objects[i].lockMovementY = true;
+            objects[i].lockRotation = true;
+            objects[i].lockScalingFlip = true;
+            objects[i].lockScalingX = true;
+            objects[i].lockScalingY = true;
+            objects[i].lockSkewingX = true;
+            objects[i].lockSkewingY = true;
+            objects[i].lockUniScaling = true;
+        }
+    } else {
+        //set all objects as visible and unlock
+        for (var i = 0; i < objects.length; i++) {
+            objects[i].visible = true;
+            objects[i].lockMovementX = false;
+            objects[i].lockMovementY = false;
+            objects[i].lockRotation = false;
+            objects[i].lockScalingFlip = false;
+            objects[i].lockScalingX = false;
+            objects[i].lockScalingY = false;
+            objects[i].lockSkewingX = false;
+            objects[i].lockSkewingY = false;
+            objects[i].lockUniScaling = false;
+        }
+    }
+    overlay.fabricCanvas().renderAll();
+});
+
+$("input[name='annotationType']").change(function () {
+    // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
+    annotationType = $("input[name='annotationType']:checked").val();
+    console.log("annotation shape changed to: " + annotationType);
+});
+
+overlay.fabricCanvas().on('object:modified', function () {
+    updateSerialization(overlay.fabricCanvas().getActiveObject());
+});
+
+$("#addAnnotation").click(function () {
+    setMouseMode("addAnnotation");
+});
+
+$('#loadAnnotation').click(function () {
+    getAnnotations();
+});
+
+$('#downloadScreenshot').click(function () {
+    var OSD_layer = viewer.drawer.canvas.toDataURL("image/png");
+    var annotations = overlay.fabricCanvas().toDataURL({format: 'image/png'});
+
+    $.ajax({
+        type: "POST",
+        url: '/xgds_image/mergeImages/',
+        datatype: 'json',
+        data: {
+            image1: OSD_layer,
+            image2: annotations
+        },
+        success: function (base64string) {  //do we have to index data?
+            console.log("IMAGE MERGE SUCCESS");
+            window.open("data:image/png;base64," + base64string);
+            // put in image tag and see if black bars/transparency still there
+            var img = new Image();
+            img.src = "data:image/png;base64," + base64string;
+
+            // $('#downloadImagePreview').prepend('<img id="imgPreview" src=img />')
+            document.getElementById('downloadImagePreview').src="data:image/png;base64," + base64string;
+            $('#my_image').attr('src', "data:image/png;base64," + base64string);
+            $('#my_image').width(800);
+        },
+        error: function (e) {
+            console.log("Ajax error");
+            console.log(e);
+        }
+    });
+});
+
+$('#deleteAnnotation').click(function () {
+    deleteActiveAnnotation();
+});
+
+$("#colorPicker").on('change.spectrum', function (e, color) {
+    currentAnnotationColor = color.toHexString(); //convert to hex
+    console.log("currentAnnotationColor is: " + currentAnnotationColor);
+});
+
 
 
 /*
