@@ -6,6 +6,8 @@ $.extend(xgds_image_annotation, {
         // if you were already initialized before, clear stuff
         // set your pk to be imageJson.pk
         this.imagePK = imageJson.pk;
+
+
     }
 });
 
@@ -416,11 +418,17 @@ $('#downloadScreenshot').click(function () {
             image1: OSD_layer,
             image2: annotations
         },
-        success: function (data) {  //do we have to index data?
+        success: function (base64string) {  //do we have to index data?
             console.log("IMAGE MERGE SUCCESS");
-            window.open("data:image/png;base64," + data);
+            window.open("data:image/png;base64," + base64string);
             // put in image tag and see if black bars/transparency still there
+            var img = new Image();
+            img.src = "data:image/png;base64," + base64string;
 
+            // $('#downloadImagePreview').prepend('<img id="imgPreview" src=img />')
+            document.getElementById('downloadImagePreview').src="data:image/png;base64," + base64string;
+            $('#my_image').attr('src', "data:image/png;base64," + base64string);
+            $('#my_image').width(800);
         },
         error: function (e) {
             console.log("Ajax error");
@@ -518,7 +526,6 @@ function objectListToJsonList(list) {
     return JSON.stringify(retval);
 }
 
-//TODO: should probably change the name of this function
 function getAnnotations() {
     $.ajax({
         type: "POST",

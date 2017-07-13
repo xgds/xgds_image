@@ -277,6 +277,7 @@ $.extend(xgds_image,{
 			} else {
 				displayImage = displayImage[0];
 			}
+			debugger;
 			this.viewer = OpenSeadragon({
 				element: displayImage,
 //				id: "display-image",
@@ -325,7 +326,12 @@ $.extend(xgds_image,{
 				
 			});
 			//TODO William put in the call to construction the annotation stuff
-			// xgds_image_annotations.initialize(imageJson, this.viewer);
+			console.log("viewer initial type");
+			console.log(typeof(this.viewer));
+			console.log(this.viewer);
+			console.log("^Just added overlay");
+			debugger;
+			xgds_image_annotation.initialize(imageJson, this.viewer);
 		} catch (err) {
 			console.log(err);
 			debugger;

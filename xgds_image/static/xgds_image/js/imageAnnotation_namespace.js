@@ -1,110 +1,157 @@
 var xgds_image_annotation = xgds_image_annotation || {};
 
+var arrow, line, rectangle, circle, ellipse, text, isDown, textboxPreview, origX, origY;
+var currentAnnotationType = "arrow"; //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
+
+/* Store imageJson locally */
+var imageJson = "";
+/*
+ Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
+ Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
+ */
+var annotationsDict = {};
+
+/*
+ Stores a dictionary of pre-set (string)color -> (string)hex pairs.
+ Loaded through ajax on document.onReady()
+ */
+var colorsDictionary = {};
+
+
+/* the mouse can be in 3 modes:
+ 1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
+ 2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
+ 3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
+ getters and setters are below
+ */
+var mouseMode = "OSD";
+
+/*
+ Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
+ */
+var annotationType = "arrow";
+
+/*
+ Default annotation color to draw annotations in
+ */
+var currentAnnotationColor = "white";
+
+var overlay = "";
 $.extend(xgds_image_annotation, {
-    /*  Global Variables  */
-    helloWorld: function() {
-        console.log("Hello World!");
-    },
-
-    // initialize viewer
-    viewer: "",
-
-    //fabricjs-openseadragon annotation object
-    overlay: "",
-    arrow: "",
-    line: "",
-    rectangle: "",
-    circle: "",
-    ellipse: "",
-    text: "",
-    isDown: "",
-    textboxPreview: "",
-    origX: "",
-    origY: "",
-
-    currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
-
-    /*
-     Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
-     Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
-     */
-    annotationsDict: {},
-
-
-    /*
-     Stores a dictionary of pre-set (string)color -> (string)hex pairs.
-     Loaded through ajax on document.onReady()
-     */
-    colorsDictionary: {},
-
-
-    /* the mouse can be in 3 modes:
-     1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
-     2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
-     3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
-     getters and setters are below
-     */
-    mouseMode: "OSD",
-
-    /*
-     Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
-     */
-    annotationType: "arrow",
-
-    /*
-     Default annotation color to draw annotations in
-     */
-    currentAnnotationColor: "white",
 
     toggleMenuBar: function() {
 
     },
 
+    // TODO: I think the issue is you can't do assignment in a namespace field like that?
+    // Need to declare as "" and initialize it in initialize()
+
+
+    // Now, just need to figure out the OSD import error...
     initialize: function(imageJson, osdViewer) {
         //TODO from Tamar
         // imageJson.pk is the pk of the image you want to work with now.
         // if you were already initialized before, clear stuff
         // set your pk to be imageJson.pk
-        // this.imagePK = imageJson.pk;
+        // this.imagePK = imageJson.pk
+        this.imageJson = imageJson;
+        this.viewer = osdViewer;
+        console.log("defined");
+        console.log(this.viewer);
+        console.log(this.imageJson);
+        console.log(typeof(this.viewer));
+        osdViewer.fabricjsOverlay();
+        this.overlay = this.viewer.fabricjsOverlay();
 
-        // initialize viewer
-        this.viewer = OpenSeadragon({
-            id: "openseadragon1",
-            prefixUrl: prefixUrl,
-            showNavigator: false,
-            gestureSettingsMouse: {
-                clickToZoom: false
-            },
-            clickToZoom: "false",
-            tileSources: [{
-                Image: {
-                    //Need to change [tile_format="jpg", image_quality=0.85,]
-                    //Plus any other changes in deepzoom.py we make
-                    xmlns: "http://schemas.microsoft.com/deepzoom/2009",
-                    Url: "../../../../data/images/spacePics/ISS044-E-1998_files/",
-                    TileSize: "128",
-                    Overlap: "2",
-                    Format: "png",
-                    ServerFormat: "Default",
-                    Size: {
-                        Width: "4928",
-                        Height: "3280",
-                    }
+         /****************************************************************************************************************
+
+         E V E N T  L I S T E N E R S
+
+         *****************************************************************************************************************/
+        //event listeners
+        //fabricJS mouse-down event listener
+
+        this.overlay.fabricCanvas().observe('mouse:down', function (o) {
+            // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
+            console.log("mouse mode is " + getMouseMode());
+            if (getMouseMode() == "addAnnotation") {
+                isDown = true;
+                var pointer = this.overlay.fabricCanvas().getPointer(o.e);
+                origX = pointer.x;
+                origY = pointer.y;
+                switch (annotationType) {
+                    case "arrow":
+                        drawArrow(pointer.x, pointer.y);
+                        break;
+                    case "rectangle":
+                        initializeRectangle(pointer.x, pointer.y);
+                        break;
+                    case "ellipse":
+                        initializeEllipse(pointer.x, pointer.y);
+                        break;
+                    case "text":
+                        // initializeText(pointer.x, pointer.y);
+                        initializeTextboxPreview(pointer.x, pointer.y);
+                        break;
+                    default:
+                        console.log("welp, that shouldn't have happened. Undefined annotationType");
+                        throw new Error("Tried to switch to an undefined annotationType");
                 }
-            }],
+            }
         });
 
-        overlay = viewer.fabricjsOverlay();
-        var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+        //fabricJS mouse-move event listener
+        this.overlay.fabricCanvas().observe('mouse:move', function (o) {
+            if (!isDown) return;
+            var pointer = this.overlay.fabricCanvas().getPointer(o.e);
 
-        //color picker
-        var spectrumOptions = {
-            showPaletteOnly: true,
-            showPalette: true,
-            palette: getPaletteColors(),
-            color: colorsDictionary[Object.keys(colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
-        };
-        $("#colorPicker").spectrum(spectrumOptions);
+            switch (annotationType) {
+                case "arrow":
+                    updateArrow(pointer.x, pointer.y);
+                    break;
+                case "rectangle":
+                    updateRectangleWidth(pointer.x, pointer.y);
+                    break;
+                case "ellipse":
+                    updateEllipse(pointer.x, pointer.y);
+                    break;
+                case "text":
+                    updateTextboxPreview(pointer.x, pointer.y);
+                    break;
+                default:
+                    console.log("welp, that shouldn't have happened. Undefined annotationType");
+                    throw new Error("Tried to switch to an undefined annotationType");
+            }
+            this.overlay.fabricCanvas().renderAll();
+        });
+
+        /* event listener that handles resizing the textbox based on amount of text */
+        this.overlay.fabricCanvas().on('text:changed', function (opt) {
+            var t1 = opt.target;
+            if (t1.width > t1.fixedWidth) {
+                t1.fontSize *= t1.fixedWidth / (t1.width + 1);
+                t1.width = t1.fixedWidth;
+            }
+        });
+
+        //fabricJS mouse-up event listener
+        this.overlay.fabricCanvas().on('mouse:up', function (o) {
+            // console.log("EVENT TRIGERRED: fabricj-mouse:up");
+            if (getMouseMode() == "addAnnotation") {
+                var pointerOnMouseUp = this.overlay.fabricCanvas().getPointer(event.e);
+
+                // save annotation to database
+                createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
+                setMouseMode("OSD");
+                $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
+            }
+            isDown = false;
+        });
+
+        this.overlay.fabricCanvas().on('object:modified', function () {
+            updateSerialization(this.overlay.fabricCanvas().getActiveObject());
+        });
+
     }, // end of initialize
 
     /****************************************************************************************************************
@@ -137,7 +184,7 @@ $.extend(xgds_image_annotation, {
             type: 'ellipse'
         });
         currentAnnotationType = ellipse
-        overlay.fabricCanvas().add(ellipse);
+        this.overlay.fabricCanvas().add(ellipse);
     },
 
     updateEllipse: function(x, y) {
@@ -160,7 +207,7 @@ $.extend(xgds_image_annotation, {
             type: 'rect'
         });
         currentAnnotationType = rectangle;
-        overlay.fabricCanvas().add(rectangle);
+        this.overlay.fabricCanvas().add(rectangle);
     },
 
     updateRectangleWidth: function(x, y) {
@@ -182,7 +229,7 @@ $.extend(xgds_image_annotation, {
            type: 'textboxPreview'
        });
        currentAnnotationType = textboxPreview;
-       overlay.fabricCanvas().add(textboxPreview);
+       this.overlay.fabricCanvas().add(textboxPreview);
     },
 
     updateTextboxPreview: function(x, y) {
@@ -212,12 +259,12 @@ $.extend(xgds_image_annotation, {
             type: 'arrow'
         });
         currentAnnotationType = arrow;
-        overlay.fabricCanvas().add(arrow);
+        this.overlay.fabricCanvas().add(arrow);
     },
 
     updateArrow: function(x, y) {
         var headlen = 100; //arrow head size
-        overlay.fabricCanvas().remove(arrow)
+        this.overlay.fabricCanvas().remove(arrow)
         var angle = Math.atan2(y - origY, x - origX);
 
         // bring the line end back some to account for arrow head.
@@ -237,8 +284,8 @@ $.extend(xgds_image_annotation, {
             type: 'arrow'
         });
         currentAnnotationType = arrow;
-        overlay.fabricCanvas().add(arrow);
-        overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().add(arrow);
+        this.overlay.fabricCanvas().renderAll();
     },
 
     calculateArrowPoints: function(x, y, headlen) {
@@ -286,24 +333,16 @@ $.extend(xgds_image_annotation, {
 
     *****************************************************************************************************************/
     //event listeners
-
-
-
-
-
-
-
-
     // support functions
     //sets if you can interact with objects on the fabricjs canvas
     setFabricCanvasInteractivity: function(boolean) {
-         overlay.fabricCanvas().forEachObject(function (object) {
+         this.overlay.fabricCanvas().forEachObject(function (object) {
             object.selectable = boolean;
         });
     },
 
     deselectFabricObjects: function(){
-        overlay.fabricCanvas().deactivateAll().renderAll();
+        this.overlay.fabricCanvas().deactivateAll().renderAll();
     },
 
     setMouseMode: function() {
@@ -403,7 +442,7 @@ $.extend(xgds_image_annotation, {
                 type: 'text'
             });
             currentAnnotationType = text;
-            overlay.fabricCanvas().add(text);
+            this.overlay.fabricCanvas().add(text);
             textboxPreview.remove();
             fabricObject = text;
         }
@@ -524,7 +563,7 @@ $.extend(xgds_image_annotation, {
      Return array for spectrum color picker palette
      */
     getPaletteColors: function() {
-        getAnnotationColors(); //now the dictionary should be full
+        xgds_image_annotation.getAnnotationColors(); //now the dictionary should be full
 
         var retval = [];
 
@@ -547,7 +586,7 @@ $.extend(xgds_image_annotation, {
     },
 
     deleteActiveAnnotations: function() {
-        var annotation = overlay.fabricCanvas().getActiveObject();
+        var annotation = this.overlay.fabricCanvas().getActiveObject();
         if (annotation["pk"] in annotationsDict) {
             //TODO: remove from database
             $.ajax({
@@ -569,10 +608,10 @@ $.extend(xgds_image_annotation, {
 
             //delete from dict and database
             delete annotationsDict[annotation["pk"]];
-            overlay.fabricCanvas().getActiveObject().remove();
+            this.overlay.fabricCanvas().getActiveObject().remove();
         } else {
             //annotation not saved in database anyways, just remove from canvas
-            overlay.fabricCanvas.getActiveObject().remove();
+            this.overlay.fabricCanvas.getActiveObject().remove();
         }
     },
 
@@ -618,8 +657,8 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"]
         });
-        overlay.fabricCanvas().add(rect);
-        overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().add(rect);
+        this.overlay.fabricCanvas().renderAll();
     },
 
     addEllipseToCanvas: function(annotationJson) {
@@ -640,8 +679,8 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"]
         });
-        overlay.fabricCanvas().add(ellipse);
-        overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().add(ellipse);
+        this.overlay.fabricCanvas().renderAll();
     },
 
     addArrowToCanvas: function(annotationJson) {
@@ -663,8 +702,8 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"]
         });
         console.log("image and pk pls");
-        overlay.fabricCanvas().add(arrow);
-        overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().add(arrow);
+        this.overlay.fabricCanvas().renderAll();
     },
 
     addTextToCanvas: function(annotationJson) {
@@ -696,208 +735,128 @@ $.extend(xgds_image_annotation, {
         //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
         //the width is undef. textbox no field width.
 
-        overlay.fabricCanvas().add(text);
-        overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().add(text);
+        this.overlay.fabricCanvas().renderAll();
     }
-
-
 
 
 }); // end of namespace
 
 
+// $(window).on( "load", function() {
+$(document).ready(function () {
+    //color picker
+    var spectrumOptions = {
+        showPaletteOnly: true,
+        showPalette: true,
+        palette: xgds_image_annotation.getPaletteColors(),
+        color: colorsDictionary[Object.keys(colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
+    };
+    $("#colorPicker").spectrum(spectrumOptions);
 
 
-// TODO: I think the issue is you can't do assignment in a namespace field like that?
-// Need to declare as "" and initialize it in initialize()
-
-
-// Now, just need to figure out the OSD import error...
-
-xgds_image_annotation.initialize();
-
-/****************************************************************************************************************
-
- E V E N T  L I S T E N E R S
-
- *****************************************************************************************************************/
-//event listeners
-//fabricJS mouse-down event listener
-overlay.fabricCanvas().observe('mouse:down', function (o) {
-    // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
-    console.log("mouse mode is " + getMouseMode());
-    if (getMouseMode() == "addAnnotation") {
-        isDown = true;
-        var pointer = overlay.fabricCanvas().getPointer(o.e);
-        origX = pointer.x;
-        origY = pointer.y;
-        switch (annotationType) {
-            case "arrow":
-                drawArrow(pointer.x, pointer.y);
-                break;
-            case "rectangle":
-                initializeRectangle(pointer.x, pointer.y);
-                break;
-            case "ellipse":
-                initializeEllipse(pointer.x, pointer.y);
-                break;
-            case "text":
-                // initializeText(pointer.x, pointer.y);
-                initializeTextboxPreview(pointer.x, pointer.y);
-                break;
-            default:
-                console.log("welp, that shouldn't have happened. Undefined annotationType");
-                throw new Error("Tried to switch to an undefined annotationType");
-        }
-    }
 });
 
-//fabricJS mouse-move event listener
-overlay.fabricCanvas().observe('mouse:move', function (o) {
-    if (!isDown) return;
-    var pointer = overlay.fabricCanvas().getPointer(o.e);
+    /*  Global Variables  */
+    //fabricjs-openseadragon annotation object
 
-    switch (annotationType) {
-        case "arrow":
-            updateArrow(pointer.x, pointer.y);
-            break;
-        case "rectangle":
-            updateRectangleWidth(pointer.x, pointer.y);
-            break;
-        case "ellipse":
-            updateEllipse(pointer.x, pointer.y);
-            break;
-        case "text":
-            updateTextboxPreview(pointer.x, pointer.y);
-            break;
-        default:
-            console.log("welp, that shouldn't have happened. Undefined annotationType");
-            throw new Error("Tried to switch to an undefined annotationType");
-    }
-    overlay.fabricCanvas().renderAll();
-});
 
-/* event listener that handles resizing the textbox based on amount of text */
-overlay.fabricCanvas().on('text:changed', function (opt) {
-    var t1 = opt.target;
-    if (t1.width > t1.fixedWidth) {
-        t1.fontSize *= t1.fixedWidth / (t1.width + 1);
-        t1.width = t1.fixedWidth;
-    }
-});
 
-//fabricJS mouse-up event listener
-overlay.fabricCanvas().on('mouse:up', function (o) {
-    // console.log("EVENT TRIGERRED: fabricj-mouse:up");
-    if (getMouseMode() == "addAnnotation") {
-        var pointerOnMouseUp = overlay.fabricCanvas().getPointer(event.e);
 
-        // save annotation to database
-        createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
-        setMouseMode("OSD");
-        $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
-    }
-    isDown = false;
-});
-
-$("input[name='cursorMode']").change(function () {
-    // console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
-    var mode = $("input[name='cursorMode']:checked").val();
-    setMouseMode(mode);
-});
-
-$("input[name='annotationsOnOrOff']").change(function () {
-    var onOff = $("input[name='annotationsOnOrOff']:checked").val();
-    var objects = overlay.fabricCanvas().getObjects();
-    if (onOff == "off") {
-        for (var i = 0; i < objects.length; i++) {
-            //set all objects as invisible and lock in position
-            objects[i].visible = false;
-            objects[i].lockMovementX = true;
-            objects[i].lockMovementY = true;
-            objects[i].lockRotation = true;
-            objects[i].lockScalingFlip = true;
-            objects[i].lockScalingX = true;
-            objects[i].lockScalingY = true;
-            objects[i].lockSkewingX = true;
-            objects[i].lockSkewingY = true;
-            objects[i].lockUniScaling = true;
-        }
-    } else {
-        //set all objects as visible and unlock
-        for (var i = 0; i < objects.length; i++) {
-            objects[i].visible = true;
-            objects[i].lockMovementX = false;
-            objects[i].lockMovementY = false;
-            objects[i].lockRotation = false;
-            objects[i].lockScalingFlip = false;
-            objects[i].lockScalingX = false;
-            objects[i].lockScalingY = false;
-            objects[i].lockSkewingX = false;
-            objects[i].lockSkewingY = false;
-            objects[i].lockUniScaling = false;
-        }
-    }
-    overlay.fabricCanvas().renderAll();
-});
-
-$("input[name='annotationType']").change(function () {
-    // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
-    annotationType = $("input[name='annotationType']:checked").val();
-    console.log("annotation shape changed to: " + annotationType);
-});
-
-overlay.fabricCanvas().on('object:modified', function () {
-    updateSerialization(overlay.fabricCanvas().getActiveObject());
-});
-
-$("#addAnnotation").click(function () {
-    setMouseMode("addAnnotation");
-});
-
-$('#loadAnnotation').click(function () {
-    getAnnotations();
-});
-
-$('#downloadScreenshot').click(function () {
-    var OSD_layer = viewer.drawer.canvas.toDataURL("image/png");
-    var annotations = overlay.fabricCanvas().toDataURL({format: 'image/png'});
-
-    $.ajax({
-        type: "POST",
-        url: '/xgds_image/mergeImages/',
-        datatype: 'json',
-        data: {
-            image1: OSD_layer,
-            image2: annotations
-        },
-        success: function (base64string) {  //do we have to index data?
-            console.log("IMAGE MERGE SUCCESS");
-            window.open("data:image/png;base64," + base64string);
-            // put in image tag and see if black bars/transparency still there
-            var img = new Image();
-            img.src = "data:image/png;base64," + base64string;
-
-            // $('#downloadImagePreview').prepend('<img id="imgPreview" src=img />')
-            document.getElementById('downloadImagePreview').src="data:image/png;base64," + base64string;
-            $('#my_image').attr('src', "data:image/png;base64," + base64string);
-            $('#my_image').width(800);
-        },
-        error: function (e) {
-            console.log("Ajax error");
-            console.log(e);
-        }
+    $("input[name='cursorMode']").change(function () {
+        // console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
+        var mode = $("input[name='cursorMode']:checked").val();
+        setMouseMode(mode);
     });
-});
 
-$('#deleteAnnotation').click(function () {
-    deleteActiveAnnotation();
-});
+    $("input[name='annotationsOnOrOff']").change(function () {
+        var onOff = $("input[name='annotationsOnOrOff']:checked").val();
+        var objects = this.overlay.fabricCanvas().getObjects();
+        if (onOff == "off") {
+            for (var i = 0; i < objects.length; i++) {
+                //set all objects as invisible and lock in position
+                objects[i].visible = false;
+                objects[i].lockMovementX = true;
+                objects[i].lockMovementY = true;
+                objects[i].lockRotation = true;
+                objects[i].lockScalingFlip = true;
+                objects[i].lockScalingX = true;
+                objects[i].lockScalingY = true;
+                objects[i].lockSkewingX = true;
+                objects[i].lockSkewingY = true;
+                objects[i].lockUniScaling = true;
+            }
+        } else {
+            //set all objects as visible and unlock
+            for (var i = 0; i < objects.length; i++) {
+                objects[i].visible = true;
+                objects[i].lockMovementX = false;
+                objects[i].lockMovementY = false;
+                objects[i].lockRotation = false;
+                objects[i].lockScalingFlip = false;
+                objects[i].lockScalingX = false;
+                objects[i].lockScalingY = false;
+                objects[i].lockSkewingX = false;
+                objects[i].lockSkewingY = false;
+                objects[i].lockUniScaling = false;
+            }
+        }
+        this.overlay.fabricCanvas().renderAll();
+    });
 
-$("#colorPicker").on('change.spectrum', function (e, color) {
-    currentAnnotationColor = color.toHexString(); //convert to hex
-    console.log("currentAnnotationColor is: " + currentAnnotationColor);
-});
+    $("input[name='annotationType']").change(function () {
+        // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
+        annotationType = $("input[name='annotationType']:checked").val();
+        console.log("annotation shape changed to: " + annotationType);
+    });
+
+    $("#addAnnotation").click(function () {
+        setMouseMode("addAnnotation");
+    });
+
+    $('#loadAnnotation').click(function () {
+        getAnnotations();
+    });
+
+    $('#downloadScreenshot').click(function () {
+        var OSD_layer = viewer.drawer.canvas.toDataURL("image/png");
+        var annotations = this.overlay.fabricCanvas().toDataURL({format: 'image/png'});
+
+        $.ajax({
+            type: "POST",
+            url: '/xgds_image/mergeImages/',
+            datatype: 'json',
+            data: {
+                image1: OSD_layer,
+                image2: annotations
+            },
+            success: function (base64string) {  //do we have to index data?
+                console.log("IMAGE MERGE SUCCESS");
+                window.open("data:image/png;base64," + base64string);
+                // put in image tag and see if black bars/transparency still there
+                var img = new Image();
+                img.src = "data:image/png;base64," + base64string;
+
+                // $('#downloadImagePreview').prepend('<img id="imgPreview" src=img />')
+                document.getElementById('downloadImagePreview').src="data:image/png;base64," + base64string;
+                $('#my_image').attr('src', "data:image/png;base64," + base64string);
+                $('#my_image').width(800);
+            },
+            error: function (e) {
+                console.log("Ajax error");
+                console.log(e);
+            }
+        });
+    });
+
+    $('#deleteAnnotation').click(function () {
+        deleteActiveAnnotation();
+    });
+
+    $("#colorPicker").on('change.spectrum', function (e, color) {
+        currentAnnotationColor = color.toHexString(); //convert to hex
+        console.log("currentAnnotationColor is: " + currentAnnotationColor);
+    });
 
 
 
