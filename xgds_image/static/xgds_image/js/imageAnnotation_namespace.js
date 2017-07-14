@@ -3,6 +3,7 @@ var xgds_image_annotation = xgds_image_annotation || {};
 /*
 TODO:
 this vs xgds_image_annotation.
+commented our mouse cursor mode stuff
 disabled spectrum color picker
 current status: fixing color picker. Chaning colorDictionary etc to this.colorPicker. Errors in index. Think it's from this.var/var undef
 spectrum broken
@@ -95,6 +96,16 @@ $.extend(xgds_image_annotation, {
         // Set toolbar as invisible
         $("#imageAnnotationToolbar").hide();
 
+        // color picker
+        var spectrumOptions = {
+            showPaletteOnly: true,
+            showPalette: true,
+            palette: xgds_image_annotation.getPaletteColors(),
+            color: this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
+        };
+        console.log("palette");
+        console.log(xgds_image_annotation.getPaletteColors());
+        $("#colorPicker").spectrum(spectrumOptions);
 
         /****************************************************************************************************************
 
@@ -171,12 +182,12 @@ $.extend(xgds_image_annotation, {
         //fabricJS mouse-up event listener
         this.overlay.fabricCanvas().on('mouse:up', function (o) {
             // console.log("EVENT TRIGERRED: fabricj-mouse:up");
-            if (this.getMouseMode() == "addAnnotation") {
-                var pointerOnMouseUp = this.overlay.fabricCanvas().getPointer(event.e);
+            if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
+                var pointerOnMouseUp = xgds_image_annotation.overlay.fabricCanvas().getPointer(event.e);
 
                 // save annotation to database
-                this.createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
-                this.setMouseMode("OSD");
+                xgds_image_annotation.createNewSerialization(xgds_image_annotation.currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
+                xgds_image_annotation.setMouseMode("OSD");
                 $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
             }
             this.isDown = false;
@@ -235,7 +246,6 @@ $.extend(xgds_image_annotation, {
 
         $("#addAnnotation").click(function () {
             console.log("Add annotation button clicked");
-            debugger;
             xgds_image_annotation.setMouseMode("addAnnotation");
         });
 
@@ -389,13 +399,14 @@ $.extend(xgds_image_annotation, {
             selectable: true,
             type: 'arrow'
         });
-        this.currentAnnotationType = arrow;
-        this.overlay.fabricCanvas().add(arrow);
+        this.currentAnnotationType = this.arrow;
+        this.overlay.fabricCanvas().add(this.arrow);
     },
 
     updateArrow: function(x, y) {
+        debugger;
         var headlen = 100; //arrow head size
-        this.overlay.fabricCanvas().remove(arrow)
+        this.overlay.fabricCanvas().remove(this.arrow);
         var angle = Math.atan2(y - this.origY, x - this.origX);
 
         // bring the line end back some to account for arrow head.
@@ -414,8 +425,8 @@ $.extend(xgds_image_annotation, {
             selectable: true,
             type: 'arrow'
         });
-        this.currentAnnotationType = arrow;
-        this.overlay.fabricCanvas().add(arrow);
+        this.currentAnnotationType = this.arrow;
+        this.overlay.fabricCanvas().add(this.arrow);
         this.overlay.fabricCanvas().renderAll();
     },
 
@@ -480,7 +491,7 @@ $.extend(xgds_image_annotation, {
                 this.deselectFabricObjects();
                 this.viewer.setMouseNavEnabled(true);
                 // $('#viewerWrapper').css('cursor', 'crosshair');
-                document.getElementById("viewerWrapper").style.cursor = "crosshair";
+                // document.getElementById("viewerWrapper").style.cursor = "crosshair";
                 break;
             case "addAnnotation":
                 console.log("mousemode: addAnnotation");
@@ -494,7 +505,7 @@ $.extend(xgds_image_annotation, {
                 this.mouseMode = "editAnnotation";
                 this.setFabricCanvasInteractivity(true);
                 // $('#viewerWrapper').css('cursor', 'wait');
-                document.getElementById("viewerWrapper").style.cursor = "pointer";
+                // document.getElementById("viewerWrapper").style.cursor = "pointer";
                 this.viewer.setMouseNavEnabled(false);
                 break;
             default:
@@ -574,7 +585,7 @@ $.extend(xgds_image_annotation, {
         }
         console.log(fabricObject);
 
-        var temp = duplicateObject(fabricObject);
+        var temp = this.duplicateObject(fabricObject);
         if(fabricObject.type == "arrow") { //arrow only needs fill
             temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
             temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
@@ -656,14 +667,14 @@ $.extend(xgds_image_annotation, {
                 console.log("raw annotations json dump " + colorsJson);
                 console.log(colorsJson);
                 colorsJson.forEach(function (color) {
-                    debugger;
-                    this.colorsDictionary[color["id"]] = {name: color["name"], hex: color["hex"], id: color["id"]};
+                    xgds_image_annotation.colorsDictionary[color["id"]] = {name: color["name"], hex: color["hex"], id: color["id"]};
                 });
-                this.currentAnnotationColor = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex;
+                xgds_image_annotation.currentAnnotationColor = xgds_image_annotation.colorsDictionary[Object.keys(xgds_image_annotation.colorsDictionary)[0]].hex;
+                // can't use this to refer to xgds_image_annotation object in ajax block?
             },
             error: function (a) {
                 console.log("Ajax error");
-                console.log(a)
+                console.log(a);
             }
         });
     },
@@ -674,11 +685,8 @@ $.extend(xgds_image_annotation, {
      */
     getColorIdFromHex: function(hexColor) {
         for (var key in this.colorsDictionary) {
-            console.log("searching...");
-            if (this.colorsDictionary[key].hex.toString().toLowerCase() == hexColor.toString().toLowerCase()) {
-                console.log(hexColor.toString().toLowerCase() + " matches this key");
-                console.log(colorsDictionary[key]);
-                return this.colorsDictionary[key].id;
+            if (xgds_image_annotation.colorsDictionary[key].hex.toString().toLowerCase() == hexColor.toString().toLowerCase()) {
+                return xgds_image_annotation.colorsDictionary[key].id;
             }
         }
         throw new Error("getColorIdFromHex couldn't find a match for " + hexColor);
@@ -867,16 +875,7 @@ $.extend(xgds_image_annotation, {
 
 $(window).on( "load", function() {
 // $(document).ready(function () {
-    //color picker
-    // var spectrumOptions = {
-    //     showPaletteOnly: true,
-    //     showPalette: true,
-    //     palette: xgds_image_annotation.getPaletteColors(),
-    //     color: this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
-    // };
-    // console.log("palette");
-    // console.log(xgds_image_annotation.getPaletteColors());
-    // $("#colorPicker").spectrum(spectrumOptions);
+
 });
 
     /*  Global Variables  */
