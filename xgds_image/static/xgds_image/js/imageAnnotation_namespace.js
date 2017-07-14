@@ -26,6 +26,8 @@ var colorsDictionary = {};
  */
 var mouseMode = "OSD";
 
+/* Stores whether the image annotation toolbar is currently hidden or not. Can be visible/invisible*/
+var imageAnnotationToolbarStatus = "invisible";
 /*
  Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
  */
@@ -37,17 +39,26 @@ var annotationType = "arrow";
 var currentAnnotationColor = "white";
 
 var overlay = "";
+/*
+TODO:
+current status: fixing color picker. Chaning colorDictionary etc to this.colorPicker. Errors in index. Think it's from this.var/var undef
+spectrum broken
+events not tied because not using this?
+make sure variables work in namespace... need to use this?
+need to add this in front of everything good lord
+ */
 $.extend(xgds_image_annotation, {
 
     toggleMenuBar: function() {
-
+        if(imageAnnotationToolbarStatus=="invisible") {
+            $("#imageAnnotationToolbar").show();
+            imageAnnotationToolbarStatus="visible";
+        }else{
+            $("#imageAnnotationToolbar").hide();
+            imageAnnotationToolbarStatus="invisible";
+        }
     },
 
-    // TODO: I think the issue is you can't do assignment in a namespace field like that?
-    // Need to declare as "" and initialize it in initialize()
-
-
-    // Now, just need to figure out the OSD import error...
     initialize: function(imageJson, osdViewer) {
         //TODO from Tamar
         // imageJson.pk is the pk of the image you want to work with now.
@@ -56,13 +67,10 @@ $.extend(xgds_image_annotation, {
         // this.imagePK = imageJson.pk
         this.imageJson = imageJson;
         this.viewer = osdViewer;
-        console.log("defined");
-        console.log(this.viewer);
-        console.log(this.imageJson);
-        console.log(typeof(this.viewer));
-        osdViewer.fabricjsOverlay();
         this.overlay = this.viewer.fabricjsOverlay();
 
+        // Set toolbar as invisible
+        $("#imageAnnotationToolbar").hide();
          /****************************************************************************************************************
 
          E V E N T  L I S T E N E R S
@@ -548,7 +556,7 @@ $.extend(xgds_image_annotation, {
     getColorIdFromHex: function(hexColor) {
         for (var key in colorsDictionary) {
             console.log("searching...");
-            if (colorsDictionary[key].hex.toString().toLowerCase() == hexColor.toString().toLowerCase()) {
+            if (this.colorsDictionary[key].hex.toString().toLowerCase() == hexColor.toString().toLowerCase()) {
                 console.log(hexColor.toString().toLowerCase() + " matches this key");
                 console.log(colorsDictionary[key]);
                 return colorsDictionary[key].id;
@@ -581,7 +589,6 @@ $.extend(xgds_image_annotation, {
         }
         retval.push(row1);
         retval.push(row2);
-
         return retval;
     },
 
@@ -746,12 +753,16 @@ $.extend(xgds_image_annotation, {
 // $(window).on( "load", function() {
 $(document).ready(function () {
     //color picker
+    debugger;
     var spectrumOptions = {
         showPaletteOnly: true,
         showPalette: true,
         palette: xgds_image_annotation.getPaletteColors(),
         color: colorsDictionary[Object.keys(colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
     };
+    console.log("palette");
+    console.log(xgds_image_annotation.getPaletteColors());
+    debugger;
     $("#colorPicker").spectrum(spectrumOptions);
 
 
