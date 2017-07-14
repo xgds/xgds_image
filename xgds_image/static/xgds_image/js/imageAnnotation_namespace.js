@@ -1,46 +1,8 @@
 var xgds_image_annotation = xgds_image_annotation || {};
 
-var arrow, line, rectangle, circle, ellipse, text, isDown, textboxPreview, origX, origY;
-var currentAnnotationType = "arrow"; //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
-
-/* Store imageJson locally */
-var imageJson = "";
-/*
- Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
- Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
- */
-var annotationsDict = {};
-
-/*
- Stores a dictionary of pre-set (string)color -> (string)hex pairs.
- Loaded through ajax on document.onReady()
- */
-var colorsDictionary = {};
-
-
-/* the mouse can be in 3 modes:
- 1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
- 2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
- 3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
- getters and setters are below
- */
-var mouseMode = "OSD";
-
-/* Stores whether the image annotation toolbar is currently hidden or not. Can be visible/invisible*/
-var imageAnnotationToolbarStatus = "invisible";
-/*
- Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
- */
-var annotationType = "arrow";
-
-/*
- Default annotation color to draw annotations in
- */
-var currentAnnotationColor = "white";
-
-var overlay = "";
 /*
 TODO:
+are the events triggering?
 current status: fixing color picker. Chaning colorDictionary etc to this.colorPicker. Errors in index. Think it's from this.var/var undef
 spectrum broken
 events not tied because not using this?
@@ -48,14 +10,67 @@ make sure variables work in namespace... need to use this?
 need to add this in front of everything good lord
  */
 $.extend(xgds_image_annotation, {
+    arrow: "",
+    line: "",
+    rectangle: "",
+    circle: "",
+    ellipse: "",
+    text: "",
+    isDown: "",
+    textboxPreview: "",
+    origX: "",
+    origY: "",
+
+    currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
+
+    overlay: "",
+
+    /* Store imageJson locally */
+    imageJson: "",
+
+    /*
+    Stores annotation [primary key] to [annotation json] mappings for all annotations currently drawn on the canvas {pk: annotation json}
+    Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
+    */
+    annotationsDict: {},
+
+
+    /*
+    Stores a dictionary of pre-set (string)color -> (string)hex pairs.
+    Loaded through ajax on document.onReady()
+    */
+    colorsDictionary: {},
+
+    /* the mouse can be in 3 modes:
+     1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
+     2.) addAnnotation (disable OSD mode and enable click/drag on fabricJS canvas to draw an annotation)
+     3.) editAnnotation (disable OSD mode and allow editing of existing annotations (but do not draw onclicK)
+     getters and setters are below
+     */
+    mouseMode: "OSD",
+
+    /* Stores whether the image annotation toolbar is currently hidden or not. Can be visible/invisible*/
+    imageAnnotationToolbarStatus: "invisible",
+
+    /*
+    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
+    */
+    annotationType: "arrow",
+
+
+    /*
+    Default annotation color to draw annotations in
+    */
+    currentAnnotationColor: "white",
+
 
     toggleMenuBar: function() {
-        if(imageAnnotationToolbarStatus=="invisible") {
+        if(this.imageAnnotationToolbarStatus=="invisible") {
             $("#imageAnnotationToolbar").show();
-            imageAnnotationToolbarStatus="visible";
+            this.imageAnnotationToolbarStatus="visible";
         }else{
             $("#imageAnnotationToolbar").hide();
-            imageAnnotationToolbarStatus="invisible";
+            this.imageAnnotationToolbarStatus="invisible";
         }
     },
 
@@ -83,11 +98,11 @@ $.extend(xgds_image_annotation, {
             // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
             console.log("mouse mode is " + getMouseMode());
             if (getMouseMode() == "addAnnotation") {
-                isDown = true;
+                this.isDown = true;
                 var pointer = this.overlay.fabricCanvas().getPointer(o.e);
-                origX = pointer.x;
-                origY = pointer.y;
-                switch (annotationType) {
+                this.origX = pointer.x;
+                this.origY = pointer.y;
+                switch (this.annotationType) {
                     case "arrow":
                         drawArrow(pointer.x, pointer.y);
                         break;
@@ -110,10 +125,10 @@ $.extend(xgds_image_annotation, {
 
         //fabricJS mouse-move event listener
         this.overlay.fabricCanvas().observe('mouse:move', function (o) {
-            if (!isDown) return;
+            if (!this.isDown) return;
             var pointer = this.overlay.fabricCanvas().getPointer(o.e);
 
-            switch (annotationType) {
+            switch (this.annotationType) {
                 case "arrow":
                     updateArrow(pointer.x, pointer.y);
                     break;
@@ -145,19 +160,19 @@ $.extend(xgds_image_annotation, {
         //fabricJS mouse-up event listener
         this.overlay.fabricCanvas().on('mouse:up', function (o) {
             // console.log("EVENT TRIGERRED: fabricj-mouse:up");
-            if (getMouseMode() == "addAnnotation") {
+            if (this.getMouseMode() == "addAnnotation") {
                 var pointerOnMouseUp = this.overlay.fabricCanvas().getPointer(event.e);
 
                 // save annotation to database
-                createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
-                setMouseMode("OSD");
+                this.createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
+                this.setMouseMode("OSD");
                 $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
             }
-            isDown = false;
+            this.isDown = false;
         });
 
         this.overlay.fabricCanvas().on('object:modified', function () {
-            updateSerialization(this.overlay.fabricCanvas().getActiveObject());
+            this.updateSerialization(this.overlay.fabricCanvas().getActiveObject());
         });
 
     }, // end of initialize
@@ -177,7 +192,7 @@ $.extend(xgds_image_annotation, {
     },
 
     initializeEllipse: function(x, y) {
-        ellipse = new fabric.Ellipse({
+        this.ellipse = new fabric.Ellipse({
             left: x,
             top: y,
             radius: 1,
@@ -191,18 +206,18 @@ $.extend(xgds_image_annotation, {
             scaleY: 1,
             type: 'ellipse'
         });
-        currentAnnotationType = ellipse
+        this.currentAnnotationType = ellipse
         this.overlay.fabricCanvas().add(ellipse);
     },
 
     updateEllipse: function(x, y) {
         var distance = distanceFormula(x, y, origX, origY);
-        ellipse.set({rx: Math.abs(origX - x), ry: Math.abs(origY - y)});
-        currentAnnotationType = ellipse
+        this.ellipse.set({rx: Math.abs(origX - x), ry: Math.abs(origY - y)});
+        this.currentAnnotationType = ellipse
     },
 
     initializeRectangle: function(x, y) {
-         rectangle = new fabric.Rect({
+         this.rectangle = new fabric.Rect({
             left: x,
             top: y,
             fill: '',
@@ -214,19 +229,19 @@ $.extend(xgds_image_annotation, {
             scaleY: 1,
             type: 'rect'
         });
-        currentAnnotationType = rectangle;
+        this.currentAnnotationType = rectangle;
         this.overlay.fabricCanvas().add(rectangle);
     },
 
     updateRectangleWidth: function(x, y) {
         var width = Math.abs(x - origX);
         var height = Math.abs(y - origY);
-        rectangle.set({width: width, height: height});
-        currentAnnotationType = rectangle;
+        this.rectangle.set({width: width, height: height});
+        this.currentAnnotationType = rectangle;
     },
 
     initializeTextboxPreview: function(x, y) {
-       textboxPreview = new fabric.Rect({
+       this.textboxPreview = new fabric.Rect({
            left: x,
            top: y,
            fill: "",
@@ -236,15 +251,15 @@ $.extend(xgds_image_annotation, {
            height: 1,
            type: 'textboxPreview'
        });
-       currentAnnotationType = textboxPreview;
+       this.currentAnnotationType = textboxPreview;
        this.overlay.fabricCanvas().add(textboxPreview);
     },
 
     updateTextboxPreview: function(x, y) {
         var width = Math.abs(x - origX);
         var height = Math.abs(y - origY);
-        textboxPreview.set({width: width, height: height});
-        currentAnnotationType = textboxPreview
+        this.textboxPreview.set({width: width, height: height});
+        this.currentAnnotationType = textboxPreview
     },
 
     /*
@@ -253,8 +268,8 @@ $.extend(xgds_image_annotation, {
      really drawing a polygon, not an arrow). Taken from https://jsfiddle.net/6e17oxc3/
      */
     drawArrow: function(x, y) {
-       var headlen = 100;  // arrow head size
-        arrow = new fabric.Polyline(calculateArrowPoints(origX, origY, x, y, headlen), {
+        var headlen = 100;  // arrow head size
+        this.arrow = new fabric.Polyline(calculateArrowPoints(origX, origY, x, y, headlen), {
             fill: currentAnnotationColor,
             stroke: 'black',
             opacity: 1,
@@ -266,7 +281,7 @@ $.extend(xgds_image_annotation, {
             selectable: true,
             type: 'arrow'
         });
-        currentAnnotationType = arrow;
+        this.currentAnnotationType = arrow;
         this.overlay.fabricCanvas().add(arrow);
     },
 
@@ -281,7 +296,7 @@ $.extend(xgds_image_annotation, {
 
         // calculate the points.
         var pointsArray = calculateArrowPoints(x, y, headlen);
-        arrow = new fabric.Polyline(pointsArray, {
+        this.arrow = new fabric.Polyline(pointsArray, {
             fill: currentAnnotationColor,
             stroke: 'black',
             opacity: 1,
@@ -291,7 +306,7 @@ $.extend(xgds_image_annotation, {
             selectable: true,
             type: 'arrow'
         });
-        currentAnnotationType = arrow;
+        this.currentAnnotationType = arrow;
         this.overlay.fabricCanvas().add(arrow);
         this.overlay.fabricCanvas().renderAll();
     },
@@ -357,27 +372,27 @@ $.extend(xgds_image_annotation, {
         switch (mode) {
             case "OSD":
                 console.log("mousemode: OSD");
-                mouseMode = "OSD";
-                setFabricCanvasInteractivity(false);
-                deselectFabricObjects();
-                viewer.setMouseNavEnabled(true);
+                this.mouseMode = "OSD";
+                this.setFabricCanvasInteractivity(false);
+                this.deselectFabricObjects();
+                this.viewer.setMouseNavEnabled(true);
                 // $('#viewerWrapper').css('cursor', 'crosshair');
                 document.getElementById("viewerWrapper").style.cursor = "crosshair";
                 break;
             case "addAnnotation":
                 console.log("mousemode: addAnnotation");
-                mouseMode = "addAnnotation";
-                setFabricCanvasInteractivity(false);
-                deselectFabricObjects();
-                viewer.setMouseNavEnabled(false); //if we're in addAnnotation mode, don't set isDown to true -- actually, ONLY set to true if mode is addAnnotation
+                this.mouseMode = "addAnnotation";
+                this.setFabricCanvasInteractivity(false);
+                this.deselectFabricObjects();
+                this.viewer.setMouseNavEnabled(false); //if we're in addAnnotation mode, don't set isDown to true -- actually, ONLY set to true if mode is addAnnotation
                 break;
             case "editAnnotation":
                 console.log("mousemode: editAnnotation");
-                mouseMode = "editAnnotation";
-                setFabricCanvasInteractivity(true);
+                this.mouseMode = "editAnnotation";
+                this.setFabricCanvasInteractivity(true);
                 // $('#viewerWrapper').css('cursor', 'wait');
                 document.getElementById("viewerWrapper").style.cursor = "pointer";
-                viewer.setMouseNavEnabled(false);
+                this.viewer.setMouseNavEnabled(false);
                 break;
             default:
                 console.log(mode);
@@ -386,7 +401,7 @@ $.extend(xgds_image_annotation, {
     },
 
     getMouseMode: function() {
-        return mouseMode;
+        return this.mouseMode;
     },
 
     duplicateObject: function(object) {
@@ -425,7 +440,7 @@ $.extend(xgds_image_annotation, {
                     //convert django pk/id to hex color
                     console.log(annotation);
                     // annotation["stroke"] = colorsDictionary[annotation["strokeColor"]].hex;
-                    addAnnotationToCanvas(annotation);
+                    this.addAnnotationToCanvas(annotation);
                 });
             },
             error: function (a) {
@@ -436,7 +451,7 @@ $.extend(xgds_image_annotation, {
 
     createNewSerialization: function(fabricObject, x, y) {
         if (fabricObject.type == "textboxPreview") {
-            text = new fabric.Textbox('MyText', {
+            this.text = new fabric.Textbox('MyText', {
                 width: x - origX,
                 top: origY,
                 left: origX,
@@ -449,24 +464,24 @@ $.extend(xgds_image_annotation, {
                 scaleY: 1,
                 type: 'text'
             });
-            currentAnnotationType = text;
+            this.currentAnnotationType = text;
             this.overlay.fabricCanvas().add(text);
-            textboxPreview.remove();
-            fabricObject = text;
+            this.textboxPreview.remove();
+            this.fabricObject = text;
         }
         console.log(fabricObject);
 
         var temp = duplicateObject(fabricObject);
         if(fabricObject.type == "arrow") { //arrow only needs fill
-            temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
-            temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-             temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-             temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+             temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+             temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
-            temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
         }
 
         console.log("add annotation dump");
@@ -494,15 +509,15 @@ $.extend(xgds_image_annotation, {
         var temp = duplicateObject(fabricObject);
 
         if(fabricObject.type == "arrow") { //arrow only needs fill
-            temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
-            temp["stroke"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-            temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = getColorIdFromHex(fabricObject["fill"]);
+            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
-            temp["stroke"] = getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = colorsDictionary[Object.keys(colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
         }
 
         console.log("alter annotation dump");
@@ -538,9 +553,9 @@ $.extend(xgds_image_annotation, {
                 console.log("raw annotations json dump " + colorsJson);
                 console.log(colorsJson);
                 colorsJson.forEach(function (color) {
-                    colorsDictionary[color["id"]] = {name: color["name"], hex: color["hex"], id: color["id"]};
+                    this.colorsDictionary[color["id"]] = {name: color["name"], hex: color["hex"], id: color["id"]};
                 });
-                currentAnnotationColor = colorsDictionary[Object.keys(colorsDictionary)[0]].hex;
+                this.currentAnnotationColor = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex;
             },
             error: function (a) {
                 console.log("Ajax error");
@@ -554,16 +569,15 @@ $.extend(xgds_image_annotation, {
      MUST USE # IN FRONT
      */
     getColorIdFromHex: function(hexColor) {
-        for (var key in colorsDictionary) {
+        for (var key in this.colorsDictionary) {
             console.log("searching...");
             if (this.colorsDictionary[key].hex.toString().toLowerCase() == hexColor.toString().toLowerCase()) {
                 console.log(hexColor.toString().toLowerCase() + " matches this key");
                 console.log(colorsDictionary[key]);
-                return colorsDictionary[key].id;
+                return this.colorsDictionary[key].id;
             }
         }
         throw new Error("getColorIdFromHex couldn't find a match for " + hexColor);
-        return null;
     },
 
     /*
@@ -571,20 +585,20 @@ $.extend(xgds_image_annotation, {
      Return array for spectrum color picker palette
      */
     getPaletteColors: function() {
-        xgds_image_annotation.getAnnotationColors(); //now the dictionary should be full
+        this.getAnnotationColors(); //now the dictionary should be full
 
         var retval = [];
 
         var row1 = [];
         var row2 = [];
 
-        var theKeys = Object.keys(colorsDictionary);
+        var theKeys = Object.keys(this.colorsDictionary);
 
         for (var i = 0; i < theKeys.length; i = i + 2) {
             // console.log("row : " + i + ': ' +  colorsDictionary[theKeys[i]].hex);
-            row1.push(colorsDictionary[theKeys[i]].hex);
+            row1.push(this.colorsDictionary[theKeys[i]].hex);
             if (i + 1 < theKeys.length) {
-                row2.push(colorsDictionary[theKeys[i + 1]].hex);
+                row2.push(this.colorsDictionary[theKeys[i + 1]].hex);
             }
         }
         retval.push(row1);
@@ -594,7 +608,7 @@ $.extend(xgds_image_annotation, {
 
     deleteActiveAnnotations: function() {
         var annotation = this.overlay.fabricCanvas().getActiveObject();
-        if (annotation["pk"] in annotationsDict) {
+        if (annotation["pk"] in this.annotationsDict) {
             //TODO: remove from database
             $.ajax({
                 type: "POST",
@@ -614,7 +628,7 @@ $.extend(xgds_image_annotation, {
             });
 
             //delete from dict and database
-            delete annotationsDict[annotation["pk"]];
+            delete this.annotationsDict[annotation["pk"]];
             this.overlay.fabricCanvas().getActiveObject().remove();
         } else {
             //annotation not saved in database anyways, just remove from canvas
@@ -626,20 +640,20 @@ $.extend(xgds_image_annotation, {
      Given an annotation model, add it to the canvas
      */
     addAnnotationToCanvas: function(annotationJson) {
-        if (annotationJson["pk"] in annotationsDict) {
+        if (annotationJson["pk"] in this.annotationsDict) {
             console.log("Annotation is already drawn on canvas, aborting load for this annotation");
             return;
         } else { //otherwise, add annotation to annotationsDict and draw it by calling one of the addShapeToCanvas() functions below
-            annotationsDict[annotationJson["pk"]] = annotationJson;
+            this.annotationsDict[annotationJson["pk"]] = annotationJson;
         }
         if (annotationJson["annotationType"] == "Rectangle") {
-            addRectToCanvas(annotationJson);
+            this.addRectToCanvas(annotationJson);
         } else if (annotationJson["annotationType"] == "Ellipse") {
-            addEllipseToCanvas(annotationJson);
+            this.addEllipseToCanvas(annotationJson);
         } else if (annotationJson["annotationType"] == "Arrow") {
-            addArrowToCanvas(annotationJson);
+            this.addArrowToCanvas(annotationJson);
         } else if (annotationJson["annotationType"] == "Text") {
-            addTextToCanvas(annotationJson);
+            this.addTextToCanvas(annotationJson);
         } else {
             throw new Error("Tried to load an undefined shape to canvas (can only load rectangles, ellipses, arrows, lines");
         }
@@ -647,10 +661,10 @@ $.extend(xgds_image_annotation, {
 
 
     addRectToCanvas: function(annotationJson) {
-        var rect = new fabric.Rect({
+        this.rect = new fabric.Rect({
             left: annotationJson["left"],
             top: annotationJson["top"],
-            stroke: colorsDictionary[annotationJson["strokeColor"]].hex,
+            stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
             strokeWidth: annotationJson["strokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
@@ -669,10 +683,10 @@ $.extend(xgds_image_annotation, {
     },
 
     addEllipseToCanvas: function(annotationJson) {
-        ellipse = new fabric.Ellipse({
+        this.ellipse = new fabric.Ellipse({
             left: annotationJson["left"],
             top: annotationJson["top"],
-            stroke: colorsDictionary[annotationJson["strokeColor"]].hex,
+            stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
             strokeWidth: annotationJson["strokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
@@ -692,15 +706,14 @@ $.extend(xgds_image_annotation, {
 
     addArrowToCanvas: function(annotationJson) {
         /* Arrows "stroke" is actually their fill. Their stroke/border is always black */
-        arrow = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
+        this.arrow = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: 'black',
-            // stroke: colorsDictionary[annotationJson["strokeColor"]].hex,
             strokeWidth: annotationJson["strokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
-            fill: colorsDictionary[annotationJson["fill"]].hex,
+            fill: this.colorsDictionary[annotationJson["fill"]].hex,
             angle: annotationJson["angle"],
             type: 'arrow',
             scaleX: annotationJson["scaleX"],
@@ -716,15 +729,15 @@ $.extend(xgds_image_annotation, {
     addTextToCanvas: function(annotationJson) {
         console.log("text annotation object");
         console.log(annotationJson);
-        text = new fabric.Textbox("hello world", {
+        this.text = new fabric.Textbox("hello world", {
             left: annotationJson["left"],
             top: annotationJson["top"],
-            stroke: colorsDictionary[annotationJson["strokeColor"]].hex,
+            stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
             strokeWidth: annotationJson["strokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
-            fill: colorsDictionary[annotationJson["fill"]].hex,
-            borderColor: colorsDictionary[annotationJson["fill"]].hex,
+            fill: this.colorsDictionary[annotationJson["fill"]].hex,
+            borderColor: this.colorsDictionary[annotationJson["fill"]].hex,
             angle: annotationJson["angle"],
             width: annotationJson["width"],
             height: annotationJson["height"],
@@ -753,31 +766,25 @@ $.extend(xgds_image_annotation, {
 // $(window).on( "load", function() {
 $(document).ready(function () {
     //color picker
-    debugger;
     var spectrumOptions = {
         showPaletteOnly: true,
         showPalette: true,
         palette: xgds_image_annotation.getPaletteColors(),
-        color: colorsDictionary[Object.keys(colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
+        color: this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
     };
     console.log("palette");
     console.log(xgds_image_annotation.getPaletteColors());
-    debugger;
     $("#colorPicker").spectrum(spectrumOptions);
-
-
 });
 
     /*  Global Variables  */
     //fabricjs-openseadragon annotation object
 
 
-
-
     $("input[name='cursorMode']").change(function () {
         // console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
         var mode = $("input[name='cursorMode']:checked").val();
-        setMouseMode(mode);
+        this.setMouseMode(mode);
     });
 
     $("input[name='annotationsOnOrOff']").change(function () {
@@ -817,20 +824,20 @@ $(document).ready(function () {
 
     $("input[name='annotationType']").change(function () {
         // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
-        annotationType = $("input[name='annotationType']:checked").val();
-        console.log("annotation shape changed to: " + annotationType);
+        this.annotationType = $("input[name='annotationType']:checked").val();
+        console.log("annotation shape changed to: " + this.annotationType);
     });
 
     $("#addAnnotation").click(function () {
-        setMouseMode("addAnnotation");
+        this.setMouseMode("addAnnotation");
     });
 
     $('#loadAnnotation').click(function () {
-        getAnnotations();
+        this.getAnnotations();
     });
 
     $('#downloadScreenshot').click(function () {
-        var OSD_layer = viewer.drawer.canvas.toDataURL("image/png");
+        var OSD_layer = this.viewer.drawer.canvas.toDataURL("image/png");
         var annotations = this.overlay.fabricCanvas().toDataURL({format: 'image/png'});
 
         $.ajax({
@@ -861,12 +868,12 @@ $(document).ready(function () {
     });
 
     $('#deleteAnnotation').click(function () {
-        deleteActiveAnnotation();
+        this.deleteActiveAnnotation();
     });
 
     $("#colorPicker").on('change.spectrum', function (e, color) {
-        currentAnnotationColor = color.toHexString(); //convert to hex
-        console.log("currentAnnotationColor is: " + currentAnnotationColor);
+        this.currentAnnotationColor = color.toHexString(); //convert to hex
+        console.log("currentAnnotationColor is: " + this.currentAnnotationColor);
     });
 
 
