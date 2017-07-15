@@ -122,7 +122,7 @@ $.extend(xgds_image_annotation, {
             // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
             console.log("mouse mode is " + xgds_image_annotation.getMouseMode());
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
-                this.isDown = true;
+                xgds_image_annotation.isDown = true;
                 var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
                 xgds_image_annotation.origX = pointer.x;
                 xgds_image_annotation.origY = pointer.y;
@@ -151,7 +151,7 @@ $.extend(xgds_image_annotation, {
         //fabricJS mouse-move event listener
         this.overlay.fabricCanvas().observe('mouse:move', function (o) {
             console.log("EVENT TRIGERRED: fabricj-mouse:move");
-            if (!this.isDown) return;
+            if (!xgds_image_annotation.isDown) return;
             var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
             switch (xgds_image_annotation.annotationType) {
                 case "arrow":
@@ -195,22 +195,22 @@ $.extend(xgds_image_annotation, {
                 xgds_image_annotation.setMouseMode("OSD");
                 $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
             }
-            this.isDown = false;
+            xgds_image_annotation.isDown = false;
         });
 
         this.overlay.fabricCanvas().on('object:modified', function () {
-            this.updateSerialization(this.overlay.fabricCanvas().getActiveObject());
+            xgds_image_annotation.updateSerialization(xgds_image_annotation.overlay.fabricCanvas().getActiveObject());
         });
 
         $("input[name='cursorMode']").change(function () {
             // console.log("cursorMode change detected: " + $("input[name='cursorMode']:checked").val());
             var mode = $("input[name='cursorMode']:checked").val();
-            this.setMouseMode(mode);
+            xgds_image_annotation.setMouseMode(mode);
         });
 
         $("input[name='annotationsOnOrOff']").change(function () {
             var onOff = $("input[name='annotationsOnOrOff']:checked").val();
-            var objects = this.overlay.fabricCanvas().getObjects();
+            var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
             if (onOff == "off") {
                 for (var i = 0; i < objects.length; i++) {
                     //set all objects as invisible and lock in position
@@ -240,13 +240,13 @@ $.extend(xgds_image_annotation, {
                     objects[i].lockUniScaling = false;
                 }
             }
-            this.overlay.fabricCanvas().renderAll();
+            xgds_image_annotation.overlay.fabricCanvas().renderAll();
         });
 
         $("input[name='annotationType']").change(function () {
             // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
             xgds_image_annotation.annotationType = $("input[name='annotationType']:checked").val();
-            console.log("annotation shape changed to: " + this.annotationType);
+            console.log("annotation shape changed to: " + xgds_image_annotation.annotationType);
         });
 
         $("#addAnnotation").click(function () {
@@ -255,12 +255,12 @@ $.extend(xgds_image_annotation, {
         });
 
         $('#loadAnnotation').click(function () {
-            this.getAnnotations();
+            xgds_image_annotation.getAnnotations();
         });
 
         $('#downloadScreenshot').click(function () {
-            var OSD_layer = this.viewer.drawer.canvas.toDataURL("image/png");
-            var annotations = this.overlay.fabricCanvas().toDataURL({format: 'image/png'});
+            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png");
+            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'});
 
             $.ajax({
                 type: "POST",
@@ -290,12 +290,12 @@ $.extend(xgds_image_annotation, {
         });
 
         $('#deleteAnnotation').click(function () {
-            this.deleteActiveAnnotation();
+            xgds_image_annotation.deleteActiveAnnotation();
         });
 
         $("#colorPicker").on('change.spectrum', function (e, color) {
-            this.currentAnnotationColor = color.toHexString(); //convert to hex
-            console.log("currentAnnotationColor is: " + this.currentAnnotationColor);
+            xgds_image_annotation.currentAnnotationColor = color.toHexString(); //convert to hex
+            console.log("currentAnnotationColor is: " + xgds_image_annotation.currentAnnotationColor);
         });
 
     }, // end of initialize
@@ -409,7 +409,6 @@ $.extend(xgds_image_annotation, {
     },
 
     updateArrow: function(x, y) {
-        debugger;
         var headlen = 100; //arrow head size
         this.overlay.fabricCanvas().remove(this.arrow);
         var angle = Math.atan2(y - this.origY, x - this.origX);
@@ -575,18 +574,18 @@ $.extend(xgds_image_annotation, {
                 top: this.origY,
                 left: this.origX,
                 fontSize: 100,
-                stroke: currentAnnotationColor,
-                fill: currentAnnotationColor,
-                borderColor: currentAnnotationColor,
+                stroke: this.currentAnnotationColor,
+                fill: this.currentAnnotationColor,
+                borderColor: this.currentAnnotationColor,
                 textAlign: 'center',
                 scaleX: 1,
                 scaleY: 1,
                 type: 'text'
             });
-            this.currentAnnotationType = text;
-            this.overlay.fabricCanvas().add(text);
+            this.currentAnnotationType = this.text;
+            this.overlay.fabricCanvas().add(this.text);
             this.textboxPreview.remove();
-            this.fabricObject = text;
+            this.fabricObject = this.text;
         }
         console.log(fabricObject);
 
@@ -625,7 +624,7 @@ $.extend(xgds_image_annotation, {
     },
 
     updateSerialization: function(fabricObject) {
-        var temp = duplicateObject(fabricObject);
+        var temp = this.duplicateObject(fabricObject);
 
         if(fabricObject.type == "arrow") { //arrow only needs fill
             temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
@@ -795,7 +794,7 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"]
         });
-        this.overlay.fabricCanvas().add(rect);
+        this.overlay.fabricCanvas().add(this.rect);
         this.overlay.fabricCanvas().renderAll();
     },
 
@@ -817,7 +816,7 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"]
         });
-        this.overlay.fabricCanvas().add(ellipse);
+        this.overlay.fabricCanvas().add(this.ellipse);
         this.overlay.fabricCanvas().renderAll();
     },
 
@@ -839,7 +838,7 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"]
         });
         console.log("image and pk pls");
-        this.overlay.fabricCanvas().add(arrow);
+        this.overlay.fabricCanvas().add(this.arrow);
         this.overlay.fabricCanvas().renderAll();
     },
 
@@ -872,7 +871,7 @@ $.extend(xgds_image_annotation, {
         //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
         //the width is undef. textbox no field width.
 
-        this.overlay.fabricCanvas().add(text);
+        this.overlay.fabricCanvas().add(this.text);
         this.overlay.fabricCanvas().renderAll();
     }
 }); // end of namespace
