@@ -116,13 +116,16 @@ $.extend(xgds_image_annotation, {
         // fabricJS mouse-down event listener
 
         this.overlay.fabricCanvas().observe('mouse:down', function (o) {
+            console.log("EVENT TRIGERRED: fabricj-mouse:down");
+            var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
+            console.log("mousedown: " + "(" + pointer.y + ", " + pointer.x + ")");
             // console.log("EVENT TRIGERRED: fabricjs-mouse:down");
             console.log("mouse mode is " + xgds_image_annotation.getMouseMode());
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
                 this.isDown = true;
                 var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
-                this.origX = pointer.x;
-                this.origY = pointer.y;
+                xgds_image_annotation.origX = pointer.x;
+                xgds_image_annotation.origY = pointer.y;
                 switch (xgds_image_annotation.annotationType) {
                     case "arrow":
                         xgds_image_annotation.drawArrow(pointer.x, pointer.y);
@@ -147,9 +150,9 @@ $.extend(xgds_image_annotation, {
 
         //fabricJS mouse-move event listener
         this.overlay.fabricCanvas().observe('mouse:move', function (o) {
+            console.log("EVENT TRIGERRED: fabricj-mouse:move");
             if (!this.isDown) return;
             var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
-
             switch (xgds_image_annotation.annotationType) {
                 case "arrow":
                     xgds_image_annotation.updateArrow(pointer.x, pointer.y);
@@ -181,7 +184,9 @@ $.extend(xgds_image_annotation, {
 
         //fabricJS mouse-up event listener
         this.overlay.fabricCanvas().on('mouse:up', function (o) {
-            // console.log("EVENT TRIGERRED: fabricj-mouse:up");
+            console.log("EVENT TRIGERRED: fabricj-mouse:up");
+            var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
+            console.log("mouseup: " + "(" + pointer.y + ", " + pointer.x + ")");
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
                 var pointerOnMouseUp = xgds_image_annotation.overlay.fabricCanvas().getPointer(event.e);
 
@@ -240,7 +245,7 @@ $.extend(xgds_image_annotation, {
 
         $("input[name='annotationType']").change(function () {
             // console.log("annotationType change detected: " + $("input[name='annotationShape']:checked").val());
-            this.annotationType = $("input[name='annotationType']:checked").val();
+            xgds_image_annotation.annotationType = $("input[name='annotationType']:checked").val();
             console.log("annotation shape changed to: " + this.annotationType);
         });
 
@@ -315,7 +320,7 @@ $.extend(xgds_image_annotation, {
             top: y,
             radius: 1,
             strokeWidth: 25,
-            stroke: currentAnnotationColor,
+            stroke: this.currentAnnotationColor,
             fill: '',
             selectable: true,
             originX: 'center',
@@ -324,14 +329,14 @@ $.extend(xgds_image_annotation, {
             scaleY: 1,
             type: 'ellipse'
         });
-        this.currentAnnotationType = ellipse
-        this.overlay.fabricCanvas().add(ellipse);
+        this.currentAnnotationType = this.ellipse
+        this.overlay.fabricCanvas().add(this.ellipse);
     },
 
     updateEllipse: function(x, y) {
-        var distance = distanceFormula(x, y, origX, origY);
-        this.ellipse.set({rx: Math.abs(origX - x), ry: Math.abs(origY - y)});
-        this.currentAnnotationType = ellipse
+        var distance = this.distanceFormula(x, y, this.origX, this.origY);
+        this.ellipse.set({rx: Math.abs(this.origX - x), ry: Math.abs(this.origY - y)});
+        this.currentAnnotationType = this.ellipse
     },
 
     initializeRectangle: function(x, y) {
@@ -340,22 +345,22 @@ $.extend(xgds_image_annotation, {
             top: y,
             fill: '',
             strokeWidth: 25,
-            stroke: currentAnnotationColor,
+            stroke: this.currentAnnotationColor,
             width: 1,
             height: 1,
             scaleX: 1,
             scaleY: 1,
             type: 'rect'
         });
-        this.currentAnnotationType = rectangle;
-        this.overlay.fabricCanvas().add(rectangle);
+        this.currentAnnotationType = this.rectangle;
+        this.overlay.fabricCanvas().add(this.rectangle);
     },
 
     updateRectangleWidth: function(x, y) {
-        var width = Math.abs(x - origX);
-        var height = Math.abs(y - origY);
+        var width = Math.abs(x - this.origX);
+        var height = Math.abs(y - this.origY);
         this.rectangle.set({width: width, height: height});
-        this.currentAnnotationType = rectangle;
+        this.currentAnnotationType = this.rectangle;
     },
 
     initializeTextboxPreview: function(x, y) {
@@ -364,20 +369,20 @@ $.extend(xgds_image_annotation, {
            top: y,
            fill: "",
            strokeWidth: 25,
-           stroke: currentAnnotationColor,
+           stroke: this.currentAnnotationColor,
            width: 1,
            height: 1,
            type: 'textboxPreview'
        });
-       this.currentAnnotationType = textboxPreview;
-       this.overlay.fabricCanvas().add(textboxPreview);
+       this.currentAnnotationType = this.textboxPreview;
+       this.overlay.fabricCanvas().add(this.textboxPreview);
     },
 
     updateTextboxPreview: function(x, y) {
-        var width = Math.abs(x - origX);
-        var height = Math.abs(y - origY);
+        var width = Math.abs(x - this.origX);
+        var height = Math.abs(y - this.origY);
         this.textboxPreview.set({width: width, height: height});
-        this.currentAnnotationType = textboxPreview
+        this.currentAnnotationType = this.textboxPreview;
     },
 
     /*
@@ -566,9 +571,9 @@ $.extend(xgds_image_annotation, {
     createNewSerialization: function(fabricObject, x, y) {
         if (fabricObject.type == "textboxPreview") {
             this.text = new fabric.Textbox('MyText', {
-                width: x - origX,
-                top: origY,
-                left: origX,
+                width: x - this.origX,
+                top: this.origY,
+                left: this.origX,
                 fontSize: 100,
                 stroke: currentAnnotationColor,
                 fill: currentAnnotationColor,
