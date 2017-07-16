@@ -277,14 +277,16 @@ $.extend(xgds_image,{
 			} else {
 				displayImage = displayImage[0];
 			}
-			debugger;
 			this.viewer = OpenSeadragon({
 				element: displayImage,
 //				id: "display-image",
 				prefixUrl: prefixUrl,
 				tileSources: tiledImage,
 			    showRotationControl: true,
-			    imageJson: imageJson
+			    imageJson: imageJson,
+			 	gestureSettingsMouse:   {
+ 	            	clickToZoom: false
+ 		        }
 			});
 			this.viewer['viewer_initialized'] = true;
 			this.setOpenseadragonRotation(this.viewer, imageJson['pk']);
@@ -326,11 +328,6 @@ $.extend(xgds_image,{
 				
 			});
 			//TODO William put in the call to construction the annotation stuff
-			console.log("viewer initial type");
-			console.log(typeof(this.viewer));
-			console.log(this.viewer);
-			console.log("^Just added overlay");
-			debugger;
 			xgds_image_annotation.initialize(imageJson, this.viewer);
 		} catch (err) {
 			console.log(err);
