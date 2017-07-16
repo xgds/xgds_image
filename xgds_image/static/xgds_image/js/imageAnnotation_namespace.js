@@ -23,7 +23,7 @@ $.extend(xgds_image_annotation, {
     origX: "",
     origY: "",
 
-    currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which varaible (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
+    currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which variable (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
 
     overlay: "",
 
@@ -66,15 +66,15 @@ $.extend(xgds_image_annotation, {
     currentAnnotationColor: "white",
 
 
-    toggleMenuBar: function() {
-        if(this.imageAnnotationToolbarStatus=="invisible") {
-            $("#imageAnnotationToolbar").show();
-            this.imageAnnotationToolbarStatus="visible";
-        }else{
-            $("#imageAnnotationToolbar").hide();
-            this.imageAnnotationToolbarStatus="invisible";
-        }
-    },
+    // toggleMenuBar: function() {
+    //     if(this.imageAnnotationToolbarStatus=="invisible") {
+    //         $("#imageAnnotationToolbar").show();
+    //         this.imageAnnotationToolbarStatus="visible";
+    //     }else{
+    //         $("#imageAnnotationToolbar").hide();
+    //         this.imageAnnotationToolbarStatus="invisible";
+    //     }
+    // },
 
     initialize: function(imageJson, osdViewer) {
         console.log("Initializing image annotations");
@@ -94,7 +94,7 @@ $.extend(xgds_image_annotation, {
         this.imageAnnotationToolbarStatus = "invisible";
 
         // Set toolbar as invisible
-        $("#imageAnnotationToolbar").hide();
+        // $("#imageAnnotationToolbar").hide();
 
         // color picker
         var spectrumOptions = {
@@ -107,6 +107,13 @@ $.extend(xgds_image_annotation, {
         console.log(xgds_image_annotation.getPaletteColors());
         $("#colorPicker").spectrum(spectrumOptions);
 
+        this.origX = 400;
+        this.origY = 400;
+        xgds_image_annotation.initializeRectangle(400, 400);
+        xgds_image_annotation.updateRectangleWidth(1000, 1000);
+
+        this.origX = 0;
+        this.origY = 0;
         /****************************************************************************************************************
 
                                              E V E N T  L I S T E N E R S
