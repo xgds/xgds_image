@@ -25,7 +25,9 @@
 			</table>
 		</div>
         <!-- place to add color palette options -->
-        <!--<button id="toggleImageAnnotationsMenu" class="btn btn-primary">Annotate Image</button>-->
+        <div id="annotationButtonWrapper">
+        <button id="toggleImageAnnotationsMenu" class="btn btn-primary" onclick="xgds_image_annotation.toggleMenuBar()">Annotate Image</button>
+        </div>
         <div id="imageAnnotationToolbar">
             <p1> Image Annotation Toolbar </p1>
             <div class="btn-group" data-toggle="buttons">
@@ -56,7 +58,7 @@
             <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="downloadScreenshot">Download Screenshot</button>
         </div>
 
-		<div class="image-wrapper"> 
+		<div class="image-wrapper">
 			<img class="loading-image"></img>
 			<div id="display-image" style="width: 600px; height: 400px;"></div>
 		</div>
