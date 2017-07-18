@@ -24,20 +24,31 @@
 				</tr>
 			</table>
 		</div>
-        <!-- place to add color palette options -->
+
         <div id="annotationButtonWrapper">
-        <button id="toggleImageAnnotationsMenu" class="btn btn-primary" onclick="xgds_image_annotation.toggleMenuBar()">Annotate Image</button>
+            <button id="toggleImageAnnotationsMenu" class="btn btn-primary" onclick="xgds_image_annotation.toggleMenuBar()">Annotate Image</button>
         </div>
+
+        </br>
         <div id="imageAnnotationToolbar">
-            <p1> Image Annotation Toolbar </p1>
-            <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-primary active">
-                <input type="radio" name="annotationsOnOrOff" id="on" autocomplete="off" value="on" checked>On</label>
-                <label class="btn btn-primary">
-                <input type="radio" name="annotationsOnOrOff" id="off" autocomplete="off" value="off">Off</label>
+            <div id="imageToolbarRow1">
+                <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-primary active">
+                    <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="OSD" checked>Navigate Image</label>
+                    <label class="btn btn-primary">
+                    <input type="radio" name="cursorMode" id="editAnnotation" autocomplete="off" value="editAnnotation">Edit Annotations</label>
+                </div>
+                <p1> Image Annotation Toolbar </p1>
+                <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-primary active">
+                    <input type="radio" name="annotationsOnOrOff" id="on" autocomplete="off" value="on" checked>On</label>
+                    <label class="btn btn-primary">
+                    <input type="radio" name="annotationsOnOrOff" id="off" autocomplete="off" value="off">Off</label>
+                </div>
             </div>
 
-            </br>
+
+            <div id="imageToolbarRow2">
             <div class="btn-group" data-toggle="buttons">
                 <label class="btn btn-primary active">
                 <input type="radio" name="annotationType" id="arrow" autocomplete="off" value="arrow"checked>Arrow</label>
@@ -47,15 +58,18 @@
                 <input type="radio" name="annotationType" id="ellipse" autocomplete="off" value="ellipse">Ellipse</label>
                 <label class="btn btn-primary">
                 <input type="radio" name="annotationType" id="text" autocomplete="off" value="text">Text</label>
+            </div>
 
             <input type='text' id="colorPicker"/>
-
+                <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="addAnnotation">Add Annotation</button>
             </div>
-            <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="addAnnotation">Add Annotation</button>
-            <br>
-            <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="loadAnnotation">Load Annotations</button>
-            <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="deleteAnnotation">Delete Selected Annotation</button>
-            <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="downloadScreenshot">Download Screenshot</button>
+
+
+            <div id="imageToolbarRow3">
+                <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="loadAnnotation">Load Annotations</button>
+                <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="deleteAnnotation">Delete Selected Annotation</button>
+                <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="downloadScreenshot">Download Screenshot</button>
+            </div>
         </div>
 
 		<div class="image-wrapper">
