@@ -94,7 +94,7 @@ $.extend(xgds_image_annotation, {
         this.imageAnnotationToolbarStatus = "invisible";
 
         // Set toolbar as invisible
-        $("#imageAnnotationToolbar").hide();
+        // $("#imageAnnotationToolbar").hide();
 
         // color picker
         var spectrumOptions = {
