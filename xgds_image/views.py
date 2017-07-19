@@ -436,6 +436,8 @@ def saveAnnotations(request):
                 annotationModel = TextAnnotation()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
+                print "annotationJSON[text]"
+                print annotationJSON["text"]
                 annotationModel.content = annotationJSON["text"] #not sure if this is where text content is stored
 
             else:

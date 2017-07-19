@@ -65,7 +65,6 @@ $.extend(xgds_image_annotation, {
     */
     currentAnnotationColor: "white",
 
-
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
             $("#imageAnnotationToolbar").show();
@@ -77,12 +76,24 @@ $.extend(xgds_image_annotation, {
     },
 
     initialize: function(imageJson, osdViewer) {
-        console.log("Initializing image annotations");
         //TODO from Tamar
         // imageJson.pk is the pk of the image you want to work with now.
         // if you were already initialized before, clear stuff
         // set your pk to be imageJson.pk
         // this.imagePK = imageJson.pk
+
+        /* Clear variables (in case an image was previously loaded */
+        this.annotationsDict = {};
+        this.colorsDictionary = {};
+
+        console.log("this.imageJson")
+        console.log(this.imageJson["pk"]);
+        console.log("imageJson (argument)");
+        console.log(imageJson["pk"]);
+        if(this.imageJson["pk"] == imageJson["pk"]) {
+            console.log("Trying to load the same image again!");
+        }
+
         this.imageJson = imageJson;
         this.viewer = osdViewer;
         this.overlay = this.viewer.fabricjsOverlay();
@@ -107,13 +118,8 @@ $.extend(xgds_image_annotation, {
         console.log(xgds_image_annotation.getPaletteColors());
         $("#colorPicker").spectrum(spectrumOptions);
 
-        // this.origX = 400;
-        // this.origY = 400;
-        // xgds_image_annotation.initializeRectangle(400, 400);
-        // xgds_image_annotation.updateRectangleWidth(1000, 1000);
-        //
-        // this.origX = 0;
-        // this.origY = 0;
+
+
         /****************************************************************************************************************
 
                                              E V E N T  L I S T E N E R S
@@ -192,8 +198,6 @@ $.extend(xgds_image_annotation, {
         //fabricJS mouse-up event listener
         this.overlay.fabricCanvas().on('mouse:up', function (o) {
             console.log("EVENT TRIGERRED: fabricj-mouse:up");
-            var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
-            console.log("mouseup: " + "(" + pointer.y + ", " + pointer.x + ")");
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
                 var pointerOnMouseUp = xgds_image_annotation.overlay.fabricCanvas().getPointer(event.e);
 
@@ -591,10 +595,11 @@ $.extend(xgds_image_annotation, {
                 scaleY: 1,
                 type: 'text'
             });
+            // debugger;
             this.currentAnnotationType = this.text;
             this.overlay.fabricCanvas().add(this.text);
             this.textboxPreview.remove();
-            this.fabricObject = this.text;
+            fabricObject = this.text;
         }
         console.log(fabricObject);
 
@@ -734,7 +739,6 @@ $.extend(xgds_image_annotation, {
     deleteActiveAnnotations: function() {
         var annotation = this.overlay.fabricCanvas().getActiveObject();
         if (annotation["pk"] in this.annotationsDict) {
-            //TODO: remove from database
             $.ajax({
                 type: "POST",
                 url: '/xgds_image/deleteAnnotation/',
@@ -757,7 +761,7 @@ $.extend(xgds_image_annotation, {
             this.overlay.fabricCanvas().getActiveObject().remove();
         } else {
             //annotation not saved in database anyways, just remove from canvas
-            this.overlay.fabricCanvas.getActiveObject().remove();
+            this.overlay.fabricCanvas().getActiveObject().remove();
         }
     },
 

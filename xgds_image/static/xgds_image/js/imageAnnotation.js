@@ -731,7 +731,7 @@ function deleteActiveAnnotation() {
         overlay.fabricCanvas().getActiveObject().remove();
     } else {
         //annotation not saved in database anyways, just remove from canvas
-        overlay.fabricCanvas.getActiveObject().remove();
+        overlay.fabricCanvas().getActiveObject().remove();
     }
 }
 
