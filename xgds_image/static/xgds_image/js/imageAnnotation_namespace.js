@@ -618,7 +618,7 @@ $.extend(xgds_image_annotation, {
             datatype: 'json',
             data: {
                 annotation: JSON.stringify(temp),
-                image_pk: 1
+                image_pk: this.imageJson["pk"]
             },
             success: function (data) {
                 fabricObject.set({pk: data["pk"], image: data["image_pk"]});
@@ -655,7 +655,7 @@ $.extend(xgds_image_annotation, {
             data: {
                 //annotation: Json.stringify(fabricObject),
                 annotation: JSON.stringify(temp),
-                image_pk: 1
+                image_pk: this.imageJson["pk"]
             },
             success: function (data) {
 

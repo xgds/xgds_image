@@ -475,7 +475,13 @@ def alterAnnotation(request):
         try:
             image = request.POST.get('image_pk')
             pk = newAnnotation["pk"]
+            print "annotation pk"
+            print pk
+            print "image pk"
+            print image
             queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
+            print "query result"
+            print queryResult
             annotationModel = queryResult[0]
         except Exception as e:
             print "406 exception threw as {0}".format(e)
