@@ -341,8 +341,15 @@ overlay.fabricCanvas().on('mouse:up', function (o) {
 
         // save annotation to database
         createNewSerialization(currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
-        setMouseMode("OSD");
-        $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
+
+        // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
+        if(currentAnnotationType.type == "text") {
+            setMouseMode("editAnnotation");
+            $("#editAnnotation").click(); //set nav bar to editAnnotation
+        }else{
+            setMouseMode("OSD");
+            $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
+        }
     }
     isDown = false;
 });

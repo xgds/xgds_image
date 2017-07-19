@@ -203,8 +203,15 @@ $.extend(xgds_image_annotation, {
 
                 // save annotation to database
                 xgds_image_annotation.createNewSerialization(xgds_image_annotation.currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
-                xgds_image_annotation.setMouseMode("OSD");
-                $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
+
+                // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
+                if(xgds_image_annotation.currentAnnotationType.type == "text") {
+                    xgds_image_annotation.setMouseMode("editAnnotation");
+                    $("#editAnnotation").click(); //set nav bar to editAnnotation
+                }else{
+                    xgds_image_annotation.setMouseMode("OSD");
+                    $("#navigateImage").click(); // change nav bar back to OSD (navigateImage)
+                }
             }
             xgds_image_annotation.isDown = false;
         });
@@ -879,10 +886,6 @@ $.extend(xgds_image_annotation, {
             textAlign: 'center',
             fontSize: 100 //Font size is static for now
         });
-        console.log("textbox width (this is causing the error: " + annotationJson["width"]);
-        //yup, we got some redundant parametesr here son.
-        //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
-        //the width is undef. textbox no field width.
 
         this.overlay.fabricCanvas().add(this.text);
         this.overlay.fabricCanvas().renderAll();
