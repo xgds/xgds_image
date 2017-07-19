@@ -297,7 +297,7 @@ $.extend(xgds_image_annotation, {
         });
 
         $('#deleteAnnotation').click(function () {
-            xgds_image_annotation.deleteActiveAnnotation();
+            xgds_image_annotation.deleteActiveAnnotations();
         });
 
         $("#colorPicker").on('change.spectrum', function (e, color) {
@@ -555,17 +555,19 @@ $.extend(xgds_image_annotation, {
     },
 
     getAnnotations: function() {
+        var imagePK = this.imageJson["pk"];
         $.ajax({
             type: "POST",
-            url: '/xgds_image/getAnnotations/1',
+            url: '/xgds_image/getAnnotations/' + imagePK,
             datatype: 'json',
             success: function (data) {
+                console.log("retrieved data");
                 console.log(data);
                 data.forEach(function (annotation) {
                     //convert django pk/id to hex color
                     console.log(annotation);
                     // annotation["stroke"] = colorsDictionary[annotation["strokeColor"]].hex;
-                    this.addAnnotationToCanvas(annotation);
+                    xgds_image_annotation.addAnnotationToCanvas(annotation);
                 });
             },
             error: function (a) {

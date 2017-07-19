@@ -519,6 +519,9 @@ def alterAnnotation(request):
 
 
 def getAnnotationsJson(request, imagePK):
+    # queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
+    print "this is the slash one (imagePK?)"
+    print imagePK
     image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
     annotations = image.getAnnotations()
     result = []
