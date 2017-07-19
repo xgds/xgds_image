@@ -118,7 +118,8 @@ $.extend(xgds_image_annotation, {
         console.log(xgds_image_annotation.getPaletteColors());
         $("#colorPicker").spectrum(spectrumOptions);
 
-
+        /* Load and display annotations */
+        xgds_image_annotation.getAnnotations();
 
         /****************************************************************************************************************
 
