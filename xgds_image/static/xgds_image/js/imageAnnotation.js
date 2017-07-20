@@ -82,7 +82,7 @@ $.extend(xgds_image_annotation, {
         this.currentAnnotationType = "arrow";
         this.mouseMode = "OSD";
         this.annotationType = "arrow";
-        this.currentAnnotationColor = "white";
+        this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
 
         // Set toolbar as invisible
