@@ -235,6 +235,7 @@ $.extend(xgds_image,{
 //				return;
 //			}
 			this.removeViewer();
+			//TODO WILLIAM put in some clearAnnotations
 		} 
 		// try removing the raw image
 		try {
@@ -282,7 +283,10 @@ $.extend(xgds_image,{
 				prefixUrl: prefixUrl,
 				tileSources: tiledImage,
 			    showRotationControl: true,
-			    imageJson: imageJson
+			    imageJson: imageJson,
+			 	gestureSettingsMouse:   {
+ 	            	clickToZoom: false
+ 		        }
 			});
 			this.viewer['viewer_initialized'] = true;
 			this.setOpenseadragonRotation(this.viewer, imageJson['pk']);
@@ -323,9 +327,9 @@ $.extend(xgds_image,{
 				}
 				
 			});
+			xgds_image_annotation.initialize(imageJson, this.viewer);
 		} catch (err) {
 			console.log(err);
-			debugger;
 		}
 	},
 	resizeImageViewer: function(element) {

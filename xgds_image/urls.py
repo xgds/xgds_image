@@ -27,6 +27,14 @@ urlpatterns = [
     url(r'^updateImageInfo/$', views.updateImageInfo, {}, 'xgds_update_image_info'),
     url(r'^deleteImages/$', views.deleteImages, {}, 'xgds_delete_images'),
     url(r'^saveRotation/$', views.saveRotationValue, {}, 'xgds_image_save_rotation'),
-    url(r'^getRotation/$', views.getRotationValue, {}, 'xgds_image_get_rotation'), 
-    url(r'^checkTiles/(?P<imageSetPK>[\d]+)$', views.getTileState, {}, 'xgds_image_check_tiles'), 
-    ]
+    url(r'^getRotation/$', views.getRotationValue, {}, 'xgds_image_get_rotation'),
+    url(r'^checkTiles/(?P<imageSetPK>[\d]+)$', views.getTileState, {}, 'xgds_image_check_tiles'),
+    url(r'^testpage$', TemplateView.as_view(template_name='xgds_image/test.html'), {}, 'test'),
+    url(r'^saveAnnotations/$', views.saveAnnotations, {}, 'xgds_image_save_annotations'),
+    url(r'^getAnnotations/(?P<imagePK>[\d]+)$', views.getAnnotationsJson, {}, 'xgds_image_get_annotations'),
+    url(r'^alterAnnotation/$', views.alterAnnotation, {}, 'xgds_image_alter_annotations'),
+    url(r'^getAnnotationColors/$', views.getAnnotationColorsJson, {}, 'xgds_image_get_annotation_colors'),
+    url(r'^deleteAnnotation/$', views.deleteAnnotation, {}, 'xgds_image_delete_annotation'),
+    url(r'^addAnnotation/$', views.addAnnotation, {}, 'xgds_image_add_annotation'),
+    url(r'^mergeImages/$', views.mergeImages, {}, 'xgds_image_merge_images')
+]

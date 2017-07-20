@@ -39,7 +39,11 @@ from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
 
 BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
 BOWER_INSTALLED_APPS += ['dropzone',
-                         'openseadragon'
+                         'openseadragon',
+                         'openseadragon-annotations',
+                         'openseadragon-fabricjsOverlay=https://github.com/altert/OpenseadragonFabricjsOverlay.git#2b6ce02dc6a920e6549dc6f5a4dd62b7bbf31970',
+                         'fabric',
+                         'spectrum'
                          ]
 
 XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
@@ -64,7 +68,14 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
                                                         'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
                                                         'viewHandlebars': 'xgds_image/templates/handlebars/image-view2.handlebars',
                                                         'viewJS': ['/static/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js',
-                                                                   '/static/xgds_image/js/imageReview.js' ],
+                                                                   '/static/xgds_image/js/imageAnnotation.js',
+                                                                   '/static/openseadragon/built-openseadragon/openseadragon/openseadragon.js',
+                                                                   '/static/fabric.js/dist/fabric.min.js',
+                                                                   '/static/openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js',
+                                                                   '/static/spectrum/spectrum.js',
+                                                                   '/static/xgds_image/js/imageReview.js'],
+
+
                                                         'viewCss': ['/static/xgds_image/css/xgds_image.css'],
                                                         'viewInitMethods': ['xgds_image.setupImageViewer'],
                                                         'event_time_field': 'acquisition_time',
@@ -74,3 +85,5 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS[XGDS_IMAGE_IMAGE_SET_MONIKER + 's'] = '/xgds_image/import'
 XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM = False
+
+XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR = 'xgds_image_annotations'

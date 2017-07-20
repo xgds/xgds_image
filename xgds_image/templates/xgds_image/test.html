@@ -1,0 +1,62 @@
+    {% extends 'xgds_image/imageDashboardBase.html' %}
+
+    {% block scripts %}
+    {{ block.super }}
+        <script type="text/javascript" src='{{ EXTERNAL_URL }}fabric.js/dist/fabric.min.js'></script>
+        <script type="text/javascript" src='{{ EXTERNAL_URL }}openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js'></script>
+        <script type="text/javascript" src='{{ EXTERNAL_URL }}spectrum/spectrum.js'></script>
+        <link rel="stylesheet" type="text/css" href='{{ EXTERNAL_URL }}spectrum/spectrum.css'>
+{#        <script type="text/css" src='{{ EXTERNAL_URL }}'spectrum/>spectrum.css'></script>#}
+        saveAnnotationsUrl = "{% url 'xgds_image_save_annotations' %}";
+        loadAnnotationsUrl = "{% url 'xgds_image_get_annotations' 1 %}";
+        <script type="text/javascript" src='{{ STATIC_URL }}xgds_image/js/imageAnnotation.js'></script>
+    {% endblock scripts %}
+    {% block content %}
+    <h1>Fabricjs Sandbox beta</h1>
+
+    <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary active">
+            <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="OSD" checked>Navigate Image</label>
+        <label class="btn btn-primary">
+            <input type="radio" name="cursorMode" id="editAnnotation" autocomplete="off" value="editAnnotation">Edit Annotations</label>
+    </div>
+    <p1> Annotations: </p1>
+     <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary active">
+            <input type="radio" name="annotationsOnOrOff" id="on" autocomplete="off" value="on" checked>On</label>
+        <label class="btn btn-primary">
+            <input type="radio" name="annotationsOnOrOff" id="off" autocomplete="off" value="off">Off</label>
+    </div>
+
+    </br>
+    <div class="btn-group" data-toggle="buttons">
+    <label class="btn btn-primary active">
+        <input type="radio" name="annotationType" id="arrow" autocomplete="off" value="arrow"checked>Arrow</label>
+    <label class="btn btn-primary">
+        <input type="radio" name="annotationType" id="rectangle" autocomplete="off" value="rectangle">Rectangle</label>
+    <label class="btn btn-primary">
+        <input type="radio" name="annotationType" id="ellipse" autocomplete="off" value="ellipse">Ellipse</label>
+    <label class="btn btn-primary">
+        <input type="radio" name="annotationType" id="text" autocomplete="off" value="text">Text</label>
+
+    <input type='text' id="colorPicker"/>
+
+    </div>
+    <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="addAnnotation">Add Annotation</button>
+    <br>
+    <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="loadAnnotation">Load Annotations</button>
+    <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="deleteAnnotation">Delete Selected Annotation</button>
+    <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="downloadScreenshot">Download Screenshot</button>
+
+    <div id="viewerWrapper">
+            <div id="openseadragon1" style="width: 800px; height: 600px;"></div>
+    </div>
+
+    <div id="downloadImagePreview">
+        <img id="my_image" src="first.jpg"/>
+    </div>
+    {% endblock content %}
+    {% block jsInit %}
+
+    {% endblock jsInit %}
+

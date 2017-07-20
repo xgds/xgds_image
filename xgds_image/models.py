@@ -24,12 +24,15 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.text import slugify
+
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
+from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
@@ -44,6 +47,7 @@ from deepzoom import deepzoom
 from StringIO import StringIO
 from datetime import datetime
 from xgds_core.couchDbStorage import CouchDbStorage
+from email.mime import image
 
 logger = logging.getLogger("deepzoom.models")
 couchStore = CouchDbStorage()
@@ -494,7 +498,7 @@ class ImageSet(AbstractImageSet):
     exif_position = DEFAULT_EXIF_POSITION_FIELD()
     user_position = DEFAULT_USER_POSITION_FIELD()
     resource = DEFAULT_RESOURCE_FIELD()
-
+    
 
 DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey(ImageSet, null=True, related_name="images")
 
@@ -525,7 +529,10 @@ class AbstractSingleImage(models.Model):
 #         """
 #         result = modelToDict(self)
 #         return result
-    
+
+    def getAnnotations(self):
+        return ANNOTATION_MANAGER.filter(image__pk=self.pk)
+
     class Meta:
         abstract = True
         ordering = ['-creation_time']
@@ -540,7 +547,98 @@ class SingleImage(AbstractSingleImage):
     # set foreign key fields from parent model to point to correct types
     imageSet = DEFAULT_IMAGE_SET_FIELD()
     
-    
+
+DEFAULT_SINGLE_IMAGE_FIELD = lambda: models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name="image")
+
+
+class AnnotationColor(models.Model):
+    name = models.CharField(max_length=16, db_index=True)
+    hex = models.CharField(max_length=16)
+
+class AbstractAnnotation(models.Model):
+    left = models.IntegerField(null=False, blank=False)
+    top = models.IntegerField(null=False, blank=False)
+    strokeColor = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_strokeColor', default=1)
+    strokeWidth = models.PositiveIntegerField(default=2)
+    angle = models.FloatField(default=0)  # store shape rotation angle
+    scaleX = models.FloatField(default=1)
+    scaleY = models.FloatField(default=1)
+    originX = models.CharField(max_length=16, default="left")
+    originY = models.CharField(max_length=16, default="center")
+    fill = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_fill', null=True, blank=True)
+
+    author = models.ForeignKey(User)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
+    image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+
+    class Meta:
+        abstract = True
+
+    def getJsonType(self):
+        return 'Annotation'
+
+    def toJson(self):
+        result = model_to_dict(self)
+        result['annotationType'] = self.getJsonType()
+        result['pk'] = self.pk
+        return result
+
+
+class TextAnnotation(AbstractAnnotation):
+    content = models.CharField(max_length=512, default='')
+    isBold = models.BooleanField(default=False)
+    isItalics = models.BooleanField(default=False)
+    width = models.PositiveIntegerField(default=1)
+    height = models.PositiveIntegerField(default=1)
+
+
+    def getJsonType(self):
+        return 'Text'
+
+
+class EllipseAnnotation(AbstractAnnotation):
+    radiusX = models.IntegerField()
+    radiusY = models.IntegerField()
+
+    def getJsonType(self):
+        return 'Ellipse'
+
+
+class RectangleAnnotation(AbstractAnnotation):
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+
+    def getJsonType(self):
+        return 'Rectangle'
+
+
+class ArrowAnnotation(AbstractAnnotation):
+    points = models.TextField(default='[]')
+
+    def getJsonType(self):
+        return 'Arrow'
+
+
+# NOT USED YET
+# This will support the url to the saved annotated image download via url
+class AnnotatedImage(models.Model):
+    imageBinary = models.FileField(upload_to=settings.XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR)
+    width = models.PositiveIntegerField(default=250)
+    height = models.PositiveIntegerField(default=250)
+    author = models.ForeignKey(User)
+    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
+    image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL,
+                              related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+
+
+ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
+                                         [TextAnnotation,
+                                          EllipseAnnotation,
+                                          RectangleAnnotation,
+                                          ArrowAnnotation,
+                                          AnnotatedImage
+                                          ])
+
 
 
 
