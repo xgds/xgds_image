@@ -68,7 +68,7 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
                                                         'columnTitles': ['Acquisition', 'Timezone', 'Name', 'Author', ''],
                                                         'viewHandlebars': 'xgds_image/templates/handlebars/image-view2.handlebars',
                                                         'viewJS': ['/static/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js',
-                                                                   '/static/xgds_image/js/imageAnnotation_namespace.js',
+                                                                   '/static/xgds_image/js/imageAnnotation.js',
                                                                    '/static/openseadragon/built-openseadragon/openseadragon/openseadragon.js',
                                                                    '/static/fabric.js/dist/fabric.min.js',
                                                                    '/static/openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js',
