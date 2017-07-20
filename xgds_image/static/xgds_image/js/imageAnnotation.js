@@ -2,7 +2,7 @@ var xgds_image_annotation = xgds_image_annotation || {};
 
 $.extend(xgds_image_annotation, {
     initialize: function (imageJson, osdViewer) {
-        //imageJson.pk is the pk of the image you want to work iwth now.
+        //imageJson.pk is the pk of the image you want to work with now.
         // if you were already initialized before, clear stuff
         // set your pk to be imageJson.pk
         this.imagePK = imageJson.pk;
@@ -480,7 +480,7 @@ function setMouseMode(mode) {
             mouseMode = "addAnnotation";
             setFabricCanvasInteractivity(false);
             deselectFabricObjects();
-            viewer.setMouseNavEnabled(false); //if we're in addAnnotation mode, don't set isDown to true -- actually, ONLY set to true if mode is addAnnotation
+            viewer.setMouseNavEnabled(false);
             break;
         case "editAnnotation":
             console.log("mousemode: editAnnotation");
@@ -857,98 +857,11 @@ function addTextToCanvas(annotationJson) {
         fontSize: 100 //Font size is static for now
     });
     console.log("textbox width (this is causing the error: " + annotationJson["width"]);
-    //yup, we got some redundant parametesr here son.
-    //IT'S SETTING THE WIDTH FROM THE DATABASE THAT BREAKS THE TEXTBOXES
-    //the width is undef. textbox no field width.
+
 
     overlay.fabricCanvas().add(text);
     overlay.fabricCanvas().renderAll();
 }
-
-/*
-Nice Stuff
-Make textboxes nicer
-Make cursor cooporate
-
-tie menu to controls
-can't click annotations -- seems like fabricCanvas sometimes goes behind the OSD canvas. Occlusion of sorts.
-just a lot of cleaning up in general needed
-
-
-Add lines:
-
-function initializeLine(x, y) {
-    line = new fabric.Line([x, y, x, y], {
-        left: x,
-        top: y,
-        stroke: "red",
-        strokeWidth: 25,
-        originX: 'center',
-        originY: 'center',
-        type: 'line'
-    });
-    currentAnnotationType = line;
-    overlay.fabricCanvas().add(line)
-}
-
-function updateLineEndpoint(x, y) {
-    line.set({x2: x, y2: y});
-    currentAnnotationType = line;
-}
-
-TODO: Can either implement scaling saving or prevent scaling and just create a new shape
-
-TEXTBOX STUFF
-TODO: select text after adding it to canvas, stay in edit mode
-TODO: add blank lines to text to make rectangle the right size <-- this one really annoys me but seems quite annoying to fix as well
-TODO: add intuitive mouse controls <-- for some reason mousemode isn't responding in the openseadragon viewer
-TODO: yellow box, scale text, insert text here
-
-
-COLOR STUFF
-TODO: rn arrows stroke is BLACK, instaed of currentAnnotationColor. Throws off getColorIdFromHex()
-TODO: set default color annotation to be white--instead it should be colorDictionary[0].name
-TODO: make sure all colors are in canonical form (e.g. rgb(r,g,b))
-
-CURSOR STUFF
-TODO: inspect element and see if pointer/cursor mode is actually being attached
-
-EXPORT AS IMAGE
-**TODO: export canvas as an image
-
-Right now we have two images. Annotations w/ transparent background and the OSD view. Can either try to set background on the fabricjs canvas and export that
-OR blend the two images.
-
-
-MISCELLANEOUS
-***TODO: de-hardcode image_pk
-TODO: Standardize initialization settings
-TODO: xgds_image_annotation namespace
-TODO: ask tamar how to organize... all of this
-TODO: add css
-****TODO: image_pk automation
-
-
-
-TODO: LATER
-TODO: something wacko is happenign with stroke color in models
-TODO: release as an open source plugin
-TODO: rect vs rectangle (ugh fabricjs uses rect)
-TODO: namespace/organize all of this to be opensourceable <--- events section in spectrumjs has a good example
-
-TODO: monitor
-TODO: prototyping/javascript namespace
-TODO: wacko rectangle drawing behavior
-TODO: add try catch to views.py
-TODO: clean up JSONresponse vs HTTP response
-
-
-SHOULD BE RESOLVED BUT KEEP AN EYE OUT
-TODO: Navigate Image/Edit Annotations kinda glitchy -- maybe make a "set mode" function that will take care of the gui as well as the mode.
-
- */
-
-
 
 
 
