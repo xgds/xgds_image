@@ -47,6 +47,7 @@ from deepzoom import deepzoom
 from StringIO import StringIO
 from datetime import datetime
 from xgds_core.couchDbStorage import CouchDbStorage
+from email.mime import image
 
 logger = logging.getLogger("deepzoom.models")
 couchStore = CouchDbStorage()
@@ -497,7 +498,7 @@ class ImageSet(AbstractImageSet):
     exif_position = DEFAULT_EXIF_POSITION_FIELD()
     user_position = DEFAULT_USER_POSITION_FIELD()
     resource = DEFAULT_RESOURCE_FIELD()
-
+    
 
 DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey(ImageSet, null=True, related_name="images")
 
@@ -568,7 +569,7 @@ class AbstractAnnotation(models.Model):
 
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
-    image = models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+    image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
 
     class Meta:
         abstract = True
@@ -618,13 +619,15 @@ class ArrowAnnotation(AbstractAnnotation):
         return 'Arrow'
 
 
+# NOT USED YET
+# This will support the url to the saved annotated image download via url
 class AnnotatedImage(models.Model):
     imageBinary = models.FileField(upload_to=settings.XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR)
     width = models.PositiveIntegerField(default=250)
     height = models.PositiveIntegerField(default=250)
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
-    image = models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL,
+    image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL,
                               related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
 
 

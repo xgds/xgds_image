@@ -511,11 +511,9 @@ def alterAnnotation(request):
 
 
 def getAnnotationsJson(request, imagePK):
-    # queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
-    image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
-    annotations = image.getAnnotations()
+    queryResult = ANNOTATION_MANAGER.filter(image__pk=imagePK)
     result = []
-    for a in annotations:
+    for a in queryResult:
         result.append(a.toJson())
     return HttpResponse(json.dumps(result), content_type='application/json')
 
@@ -576,7 +574,9 @@ def addAnnotation(request):
         annotationModel.scaleY = newAnnotation["scaleY"]
 
         annotationModel.author = request.user
-        annotationModel.image_id = request.POST.get('image_pk')
+        annotationModel.image_id = int(request.POST.get('image_pk'))
+        print 'save annotation image id from request.POST ' + request.POST.get('image_pk')
+        print annotationModel.image_id
         annotationModel.save()
 
         return HttpResponse(json.dumps(annotationModel.toJson()),
@@ -590,11 +590,9 @@ def mergeImages(request):
     if request.method == 'POST':
         # Get exif data from original image (which we want to preserve in the returned image)
         imagePK = request.POST.get('imagePK', None)
-        image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
+        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imagePK)
+        image = imageSet.getRawImage()
         exifData = getExifData(image)
-
-        print "exif data"
-        print exifData
 
         # load images
         temp1 = request.POST.get('image1', None)
