@@ -25,12 +25,21 @@ $.extend(xgds_image_annotation, {
     */
     annotationsDict: {},
 
-
     /*
     Stores a dictionary of pre-set (string)color -> (string)hex pairs.
     Loaded through ajax on document.onReady()
     */
     colorsDictionary: {},
+
+    /*
+    Spectrum color palette. Stores an array of colors in the correct format for the spectrum color picker.
+     */
+    spectrumColorPalette: [],
+
+    /*
+    Boolean of whether colors dictionary is loaded or not
+     */
+    colorsLoaded: false,
 
     /* the mouse can be in 3 modes:
      1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
@@ -48,19 +57,26 @@ $.extend(xgds_image_annotation, {
     */
     annotationType: "arrow",
 
-
     /*
     Default annotation color to draw annotations in
     */
-    currentAnnotationColor: "white",
+    currentAnnotationColor: "red",
+
+    /*
+    Global setting to show/hide toolbar on default
+     */
+    showToolbar: "false",
+
 
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
             $("#imageAnnotationToolbar").show();
+            this.showToolbar = "true";
             this.imageAnnotationToolbarStatus="visible";
         }else{
             $("#imageAnnotationToolbar").hide();
+            this.showToolbar = "false";
             this.imageAnnotationToolbarStatus="invisible";
         }
     },
@@ -72,11 +88,11 @@ $.extend(xgds_image_annotation, {
     initialize: function(imageJson, osdViewer) {
         /* Clear variables */
         this.annotationsDict = {};
-        this.colorsDictionary = {};
+
 
         /* Initialize member variables */
         this.imageJson = imageJson;
-        this.viewer = osdViewer;
+        this.viewer = osdViewer;  // TODO: do we need to load this every time?
         this.overlay = this.viewer.fabricjsOverlay();
 
         this.currentAnnotationType = "arrow";
@@ -85,18 +101,29 @@ $.extend(xgds_image_annotation, {
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
 
-        // Set toolbar as invisible
-        $("#imageAnnotationToolbar").hide();
+        /* Show/hide toolbar based on default setting, showToolbar */
+        if(this.showToolbar === "false") {
+            $("#imageAnnotationToolbar").hide();
+            this.imageAnnotationToolbarStatus = "invisible";
+        }else{
+            $("#imageAnnotationToolbar").show();
+            this.imageAnnotationToolbarStatus = "visible";
+        }
+
+        /* Load colors into colors dictionary if not already loaded. This populates the colors dictionary AND creates the spectrum color palette */
+        if(this.spectrumColorPalette.length===0) {
+            this.spectrumColorPalette = this.getPaletteColors();
+        }
+
 
         // Initialize color picker options
         var spectrumOptions = {
             showPaletteOnly: true,
             showPalette: true,
-            palette: xgds_image_annotation.getPaletteColors(),
+            palette: this.spectrumColorPalette,
             color: this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
         };
-        console.log("palette");
-        console.log(xgds_image_annotation.getPaletteColors());
+
         $("#colorPicker").spectrum(spectrumOptions);
 
         /* Load and display annotations */
