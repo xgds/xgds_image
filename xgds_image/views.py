@@ -416,8 +416,8 @@ def saveAnnotations(request):
         mapAnnotations = json.loads(temp)
 
         for annotationJSON in mapAnnotations["objects"]:
-            print "annotation type: {0}".format(annotationJSON["type"])
-            print annotationJSON['type']
+            # print "annotation type: {0}".format(annotationJSON["type"])
+            # print annotationJSON['type']
             if annotationJSON["type"]=="rect":
                 annotationModel = RectangleAnnotation()
                 annotationModel.width = annotationJSON["width"]
@@ -466,24 +466,15 @@ def saveAnnotations(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
-#Is there a better way to do this? fair amount of reused code
+
 def alterAnnotation(request):
-    print "inside alterAnnotation()"
     if request.method=='POST':
         temp = request.POST.get('annotation', None)
         newAnnotation = json.loads(temp)
-        print "temp"
-        print temp
         try:
             image = request.POST.get('image_pk')
             pk = newAnnotation["pk"]
-            print "annotation pk"
-            print pk
-            print "image pk"
-            print image
             queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
-            print "query result"
-            print queryResult
             annotationModel = queryResult[0]
         except Exception as e:
             print "406 exception threw as {0}".format(e)
@@ -503,7 +494,7 @@ def alterAnnotation(request):
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             print newAnnotation["text"]
-            annotationModel.content = newAnnotation["text"]  # not sure if this is where text content is stored
+            annotationModel.content = newAnnotation["text"]
 
         # add common variables
         annotationModel.left = newAnnotation["left"]
@@ -522,15 +513,11 @@ def alterAnnotation(request):
 
 def getAnnotationsJson(request, imagePK):
     # queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
-    print "this is the slash one (imagePK?)"
-    print imagePK
     image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
     annotations = image.getAnnotations()
     result = []
     for a in annotations:
         result.append(a.toJson())
-    # print result
-    print len(result)
     return HttpResponse(json.dumps(result), content_type='application/json')
 
 
@@ -540,7 +527,7 @@ def getAnnotationColorsJson(request):
     for color in colors:
         result.append(model_to_dict(color))
     return HttpResponse(json.dumps(result), content_type='application/json');
-    # return JsonResponse(result) #TODO: hopefully this json response works
+
 
 def deleteAnnotation(request):
     try:
@@ -553,11 +540,10 @@ def deleteAnnotation(request):
     annotationModel.delete()
     return HttpResponse('')
 
+
 def addAnnotation(request):
     if request.method == 'POST':
-        print "inside addAnnotation()"
         temp = request.POST.get('annotation', None)
-        print temp
         newAnnotation = json.loads(temp)
         if newAnnotation["type"] == "rect":
             annotationModel = RectangleAnnotation()
@@ -624,11 +610,6 @@ def mergeImages(request):
         # Encode in base 64 for HttpResponse
         background64 = BytesIO(base64.b64encode(imgByteArr))
 
-        # Image debugging lines
-        # background.save("/tmp/background_decoded.png")
-        # myfile = open("/tmp/base64Image.txt", "w")
-        # myfile.write(base64.b64encode(imgByteArr))
-        # myfile.close()
         return HttpResponse(base64.b64encode(imgByteArr), content_type="application/base64")
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
