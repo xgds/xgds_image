@@ -589,6 +589,15 @@ def addAnnotation(request):
 # canvas combined.
 def mergeImages(request):
     if request.method == 'POST':
+        # Get exif data from original image (which we want to preserve in the returned image)
+        imagePK = request.POST.get('imagePK', None)
+        image = SINGLE_IMAGE_MODEL.get().objects.get(pk=imagePK)
+        exifData = getExifData(image)
+
+        print "exif data"
+        print exifData
+
+        # load images
         temp1 = request.POST.get('image1', None)
         temp2 = request.POST.get('image2', None)
 
@@ -604,11 +613,8 @@ def mergeImages(request):
 
         # Save background into Byte Array/Stream
         imgByteArr = BytesIO()
-        background.save(imgByteArr, format='PNG')
+        background.save(imgByteArr, format='JPEG', exif=str(exifData))
         imgByteArr = imgByteArr.getvalue()
-
-        # Encode in base 64 for HttpResponse
-        background64 = BytesIO(base64.b64encode(imgByteArr))
 
         return HttpResponse(base64.b64encode(imgByteArr), content_type="application/base64")
     else:
