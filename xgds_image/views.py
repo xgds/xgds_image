@@ -372,7 +372,7 @@ def saveImage(request):
             if 'relay' in request.POST:
                 # create the record for the datum
                 # fire a message for new data
-                addRelayFiles(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
+                addRelay(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
             # create a thumbnail
             thumbnailStream = createThumbnailFile(newSingleImage.file)
             SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailStream,
