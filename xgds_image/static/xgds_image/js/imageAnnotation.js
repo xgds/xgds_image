@@ -746,7 +746,9 @@ $.extend(xgds_image_annotation, {
                     pk: annotation["pk"]
                 },
                 success: function (data) {
-                    console.log(data);
+                    //delete from dict and database
+                    delete xgds_image_annotation.annotationsDict[annotation["pk"]];
+                    xgds_image_annotation.overlay.fabricCanvas().getActiveObject().remove();
                 },
                 error: function (a) {
                     console.log("Ajax error");
@@ -754,10 +756,6 @@ $.extend(xgds_image_annotation, {
                     throw new Error("Unable to delete the annotation's entry from the database");
                 }
             });
-
-            //delete from dict and database
-            delete this.annotationsDict[annotation["pk"]];
-            this.overlay.fabricCanvas().getActiveObject().remove();
         } else {
             //annotation not saved in database anyways, just remove from canvas
             this.overlay.fabricCanvas().getActiveObject().remove();
