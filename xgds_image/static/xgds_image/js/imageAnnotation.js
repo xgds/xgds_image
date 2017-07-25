@@ -72,6 +72,11 @@ $.extend(xgds_image_annotation, {
      */
     showAnnotations: "true",
 
+
+    downloadScreenshot: function() {
+        console.log("ON SUBMITT CALLED DOWNLOADSCREENSHOT");
+    },
+
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
@@ -280,18 +285,20 @@ $.extend(xgds_image_annotation, {
                     image1: OSD_layer,
                     image2: annotations,
                     imagePK: imagePK
-                },
-                success: function (base64string) {
-                    window.open("data:image/jpeg;base64," + base64string);
-                    var img = new Image();
-                    img.src = "data:image/jpeg;base64," + base64string;
-                },
-                error: function (a,b,c,d) {
-                    console.log("Download screenshot ajax error");
-                    console.log(a);
-
-                    throw "Ajax error while downloading screenshot";
                 }
+                // success: function (base64string) {
+                //     console.log("printing string");
+                //     console.log(base64string);
+                //     // window.open("data:image/jpeg;base64," + base64string);
+                //     // var img = new Image();
+                //     // img.src = "data:image/jpeg;base64," + base64string;
+                // },
+                // error: function (a,b,c,d) {
+                //     console.log("Download screenshot ajax error");
+                //     console.log(a);
+                //
+                //     throw "Ajax error while downloading screenshot";
+                // }
             });
         });
 
@@ -557,7 +564,8 @@ $.extend(xgds_image_annotation, {
             success: function (data) {
                 data.forEach(function (annotation) {
                     xgds_image_annotation.addAnnotationToCanvas(annotation)
-                    if (xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
+                    // Not optimal but this if statement doesn't work outside of the for each for some reason
+                    if (xgds_image_annotation.showAnnotations == "false") {
                         console.log("activated almonds");
                         $("#off").click();
                         xgds_image_annotation.turnAnnotationsOnOff("off");

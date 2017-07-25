@@ -603,6 +603,8 @@ def mergeImages(request):
 
         # decode base 64 bitstream for PIL
         background = Image.open(BytesIO(base64.b64decode(temp1)))
+        background1 = Image.open(BytesIO(base64.b64decode(temp1)))
+
         foreground = Image.open(BytesIO(base64.b64decode(temp2)))
 
         # PIL paste foreground on background
@@ -613,8 +615,81 @@ def mergeImages(request):
         background.save(imgByteArr, format='JPEG', exif=str(exifData))
         imgByteArr = imgByteArr.getvalue()
 
-        return HttpResponse(base64.b64encode(imgByteArr), content_type="application/base64")
+        from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse
+        from django.utils.encoding import smart_str
+
+        retvalImage = base64.b64encode(imgByteArr)
+
+
+
+        # response = djangoResponse(background)
+        # response["Content-disposition"] = 'attachment; filename=%s' % "background.jpg"
+        # response['Content-Type'] = 'application/force-download'
+        # # response['Content-Length'] = len(str(retvalImage))
+
+
+        # response = HttpResponse(content_type='image/PNG')
+        # response['Content-Disposition'] = 'attachment; filename=%s' % 'background.jpg'
+        # image.save(response, format)
+
+        # attDataStream = db.get_attachment(doc, docName)
+
+
+        # imgByteArr2 = BytesIO()
+        # background.save(imgByteArr2, format='JPEG')
+        # # imgByteArr2 = imgByteArr2.getvalue()
+        #
+        # attDataStream = imgByteArr2
+        # attData = attDataStream.read()
+        # attDataStream.close()
+
+        imgByteArr = BytesIO()
+        background.save(imgByteArr, format='JPEG', exif=str(exifData))
+        imgByteArr = imgByteArr.getvalue()
+
+        stream =  BytesIO(imgByteArr)
+        attData = stream.read()
+        stream.close()
+        print "attData stream"
+        print attData
+
+
+
+        # import io
+        # roiImg = background1.crop(box)
+        # imgByteArr = BytesIO()
+        # roiImg.save(imgByteArr, format='PNG')
+        # imgByteArr = imgByteArr.getvalue()
+
+        #background1 is a PIL image PNG instance
+
+        response = HttpResponse(content_type='image/jpg')
+
+        background1.save(response, "JPEG")
+
+        print "response"
+        print response
+
+
+        response['Content-Disposition'] = 'attachment; filename="piece.jpg"'
+
+        print "type of response"
+        print type(response)
+        return response
+
+        # response = HttpResponse(attData, content_type="image/jpg")
+        #
+        # response["Content-Disposition"] = "attachment; filename=%s" % "background.jpg"
+        # # response['Content-disposition'] = 'application/force-download'
+        #
+        # # response = HttpResponse(image_buffer, content_type=content_type);
+        # print "returning response"
+        # return response
+
+        # return HttpResponse(base64.b64encode(imgByteArr), content_type="application/base64")
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
                             status=406)
+
+
 
