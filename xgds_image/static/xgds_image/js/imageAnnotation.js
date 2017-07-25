@@ -67,7 +67,6 @@ $.extend(xgds_image_annotation, {
      */
     showToolbar: "false",
 
-
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
@@ -222,11 +221,9 @@ $.extend(xgds_image_annotation, {
 
                 // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
                 if(xgds_image_annotation.currentAnnotationType.type == "text") {
-                    xgds_image_annotation.setMouseMode("editAnnotation");
+                    xgds_image_annotation.setMouseMode("editAnnotation"); // break out into edit mode
                     $("#editAnnotation").click(); // set nav bar to editAnnotation
-                }else{
-                    xgds_image_annotation.setMouseMode("OSD");
-                    $("#navigateImage").click();  // change nav bar back to OSD (navigateImage)
+                    console.log("text added")
                 }
             }
             xgds_image_annotation.isDown = false;
@@ -284,10 +281,6 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.annotationType = $("input[name='annotationType']:checked").val();
         });
 
-        $("#addAnnotation").click(function () {
-            xgds_image_annotation.setMouseMode("addAnnotation");
-        });
-
         /*
         Download screenshot of *current* view (i.e. will take into account current zoom level)
         Ajax images to server, combine with pillow, and return.
@@ -308,14 +301,15 @@ $.extend(xgds_image_annotation, {
                     imagePK: imagePK
                 },
                 success: function (base64string) {
-
                     window.open("data:image/jpeg;base64," + base64string);
                     var img = new Image();
                     img.src = "data:image/jpeg;base64," + base64string;
                 },
-                error: function (e) {
+                error: function (a,b,c,d) {
                     console.log("Download screenshot ajax error");
-                    console.log(e);
+                    console.log(a);
+
+                    throw "Ajax error while downloading screenshot";
                 }
             });
         });
