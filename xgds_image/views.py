@@ -39,6 +39,7 @@ from django.forms.models import model_to_dict
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
+from xgds_core.util import deletePostKey
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
 
@@ -372,7 +373,7 @@ def saveImage(request):
             if 'relay' in request.POST:
                 # create the record for the datum
                 # fire a message for new data
-                del request.POST['relay']
+                delPostKey(request.POST, 'relay')
                 addRelay(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
             # create a thumbnail
             thumbnailStream = createThumbnailFile(newSingleImage.file)
