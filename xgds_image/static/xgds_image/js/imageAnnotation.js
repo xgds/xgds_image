@@ -67,6 +67,11 @@ $.extend(xgds_image_annotation, {
      */
     showToolbar: "false",
 
+    /*
+    Global setting to show/hide annotations on default
+     */
+    showAnnotations: "true",
+
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
@@ -101,7 +106,7 @@ $.extend(xgds_image_annotation, {
         this.imageAnnotationToolbarStatus = "invisible";
 
         /* Show/hide toolbar based on default setting, showToolbar */
-        if(this.showToolbar === "false") {
+        if (this.showToolbar === "false") {
             $("#imageAnnotationToolbar").hide();
             this.imageAnnotationToolbarStatus = "invisible";
         }else{
@@ -127,6 +132,12 @@ $.extend(xgds_image_annotation, {
 
         /* Load and display annotations */
         xgds_image_annotation.getAnnotations();
+
+        if (xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
+            console.log("activated almonds");
+            $("#off").click();
+            xgds_image_annotation.turnAnnotationsOnOff("off");
+        }
 
         /****************************************************************************************************************
 
@@ -243,37 +254,7 @@ $.extend(xgds_image_annotation, {
         // Listen and set for annotations on/off
         $("input[name='annotationsOnOrOff']").change(function () {
             var onOff = $("input[name='annotationsOnOrOff']:checked").val();
-            var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
-            if (onOff == "off") {
-                for (var i = 0; i < objects.length; i++) {
-                    //set all objects as invisible and lock in position
-                    objects[i].visible = false;
-                    objects[i].lockMovementX = true;
-                    objects[i].lockMovementY = true;
-                    objects[i].lockRotation = true;
-                    objects[i].lockScalingFlip = true;
-                    objects[i].lockScalingX = true;
-                    objects[i].lockScalingY = true;
-                    objects[i].lockSkewingX = true;
-                    objects[i].lockSkewingY = true;
-                    objects[i].lockUniScaling = true;
-                }
-            } else {
-                //set all objects as visible and unlock
-                for (var i = 0; i < objects.length; i++) {
-                    objects[i].visible = true;
-                    objects[i].lockMovementX = false;
-                    objects[i].lockMovementY = false;
-                    objects[i].lockRotation = false;
-                    objects[i].lockScalingFlip = false;
-                    objects[i].lockScalingX = false;
-                    objects[i].lockScalingY = false;
-                    objects[i].lockSkewingX = false;
-                    objects[i].lockSkewingY = false;
-                    objects[i].lockUniScaling = false;
-                }
-            }
-            xgds_image_annotation.overlay.fabricCanvas().renderAll();
+            xgds_image_annotation.turnAnnotationsOnOff(onOff);
         });
 
         // Listen for user-selected annotationType
@@ -575,7 +556,12 @@ $.extend(xgds_image_annotation, {
             datatype: 'json',
             success: function (data) {
                 data.forEach(function (annotation) {
-                    xgds_image_annotation.addAnnotationToCanvas(annotation);
+                    xgds_image_annotation.addAnnotationToCanvas(annotation)
+                    if (xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
+                        console.log("activated almonds");
+                        $("#off").click();
+                        xgds_image_annotation.turnAnnotationsOnOff("off");
+                    }
                 });
             },
             error: function (a) {
@@ -878,6 +864,42 @@ $.extend(xgds_image_annotation, {
 
         this.overlay.fabricCanvas().add(this.text);
         this.overlay.fabricCanvas().renderAll();
+    },
+
+    turnAnnotationsOnOff: function(onOrOff) {
+        var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
+        if (onOrOff == "off") {
+            xgds_image_annotation.showAnnotations = "false";
+            for (var i = 0; i < objects.length; i++) {
+                //set all objects as invisible and lock in position
+                objects[i].visible = false;
+                objects[i].lockMovementX = true;
+                objects[i].lockMovementY = true;
+                objects[i].lockRotation = true;
+                objects[i].lockScalingFlip = true;
+                objects[i].lockScalingX = true;
+                objects[i].lockScalingY = true;
+                objects[i].lockSkewingX = true;
+                objects[i].lockSkewingY = true;
+                objects[i].lockUniScaling = true;
+            }
+        }else{
+            xgds_image_annotation.showAnnotations = "true";
+            //set all objects as visible and unlock
+            for (var i = 0; i < objects.length; i++) {
+                objects[i].visible = true;
+                objects[i].lockMovementX = false;
+                objects[i].lockMovementY = false;
+                objects[i].lockRotation = false;
+                objects[i].lockScalingFlip = false;
+                objects[i].lockScalingX = false;
+                objects[i].lockScalingY = false;
+                objects[i].lockSkewingX = false;
+                objects[i].lockSkewingY = false;
+                objects[i].lockUniScaling = false;
+            }
+        }
+        xgds_image_annotation.overlay.fabricCanvas().renderAll();
     }
 }); // end of namespace
 
