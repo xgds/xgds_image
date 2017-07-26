@@ -53,7 +53,7 @@ $.extend(xgds_image_annotation, {
     imageAnnotationToolbarStatus: "invisible",
 
     /*
-    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
+    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType radio menu
     */
     annotationType: "arrow",
 
@@ -69,6 +69,7 @@ $.extend(xgds_image_annotation, {
 
     /*
     Dictionary of different annotation sizes. Stroke is the stroke size used for non-arrow shapes. Arrow size is controlled by headlen.
+    TODO: add font sizes
      */
     annotationSizes: {
         "small": {
@@ -138,7 +139,7 @@ $.extend(xgds_image_annotation, {
         }
 
         /* Load colors into colors dictionary if not already loaded. This populates the colors dictionary AND creates the spectrum color palette */
-        //TODO: change this back
+        //TODO: change this back later--keep for now to prevent continuous-annotation-drawing bug
         this.spectrumColorPalette = this.getPaletteColors();
 
         // Initialize color picker options
@@ -317,7 +318,6 @@ $.extend(xgds_image_annotation, {
                 	 console.log(htmlResponse);
                  }
              });
-        	 
         });
 
         $('#deleteAnnotation').click(function () {

@@ -609,8 +609,6 @@ def mergeImages(request):
 
         # decode base 64 bitstream for PIL
         background = Image.open(BytesIO(base64.b64decode(temp1)))
-        background1 = Image.open(BytesIO(base64.b64decode(temp1)))
-
         foreground = Image.open(BytesIO(base64.b64decode(temp2)))
 
         # PIL paste foreground on background
@@ -625,7 +623,6 @@ def mergeImages(request):
         response = HttpResponse(content_type='image/jpg')
         background.save(response, "JPEG")
         response['Content-Disposition'] = 'attachment; filename="%s.jpg"' % os.path.splitext(imageSet.name)[0]
-
         return response
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
