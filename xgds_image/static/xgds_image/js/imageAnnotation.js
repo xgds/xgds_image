@@ -63,6 +63,29 @@ $.extend(xgds_image_annotation, {
     currentAnnotationColor: "red",
 
     /*
+    Default annotation size
+     */
+    currentAnnotationSize: "medium",
+
+    /*
+    Dictionary of different annotation sizes. Stroke is the stroke size used for non-arrow shapes. Arrow size is controlled by headlen.
+     */
+    annotationSizes: {
+        "small": {
+            "stroke": 5,
+            "arrow": 50
+        },
+        "medium": {
+            "stroke": 15,
+            "arrow": 75
+        },
+        "large": {
+            "stroke": 25,
+            "arrow": 100
+        },
+    },
+
+    /*
     Global setting to show/hide toolbar on default
      */
     showToolbar: "false",
@@ -105,7 +128,8 @@ $.extend(xgds_image_annotation, {
         this.overlay = this.viewer.fabricjsOverlay();
 
         this.currentAnnotationType = "arrow";
-        this.mouseMode = "OSD";
+        this.mouseMode = "addAnnotation";
+        this.setMouseMode(this.mouseMode);
         this.annotationType = "arrow";
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
@@ -267,6 +291,11 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.annotationType = $("input[name='annotationType']:checked").val();
         });
 
+        // Listen for user-selected annotationSize
+        $("input[name='annotationSize']").change(function () {
+            xgds_image_annotation.currentAnnotationSize = $("input[name='annotationSize']:checked").val();
+        });
+
         /*
         Download screenshot of *current* view (i.e. will take into account current zoom level)
         Ajax images to server, combine with pillow, and return.
@@ -324,7 +353,7 @@ $.extend(xgds_image_annotation, {
             left: x,
             top: y,
             radius: 1,
-            strokeWidth: 25,
+            strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
             stroke: this.currentAnnotationColor,
             fill: '',
             selectable: true,
@@ -332,7 +361,8 @@ $.extend(xgds_image_annotation, {
             originY: 'center',
             scaleX: 1,
             scaleY: 1,
-            type: 'ellipse'
+            type: 'ellipse',
+            size: this.currentAnnotationSize
         });
         this.currentAnnotationType = this.ellipse
         this.overlay.fabricCanvas().add(this.ellipse);
@@ -348,13 +378,14 @@ $.extend(xgds_image_annotation, {
             left: x,
             top: y,
             fill: '',
-            strokeWidth: 25,
+            strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
             stroke: this.currentAnnotationColor,
             width: 1,
             height: 1,
             scaleX: 1,
             scaleY: 1,
-            type: 'rect'
+            type: 'rect',
+            size: this.currentAnnotationSize
         });
         this.currentAnnotationType = this.rectangle;
         this.overlay.fabricCanvas().add(this.rectangle);
@@ -372,11 +403,12 @@ $.extend(xgds_image_annotation, {
            left: x,
            top: y,
            fill: "",
-           strokeWidth: 25,
+           strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
            stroke: this.currentAnnotationColor,
            width: 1,
            height: 1,
-           type: 'textboxPreview'
+           type: 'textboxPreview',
+           size: this.currentAnnotationSize
        });
        this.currentAnnotationType = this.textboxPreview;
        this.overlay.fabricCanvas().add(this.textboxPreview);
@@ -395,7 +427,7 @@ $.extend(xgds_image_annotation, {
      really drawing a polygon, not an arrow). Taken from https://jsfiddle.net/6e17oxc3/
      */
     drawArrow: function(x, y) {
-        var headlen = 100;  // arrow head size
+        var headlen = this.annotationSizes[this.currentAnnotationSize]["arrow"];  // arrow head size
         this.arrow = new fabric.Polyline(this.calculateArrowPoints(this.origX, this.origY, x, y, headlen), {
             fill: this.currentAnnotationColor,
             stroke: 'black',
@@ -406,14 +438,15 @@ $.extend(xgds_image_annotation, {
             scaleX: 1,
             scaleY: 1,
             selectable: true,
-            type: 'arrow'
+            type: 'arrow',
+            size: this.currentAnnotationSize
         });
         this.currentAnnotationType = this.arrow;
         this.overlay.fabricCanvas().add(this.arrow);
     },
 
     updateArrow: function(x, y) {
-        var headlen = 100; //arrow head size
+        var headlen = this.annotationSizes[this.currentAnnotationSize]["arrow"]; // current arrow head size
         this.overlay.fabricCanvas().remove(this.arrow);
         var angle = Math.atan2(y - this.origY, x - this.origX);
 
@@ -441,7 +474,7 @@ $.extend(xgds_image_annotation, {
     // Compute set of points to create arrow shape
     calculateArrowPoints: function(x, y, headlen) {
         var angle = Math.atan2(y - this.origY, x - this.origX);
-        var headlen = 100;  // arrow head size
+        var headlen = this.annotationSizes[this.currentAnnotationSize]["arrow"],
 
         // bring the line end back some to account for arrow head.
         x = x - (headlen) * Math.cos(angle);
@@ -520,7 +553,7 @@ $.extend(xgds_image_annotation, {
     },
 
     /*
-    We duplicate objects before serializing them because... TODO: why do we have to duplicate again?
+    We duplicate objects before serializing them because... TODO: why do we have to duplicate again? It's definitely
      */
     duplicateObject: function(object) {
         var objectCopy = {
@@ -542,7 +575,8 @@ $.extend(xgds_image_annotation, {
             height: object["height"],
             width: object["width"],
             pk: object["pk"],
-            image: object["image"]
+            image: object["image"],
+            size: object["size"]
         };
         return objectCopy;
     },
@@ -559,7 +593,6 @@ $.extend(xgds_image_annotation, {
                     xgds_image_annotation.addAnnotationToCanvas(annotation)
                     // Not optimal but this if statement doesn't work outside of the for each for some reason
                     if (xgds_image_annotation.showAnnotations == "false") {
-                        console.log("activated almonds");
                         $("#off").click();
                         xgds_image_annotation.turnAnnotationsOnOff("off");
                     }
@@ -586,7 +619,8 @@ $.extend(xgds_image_annotation, {
                 textAlign: 'center',
                 scaleX: 1,
                 scaleY: 1,
-                type: 'text'
+                type: 'text',
+                size: this.currentAnnotationSize
             });
             this.currentAnnotationType = this.text;
             this.overlay.fabricCanvas().add(this.text);
@@ -788,7 +822,8 @@ $.extend(xgds_image_annotation, {
             scaleX: annotationJson["scaleX"],
             scaleY: annotationJson["scaleY"],
             pk: annotationJson["pk"],
-            image: annotationJson["image"]
+            image: annotationJson["image"],
+            size: annotationJson["size"]
         });
         this.overlay.fabricCanvas().add(this.rect);
         this.overlay.fabricCanvas().renderAll();
@@ -810,7 +845,8 @@ $.extend(xgds_image_annotation, {
             scaleX: annotationJson["scaleX"],
             scaleY: annotationJson["scaleY"],
             pk: annotationJson["pk"],
-            image: annotationJson["image"]
+            image: annotationJson["image"],
+            size: annotationJson["size"]
         });
         this.overlay.fabricCanvas().add(this.ellipse);
         this.overlay.fabricCanvas().renderAll();
@@ -831,7 +867,8 @@ $.extend(xgds_image_annotation, {
             scaleX: annotationJson["scaleX"],
             scaleY: annotationJson["scaleY"],
             pk: annotationJson["pk"],
-            image: annotationJson["image"]
+            image: annotationJson["image"],
+            size: annotationJson["size"]
         });
         console.log("image and pk pls");
         this.overlay.fabricCanvas().add(this.arrow);
@@ -860,7 +897,8 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"],
             textAlign: 'center',
-            fontSize: 100 //Font size is static for now
+            fontSize: 100, //Font size is static for now
+            size: annotationJson["size"]
         });
 
         this.overlay.fabricCanvas().add(this.text);
