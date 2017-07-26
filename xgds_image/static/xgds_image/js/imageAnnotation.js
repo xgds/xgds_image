@@ -25,12 +25,21 @@ $.extend(xgds_image_annotation, {
     */
     annotationsDict: {},
 
-
     /*
     Stores a dictionary of pre-set (string)color -> (string)hex pairs.
     Loaded through ajax on document.onReady()
     */
     colorsDictionary: {},
+
+    /*
+    Spectrum color palette. Stores an array of colors in the correct format for the spectrum color picker.
+     */
+    spectrumColorPalette: [],
+
+    /*
+    Boolean of whether colors dictionary is loaded or not
+     */
+    colorsLoaded: false,
 
     /* the mouse can be in 3 modes:
      1.) OSD (for interaction w/ OSD viewer, drag/scroll/zoom around the map
@@ -48,19 +57,35 @@ $.extend(xgds_image_annotation, {
     */
     annotationType: "arrow",
 
-
     /*
     Default annotation color to draw annotations in
     */
-    currentAnnotationColor: "white",
+    currentAnnotationColor: "red",
+
+    /*
+    Global setting to show/hide toolbar on default
+     */
+    showToolbar: "false",
+
+    /*
+    Global setting to show/hide annotations on default
+     */
+    showAnnotations: "true",
+
+
+    downloadScreenshot: function() {
+        console.log("ON SUBMITT CALLED DOWNLOADSCREENSHOT");
+    },
 
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
             $("#imageAnnotationToolbar").show();
+            this.showToolbar = "true";
             this.imageAnnotationToolbarStatus="visible";
         }else{
             $("#imageAnnotationToolbar").hide();
+            this.showToolbar = "false";
             this.imageAnnotationToolbarStatus="invisible";
         }
     },
@@ -72,11 +97,11 @@ $.extend(xgds_image_annotation, {
     initialize: function(imageJson, osdViewer) {
         /* Clear variables */
         this.annotationsDict = {};
-        this.colorsDictionary = {};
+
 
         /* Initialize member variables */
         this.imageJson = imageJson;
-        this.viewer = osdViewer;
+        this.viewer = osdViewer;  // TODO: do we need to load this every time?
         this.overlay = this.viewer.fabricjsOverlay();
 
         this.currentAnnotationType = "arrow";
@@ -85,22 +110,39 @@ $.extend(xgds_image_annotation, {
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
 
-        // Set toolbar as invisible
-        $("#imageAnnotationToolbar").hide();
+        /* Show/hide toolbar based on default setting, showToolbar */
+        if (this.showToolbar === "false") {
+            $("#imageAnnotationToolbar").hide();
+            this.imageAnnotationToolbarStatus = "invisible";
+        }else{
+            $("#imageAnnotationToolbar").show();
+            this.imageAnnotationToolbarStatus = "visible";
+        }
+
+        /* Load colors into colors dictionary if not already loaded. This populates the colors dictionary AND creates the spectrum color palette */
+        if(this.spectrumColorPalette.length===0) {
+            this.spectrumColorPalette = this.getPaletteColors();
+        }
+
 
         // Initialize color picker options
         var spectrumOptions = {
             showPaletteOnly: true,
             showPalette: true,
-            palette: xgds_image_annotation.getPaletteColors(),
+            palette: this.spectrumColorPalette,
             color: this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].hex //set default color as the "first" key in colorsDictionary
         };
-        console.log("palette");
-        console.log(xgds_image_annotation.getPaletteColors());
+
         $("#colorPicker").spectrum(spectrumOptions);
 
         /* Load and display annotations */
         xgds_image_annotation.getAnnotations();
+
+        if (xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
+            console.log("activated almonds");
+            $("#off").click();
+            xgds_image_annotation.turnAnnotationsOnOff("off");
+        }
 
         /****************************************************************************************************************
 
@@ -195,11 +237,9 @@ $.extend(xgds_image_annotation, {
 
                 // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
                 if(xgds_image_annotation.currentAnnotationType.type == "text") {
-                    xgds_image_annotation.setMouseMode("editAnnotation");
+                    xgds_image_annotation.setMouseMode("editAnnotation"); // break out into edit mode
                     $("#editAnnotation").click(); // set nav bar to editAnnotation
-                }else{
-                    xgds_image_annotation.setMouseMode("OSD");
-                    $("#navigateImage").click();  // change nav bar back to OSD (navigateImage)
+                    console.log("text added")
                 }
             }
             xgds_image_annotation.isDown = false;
@@ -219,37 +259,7 @@ $.extend(xgds_image_annotation, {
         // Listen and set for annotations on/off
         $("input[name='annotationsOnOrOff']").change(function () {
             var onOff = $("input[name='annotationsOnOrOff']:checked").val();
-            var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
-            if (onOff == "off") {
-                for (var i = 0; i < objects.length; i++) {
-                    //set all objects as invisible and lock in position
-                    objects[i].visible = false;
-                    objects[i].lockMovementX = true;
-                    objects[i].lockMovementY = true;
-                    objects[i].lockRotation = true;
-                    objects[i].lockScalingFlip = true;
-                    objects[i].lockScalingX = true;
-                    objects[i].lockScalingY = true;
-                    objects[i].lockSkewingX = true;
-                    objects[i].lockSkewingY = true;
-                    objects[i].lockUniScaling = true;
-                }
-            } else {
-                //set all objects as visible and unlock
-                for (var i = 0; i < objects.length; i++) {
-                    objects[i].visible = true;
-                    objects[i].lockMovementX = false;
-                    objects[i].lockMovementY = false;
-                    objects[i].lockRotation = false;
-                    objects[i].lockScalingFlip = false;
-                    objects[i].lockScalingX = false;
-                    objects[i].lockScalingY = false;
-                    objects[i].lockSkewingX = false;
-                    objects[i].lockSkewingY = false;
-                    objects[i].lockUniScaling = false;
-                }
-            }
-            xgds_image_annotation.overlay.fabricCanvas().renderAll();
+            xgds_image_annotation.turnAnnotationsOnOff(onOff);
         });
 
         // Listen for user-selected annotationType
@@ -257,40 +267,32 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.annotationType = $("input[name='annotationType']:checked").val();
         });
 
-        $("#addAnnotation").click(function () {
-            xgds_image_annotation.setMouseMode("addAnnotation");
-        });
-
         /*
         Download screenshot of *current* view (i.e. will take into account current zoom level)
         Ajax images to server, combine with pillow, and return.
         TODO: keep exif data
          */
-        $('#downloadScreenshot').click(function () {
+        $('#downloadScreenshot').click(function (event) {
+        		event.preventDefault();
             var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png");
             var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'});
-
             var imagePK = xgds_image_annotation.imageJson["pk"];
-            $.ajax({
-                type: "POST",
-                url: '/xgds_image/mergeImages/',
-                datatype: 'json',
-                data: {
+            var postData = {
                     image1: OSD_layer,
                     image2: annotations,
                     imagePK: imagePK
-                },
-                success: function (base64string) {
-
-                    window.open("data:image/jpeg;base64," + base64string);
-                    var img = new Image();
-                    img.src = "data:image/jpeg;base64," + base64string;
-                },
-                error: function (e) {
-                    console.log("Download screenshot ajax error");
-                    console.log(e);
-                }
-            });
+                };
+        	 $.fileDownload('/xgds_image/mergeImages/', {
+        		 	data: postData,
+        		 	httpMethod: "POST",
+                 successCallback: function (url) {
+                	 console.log('downloaded');
+                 },
+                 failCallback: function (htmlResponse, url) {
+                	 console.log(htmlResponse);
+                 }
+             });
+        	 
         });
 
         $('#deleteAnnotation').click(function () {
@@ -554,7 +556,13 @@ $.extend(xgds_image_annotation, {
             datatype: 'json',
             success: function (data) {
                 data.forEach(function (annotation) {
-                    xgds_image_annotation.addAnnotationToCanvas(annotation);
+                    xgds_image_annotation.addAnnotationToCanvas(annotation)
+                    // Not optimal but this if statement doesn't work outside of the for each for some reason
+                    if (xgds_image_annotation.showAnnotations == "false") {
+                        console.log("activated almonds");
+                        $("#off").click();
+                        xgds_image_annotation.turnAnnotationsOnOff("off");
+                    }
                 });
             },
             error: function (a) {
@@ -725,7 +733,9 @@ $.extend(xgds_image_annotation, {
                     pk: annotation["pk"]
                 },
                 success: function (data) {
-                    console.log(data);
+                    //delete from dict and database
+                    delete xgds_image_annotation.annotationsDict[annotation["pk"]];
+                    xgds_image_annotation.overlay.fabricCanvas().getActiveObject().remove();
                 },
                 error: function (a) {
                     console.log("Ajax error");
@@ -733,10 +743,6 @@ $.extend(xgds_image_annotation, {
                     throw new Error("Unable to delete the annotation's entry from the database");
                 }
             });
-
-            //delete from dict and database
-            delete this.annotationsDict[annotation["pk"]];
-            this.overlay.fabricCanvas().getActiveObject().remove();
         } else {
             //annotation not saved in database anyways, just remove from canvas
             this.overlay.fabricCanvas().getActiveObject().remove();
@@ -859,6 +865,42 @@ $.extend(xgds_image_annotation, {
 
         this.overlay.fabricCanvas().add(this.text);
         this.overlay.fabricCanvas().renderAll();
+    },
+
+    turnAnnotationsOnOff: function(onOrOff) {
+        var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
+        if (onOrOff == "off") {
+            xgds_image_annotation.showAnnotations = "false";
+            for (var i = 0; i < objects.length; i++) {
+                //set all objects as invisible and lock in position
+                objects[i].visible = false;
+                objects[i].lockMovementX = true;
+                objects[i].lockMovementY = true;
+                objects[i].lockRotation = true;
+                objects[i].lockScalingFlip = true;
+                objects[i].lockScalingX = true;
+                objects[i].lockScalingY = true;
+                objects[i].lockSkewingX = true;
+                objects[i].lockSkewingY = true;
+                objects[i].lockUniScaling = true;
+            }
+        }else{
+            xgds_image_annotation.showAnnotations = "true";
+            //set all objects as visible and unlock
+            for (var i = 0; i < objects.length; i++) {
+                objects[i].visible = true;
+                objects[i].lockMovementX = false;
+                objects[i].lockMovementY = false;
+                objects[i].lockRotation = false;
+                objects[i].lockScalingFlip = false;
+                objects[i].lockScalingX = false;
+                objects[i].lockScalingY = false;
+                objects[i].lockSkewingX = false;
+                objects[i].lockSkewingY = false;
+                objects[i].lockUniScaling = false;
+            }
+        }
+        xgds_image_annotation.overlay.fabricCanvas().renderAll();
     }
 }); // end of namespace
 
