@@ -128,7 +128,8 @@ $.extend(xgds_image_annotation, {
         this.overlay = this.viewer.fabricjsOverlay();
 
         this.currentAnnotationType = "arrow";
-        this.mouseMode = "OSD";
+        this.mouseMode = "addAnnotation";
+        this.setMouseMode(this.mouseMode);
         this.annotationType = "arrow";
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
