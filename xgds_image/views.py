@@ -455,6 +455,7 @@ def saveAnnotations(request):
             annotationModel.angle = annotationJSON["angle"]
             annotationModel.scaleX = annotationJson["scaleX"]
             annotationModel.scaleY = annotationJson["scaleY"]
+            annotationModel.size = newAnnotation["size"]
 
             annotationModel.author = request.user
             annotationModel.image_id = request.POST.get('image_pk')
@@ -503,6 +504,8 @@ def alterAnnotation(request):
         annotationModel.angle = newAnnotation["angle"]
         annotationModel.scaleX = newAnnotation["scaleX"]
         annotationModel.scaleY = newAnnotation["scaleY"]
+        annotationModel.size = newAnnotation["size"]
+
         annotationModel.save()
         return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
                         content_type='application/json')
@@ -572,6 +575,7 @@ def addAnnotation(request):
         annotationModel.angle = newAnnotation["angle"]
         annotationModel.scaleX = newAnnotation["scaleX"]
         annotationModel.scaleY = newAnnotation["scaleY"]
+        annotationModel.size = newAnnotation["size"]
 
         annotationModel.author = request.user
         annotationModel.image_id = int(request.POST.get('image_pk'))

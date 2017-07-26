@@ -57,20 +57,19 @@
             <!--<p1> Image Annotation Toolbar </p1>-->
             <div id="imageToolbarRow1">
                 <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-primary active">
-                        <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="OSD" checked>Navigate
-                    </label>
                     <label class="btn btn-primary">
-                        <input type="radio" name="cursorMode" id="addAnnotation" autocomplete="off" value="addAnnotation">Add Annotations
+                        <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="OSD">Navigate
+                    </label>
+                    <label class="btn btn-primary active">
+                        <input type="radio" name="cursorMode" id="addAnnotation" autocomplete="off" value="addAnnotation checked">Add Annotations
                     </label>
                     <label class="btn btn-primary">
                         <input type="radio" name="cursorMode" id="editAnnotation" autocomplete="off" value="editAnnotation">Edit Annotations
                     </label>
                 </div>
             </div>
-
-
             <div id="imageToolbarRow2">
+                <p1> Annotation Type: </p1>
                 <div class="btn-group" data-toggle="buttons">
                     <label class="btn btn-primary active">
                         <input type="radio" name="annotationType" id="arrow" autocomplete="off" value="arrow" checked>Arrow
@@ -85,11 +84,24 @@
                         <input type="radio" name="annotationType" id="text" autocomplete="off" value="text">Text
                     </label>
                 </div>
+            </div>
+            <div id="imageToolbarRow3">
+                <p1> Annotation Size: </p1>
+                <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-primary">
+                        <input type="radio" name="annotationSize" id="small" autocomplete="off" value="small">Small
+                    </label>
+                    <label class="btn btn-primary active">
+                        <input type="radio" name="annotationSize" id="medium" autocomplete="off" value="medium" checked>Medium
+                    </label>
+                    <label class="btn btn-primary">
+                        <input type="radio" name="annotationSize" id="large" autocomplete="off" value="large">Large
+                    </label>
+                </div>
                 <input type='text' id="colorPicker"/>
             </div>
 
-            <div id="imageToolbarRow3">
-
+            <div id="imageToolbarRow4">
                 <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="deleteAnnotation">Delete Selected Annotation</button>
             </div>
             </br>
