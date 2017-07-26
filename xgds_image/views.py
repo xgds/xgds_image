@@ -671,7 +671,7 @@ def mergeImages(request):
         print response
 
 
-        response['Content-Disposition'] = 'attachment; filename="piece.jpg"'
+        response['Content-Disposition'] = 'attachment; filename="%s.jpg"' % os.path.splitext(imageSet.name)[0]
 
         print "type of response"
         print type(response)

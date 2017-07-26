@@ -272,34 +272,27 @@ $.extend(xgds_image_annotation, {
         Ajax images to server, combine with pillow, and return.
         TODO: keep exif data
          */
-        $('#downloadScreenshot').click(function () {
+        $('#downloadScreenshot').click(function (event) {
+        		event.preventDefault();
             var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png");
             var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'});
-
             var imagePK = xgds_image_annotation.imageJson["pk"];
-            $.ajax({
-                type: "POST",
-                url: '/xgds_image/mergeImages/',
-                datatype: 'json',
-                data: {
+            var postData = {
                     image1: OSD_layer,
                     image2: annotations,
                     imagePK: imagePK
-                }
-                // success: function (base64string) {
-                //     console.log("printing string");
-                //     console.log(base64string);
-                //     // window.open("data:image/jpeg;base64," + base64string);
-                //     // var img = new Image();
-                //     // img.src = "data:image/jpeg;base64," + base64string;
-                // },
-                // error: function (a,b,c,d) {
-                //     console.log("Download screenshot ajax error");
-                //     console.log(a);
-                //
-                //     throw "Ajax error while downloading screenshot";
-                // }
-            });
+                };
+        	 $.fileDownload('/xgds_image/mergeImages/', {
+        		 	data: postData,
+        		 	httpMethod: "POST",
+                 successCallback: function (url) {
+                	 console.log('downloaded');
+                 },
+                 failCallback: function (htmlResponse, url) {
+                	 console.log(htmlResponse);
+                 }
+             });
+        	 
         });
 
         $('#deleteAnnotation').click(function () {
