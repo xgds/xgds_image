@@ -53,7 +53,7 @@ $.extend(xgds_image_annotation, {
     imageAnnotationToolbarStatus: "invisible",
 
     /*
-    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType
+    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType radio menu
     */
     annotationType: "arrow",
 
@@ -69,6 +69,7 @@ $.extend(xgds_image_annotation, {
 
     /*
     Dictionary of different annotation sizes. Stroke is the stroke size used for non-arrow shapes. Arrow size is controlled by headlen.
+    TODO: add font sizes
      */
     annotationSizes: {
         "small": {
@@ -95,11 +96,6 @@ $.extend(xgds_image_annotation, {
      */
     showAnnotations: "true",
 
-
-    downloadScreenshot: function() {
-        console.log("ON SUBMITT CALLED DOWNLOADSCREENSHOT");
-    },
-
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
@@ -110,6 +106,8 @@ $.extend(xgds_image_annotation, {
             $("#imageAnnotationToolbar").hide();
             this.showToolbar = "false";
             this.imageAnnotationToolbarStatus="invisible";
+            this.mouseMode = "OSD";
+            this.setMouseMode(this.mouseMode);
         }
     },
 
@@ -143,7 +141,7 @@ $.extend(xgds_image_annotation, {
         }
 
         /* Load colors into colors dictionary if not already loaded. This populates the colors dictionary AND creates the spectrum color palette */
-        //TODO: change this back
+        //TODO: change this back later--keep for now to prevent continuous-annotation-drawing bug
         this.spectrumColorPalette = this.getPaletteColors();
 
         // Initialize color picker options
@@ -159,13 +157,22 @@ $.extend(xgds_image_annotation, {
         /* Load and display annotations */
         xgds_image_annotation.getAnnotations();
 
-        if (xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
+        if(xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
             console.log("activated almonds");
             $("#off").click();
             xgds_image_annotation.turnAnnotationsOnOff("off");
         }
 
-        this.mouseMode = "addAnnotation";
+        /* Update the currentAnnotationSize radio menubar to have the correct annotationSize selected */
+        if(xgds_image_annotation.currentAnnotationSize == "small") {
+            $("#small").click();
+        }else if(xgds_image_annotation.currentAnnotationSize == "medium"){
+            $("#medium").click();
+        }else{
+            $("#large").click();
+        }
+
+        this.mouseMode = "OSD";
         this.setMouseMode(this.mouseMode);
 
         /****************************************************************************************************************
@@ -322,7 +329,6 @@ $.extend(xgds_image_annotation, {
                 	 console.log(htmlResponse);
                  }
              });
-        	 
         });
 
         $('#deleteAnnotation').click(function () {

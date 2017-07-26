@@ -42,26 +42,18 @@
                     <input type="radio" name="annotationsOnOrOff" id="off" autocomplete="off" value="off">Off
                 </label>
             </div>
-            <!-- change from button to form -->
-
-            <!--<form action="/xgds_image/merge_images/" method="post">-->
-
-                <!--<input type="submit" value="Download" onsubmit="xgds_image_annotation." class="btn btn-primary">-->
-                <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="downloadScreenshot">Download Screenshot</button>
-            <!--</form>-->
+            <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off" id="downloadScreenshot">Download Screenshot</button>
         </div>
 
-        <!--</br>-->
         <div id="imageAnnotationToolbar">
             </br>
-            <!--<p1> Image Annotation Toolbar </p1>-->
             <div id="imageToolbarRow1">
                 <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-primary">
-                        <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="OSD">Navigate
-                    </label>
                     <label class="btn btn-primary active">
-                        <input type="radio" name="cursorMode" id="addAnnotation" autocomplete="off" value="addAnnotation" checked>Add Annotations
+                        <input type="radio" name="cursorMode" id="navigateImage" autocomplete="off" value="OSD" checked>Navigate
+                    </label>
+                    <label class="btn btn-primary">
+                        <input type="radio" name="cursorMode" id="addAnnotation" autocomplete="off" value="addAnnotation">Add Annotations
                     </label>
                     <label class="btn btn-primary">
                         <input type="radio" name="cursorMode" id="editAnnotation" autocomplete="off" value="editAnnotation">Edit Annotations
