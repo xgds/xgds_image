@@ -144,10 +144,8 @@ $.extend(xgds_image_annotation, {
         }
 
         /* Load colors into colors dictionary if not already loaded. This populates the colors dictionary AND creates the spectrum color palette */
-        if(this.spectrumColorPalette.length===0) {
-            this.spectrumColorPalette = this.getPaletteColors();
-        }
-
+        //TODO: change this back
+        this.spectrumColorPalette = this.getPaletteColors();
 
         // Initialize color picker options
         var spectrumOptions = {
@@ -456,6 +454,7 @@ $.extend(xgds_image_annotation, {
 
         // calculate the points.
         var pointsArray = this.calculateArrowPoints(x, y, headlen);
+        var oldArrowSize = this.arrow.size
         this.arrow = new fabric.Polyline(pointsArray, {
             fill: this.currentAnnotationColor,
             stroke: 'black',
@@ -464,7 +463,8 @@ $.extend(xgds_image_annotation, {
             originX: 'left',
             originY: 'top',
             selectable: true,
-            type: 'arrow'
+            type: 'arrow',
+            size: oldArrowSize
         });
         this.currentAnnotationType = this.arrow;
         this.overlay.fabricCanvas().add(this.arrow);
@@ -533,6 +533,7 @@ $.extend(xgds_image_annotation, {
                 break;
             case "addAnnotation":
                 this.mouseMode = "addAnnotation";
+                debugger;
                 this.setFabricCanvasInteractivity(false);
                 this.deselectFabricObjects();
                 this.viewer.setMouseNavEnabled(false);
