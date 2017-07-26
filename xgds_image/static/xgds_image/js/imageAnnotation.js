@@ -663,6 +663,7 @@ $.extend(xgds_image_annotation, {
             },
             success: function (data) {
                 fabricObject.set({pk: data["pk"], image: data["image_pk"]});
+                xgds_image_annotation.annotationsDict[data["pk"]] = data;
             },
             error: function (e) {
                 console.log("Ajax error");
