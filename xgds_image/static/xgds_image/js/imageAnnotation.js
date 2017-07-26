@@ -95,11 +95,6 @@ $.extend(xgds_image_annotation, {
      */
     showAnnotations: "true",
 
-
-    downloadScreenshot: function() {
-        console.log("ON SUBMITT CALLED DOWNLOADSCREENSHOT");
-    },
-
     // Toggle image annotation toolbar. Connected to button id=toggleImageAnnotationsMenu in image-view2.handlebars
     toggleMenuBar: function() {
         if(this.imageAnnotationToolbarStatus=="invisible") {
