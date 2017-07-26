@@ -566,6 +566,7 @@ class AbstractAnnotation(models.Model):
     originX = models.CharField(max_length=16, default="left")
     originY = models.CharField(max_length=16, default="center")
     fill = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_fill', null=True, blank=True)
+    size = models.CharField(max_length=16, default="medium")
 
     author = models.ForeignKey(User)
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
