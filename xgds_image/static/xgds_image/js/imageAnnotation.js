@@ -157,10 +157,19 @@ $.extend(xgds_image_annotation, {
         /* Load and display annotations */
         xgds_image_annotation.getAnnotations();
 
-        if (xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
+        if(xgds_image_annotation.showAnnotations == "false") { // This code is duplicated in the getAnnotations callback to deal with async
             console.log("activated almonds");
             $("#off").click();
             xgds_image_annotation.turnAnnotationsOnOff("off");
+        }
+
+        /* Update the currentAnnotationSize radio menubar to have the correct annotationSize selected */
+        if(xgds_image_annotation.currentAnnotationSize == "small") {
+            $("#small").click();
+        }else if(xgds_image_annotation.currentAnnotationSize == "medium"){
+            $("#medium").click();
+        }else{
+            $("#large").click();
         }
 
         this.mouseMode = "OSD";
