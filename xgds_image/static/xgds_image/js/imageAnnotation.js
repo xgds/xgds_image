@@ -128,8 +128,7 @@ $.extend(xgds_image_annotation, {
         this.overlay = this.viewer.fabricjsOverlay();
 
         this.currentAnnotationType = "arrow";
-        this.mouseMode = "addAnnotation";
-        this.setMouseMode(this.mouseMode);
+
         this.annotationType = "arrow";
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
@@ -166,6 +165,9 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.turnAnnotationsOnOff("off");
         }
 
+        this.mouseMode = "addAnnotation";
+        this.setMouseMode(this.mouseMode);
+
         /****************************************************************************************************************
 
                                              E V E N T  L I S T E N E R S
@@ -182,6 +184,7 @@ $.extend(xgds_image_annotation, {
             - initialize the correct function based on what the currentAnnotationType is.
          */
         this.overlay.fabricCanvas().observe('mouse:down', function (o) {
+            xgds_image_annotation.setMouseMode(xgds_image_annotation.mouseMode);
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
                 xgds_image_annotation.isDown = true;
 
@@ -514,7 +517,9 @@ $.extend(xgds_image_annotation, {
     },
 
     setFabricCanvasInteractivity: function(boolean) {
-         this.overlay.fabricCanvas().forEachObject(function (object) {
+        console.log("inside setFabricCanvasInteractivity");
+        this.overlay.fabricCanvas().forEachObject(function (object) {
+            console.log("canvas interactivity set to " + boolean);
             object.selectable = boolean;
         });
     },
@@ -533,7 +538,6 @@ $.extend(xgds_image_annotation, {
                 break;
             case "addAnnotation":
                 this.mouseMode = "addAnnotation";
-                debugger;
                 this.setFabricCanvasInteractivity(false);
                 this.deselectFabricObjects();
                 this.viewer.setMouseNavEnabled(false);
