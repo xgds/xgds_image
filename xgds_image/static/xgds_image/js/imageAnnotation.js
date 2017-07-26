@@ -106,6 +106,8 @@ $.extend(xgds_image_annotation, {
             $("#imageAnnotationToolbar").hide();
             this.showToolbar = "false";
             this.imageAnnotationToolbarStatus="invisible";
+            this.mouseMode = "OSD";
+            this.setMouseMode(this.mouseMode);
         }
     },
 
