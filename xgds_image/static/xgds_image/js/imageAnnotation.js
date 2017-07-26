@@ -165,7 +165,7 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.turnAnnotationsOnOff("off");
         }
 
-        this.mouseMode = "addAnnotation";
+        this.mouseMode = "OSD";
         this.setMouseMode(this.mouseMode);
 
         /****************************************************************************************************************
