@@ -128,8 +128,7 @@ $.extend(xgds_image_annotation, {
         this.overlay = this.viewer.fabricjsOverlay();
 
         this.currentAnnotationType = "arrow";
-        this.mouseMode = "addAnnotation";
-        this.setMouseMode(this.mouseMode);
+
         this.annotationType = "arrow";
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
@@ -144,10 +143,8 @@ $.extend(xgds_image_annotation, {
         }
 
         /* Load colors into colors dictionary if not already loaded. This populates the colors dictionary AND creates the spectrum color palette */
-        if(this.spectrumColorPalette.length===0) {
-            this.spectrumColorPalette = this.getPaletteColors();
-        }
-
+        //TODO: change this back
+        this.spectrumColorPalette = this.getPaletteColors();
 
         // Initialize color picker options
         var spectrumOptions = {
@@ -168,6 +165,9 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.turnAnnotationsOnOff("off");
         }
 
+        this.mouseMode = "addAnnotation";
+        this.setMouseMode(this.mouseMode);
+
         /****************************************************************************************************************
 
                                              E V E N T  L I S T E N E R S
@@ -184,6 +184,7 @@ $.extend(xgds_image_annotation, {
             - initialize the correct function based on what the currentAnnotationType is.
          */
         this.overlay.fabricCanvas().observe('mouse:down', function (o) {
+            xgds_image_annotation.setMouseMode(xgds_image_annotation.mouseMode);
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
                 xgds_image_annotation.isDown = true;
 
@@ -456,6 +457,7 @@ $.extend(xgds_image_annotation, {
 
         // calculate the points.
         var pointsArray = this.calculateArrowPoints(x, y, headlen);
+        var oldArrowSize = this.arrow.size
         this.arrow = new fabric.Polyline(pointsArray, {
             fill: this.currentAnnotationColor,
             stroke: 'black',
@@ -464,7 +466,8 @@ $.extend(xgds_image_annotation, {
             originX: 'left',
             originY: 'top',
             selectable: true,
-            type: 'arrow'
+            type: 'arrow',
+            size: oldArrowSize
         });
         this.currentAnnotationType = this.arrow;
         this.overlay.fabricCanvas().add(this.arrow);
@@ -514,7 +517,9 @@ $.extend(xgds_image_annotation, {
     },
 
     setFabricCanvasInteractivity: function(boolean) {
-         this.overlay.fabricCanvas().forEachObject(function (object) {
+        console.log("inside setFabricCanvasInteractivity");
+        this.overlay.fabricCanvas().forEachObject(function (object) {
+            console.log("canvas interactivity set to " + boolean);
             object.selectable = boolean;
         });
     },
