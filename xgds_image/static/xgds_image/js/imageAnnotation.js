@@ -267,6 +267,9 @@ $.extend(xgds_image_annotation, {
                 // save annotation to database
                 xgds_image_annotation.createNewSerialization(xgds_image_annotation.currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
 
+                // Set fabric interactivity to false
+                xgds_image_annotation.setFabricCanvasInteractivity(false);
+
                 // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
                 if(xgds_image_annotation.currentAnnotationType.type == "text") {
                     xgds_image_annotation.setMouseMode("editAnnotation"); // break out into edit mode
@@ -383,7 +386,6 @@ $.extend(xgds_image_annotation, {
             strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
             stroke: this.currentAnnotationColor,
             fill: '',
-            selectable: true,
             originX: 'center',
             originY: 'center',
             scaleX: 1,
@@ -464,7 +466,6 @@ $.extend(xgds_image_annotation, {
             originY: 'top',
             scaleX: 1,
             scaleY: 1,
-            selectable: true,
             type: 'arrow',
             size: this.currentAnnotationSize
         });
@@ -491,7 +492,6 @@ $.extend(xgds_image_annotation, {
             strokeWidth: 2,
             originX: 'left',
             originY: 'top',
-            selectable: true,
             type: 'arrow',
             size: oldArrowSize
         });
@@ -543,9 +543,7 @@ $.extend(xgds_image_annotation, {
     },
 
     setFabricCanvasInteractivity: function(boolean) {
-        console.log("inside setFabricCanvasInteractivity");
         this.overlay.fabricCanvas().forEachObject(function (object) {
-            console.log("canvas interactivity set to " + boolean);
             object.selectable = boolean;
         });
     },
