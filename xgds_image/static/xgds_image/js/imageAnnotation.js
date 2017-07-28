@@ -311,8 +311,8 @@ $.extend(xgds_image_annotation, {
          */
         $('#downloadScreenshot').click(function (event) {
         		event.preventDefault();
-            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png");
-            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'});
+            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png"); // current OSD view
+            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'}); // image with annotations, transparent background
             var imagePK = xgds_image_annotation.imageJson["pk"];
             var postData = {
                     image1: OSD_layer,
@@ -337,6 +337,22 @@ $.extend(xgds_image_annotation, {
 
         $("#colorPicker").on('change.spectrum', function (e, color) {
             xgds_image_annotation.currentAnnotationColor = color.toHexString(); //convert to hex
+        });
+
+        $(document).keyup(function(e) {
+            //TODO: change alert to some kind of error <p> tag
+            if(xgds_image_annotation.getMouseMode() != "editAnnotation") {
+                alert("Please enter edit annotation mode and select the annotation you would like to delete");
+                return;
+            }
+
+
+            if(e.which == 8) { // key code 8 is the delete key (on iOS devices). If the delete key doesn't work for PCs, try adding key code 46 too.
+                //TODO: check if an annotation is active
+
+                xgds_image_annotation.deleteActiveAnnotations();
+            }
+
         });
 
     }, // end of initialize
@@ -646,8 +662,8 @@ $.extend(xgds_image_annotation, {
             temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-             temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-             temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
             temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
             temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
@@ -663,7 +679,7 @@ $.extend(xgds_image_annotation, {
             },
             success: function (data) {
                 fabricObject.set({pk: data["pk"], image: data["image_pk"]});
-                xgds_image_annotation.annotationsDict[data["pk"]] = data;
+                xgds_image_annotation.annotationsDict[data["pk"]] = data; // add current annotation to annotationsDict
             },
             error: function (e) {
                 console.log("Ajax error");
@@ -769,6 +785,11 @@ $.extend(xgds_image_annotation, {
 
     // Remove the currently selected annotation from the canvas, annotationsDict, AND the database
     deleteActiveAnnotations: function() {
+        if(this.overlay.fabricCanvas().getActiveObject() == null) {
+            alert("Please select the annotation you would like to delete");
+            return;
+        }
+
         var annotation = this.overlay.fabricCanvas().getActiveObject();
         if (annotation["pk"] in this.annotationsDict) {
             $.ajax({
