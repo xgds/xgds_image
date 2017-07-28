@@ -331,8 +331,12 @@ $.extend(xgds_image_annotation, {
              });
         });
 
-        $('#deleteAnnotation').click(function () {
+        $('#deleteSelected').click(function() {
             xgds_image_annotation.deleteActiveAnnotations();
+        });
+
+        $('#deleteAll').click(function() {
+            xgds_image_annotation.deleteAllAnnotations();
         });
 
         $("#colorPicker").on('change.spectrum', function (e, color) {
@@ -783,14 +787,33 @@ $.extend(xgds_image_annotation, {
         return retval;
     },
 
-    // Remove the currently selected annotation from the canvas, annotationsDict, AND the database
+    // Select the currently selected annotation from the canvas and pass on to deleteAnnotation
     deleteActiveAnnotations: function() {
+        // Break out if no annotation is currently selected
         if(this.overlay.fabricCanvas().getActiveObject() == null) {
             alert("Please select the annotation you would like to delete");
             return;
         }
-
         var annotation = this.overlay.fabricCanvas().getActiveObject();
+        this.deleteAnnotation(annotation);
+    },
+
+    // Get all objects from canvas and pass each one to deleteAnnotation()
+    deleteAllAnnotations: function() {
+        var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
+        /* if objects is null, catch */
+        if(objects.length == 0) {
+            console.log("No annotations on canvas to delete");
+            return;
+        }
+
+        for (var i = 0; i < objects.length; i++) {
+            this.deleteAnnotation(objects[i]);
+        }
+    },
+
+    /* Delete annotation from annotationsDict and the database */
+    deleteAnnotation: function(annotation) {
         if (annotation["pk"] in this.annotationsDict) {
             $.ajax({
                 type: "POST",
@@ -802,7 +825,7 @@ $.extend(xgds_image_annotation, {
                 success: function (data) {
                     //delete from dict and database
                     delete xgds_image_annotation.annotationsDict[annotation["pk"]];
-                    xgds_image_annotation.overlay.fabricCanvas().getActiveObject().remove();
+                    annotation.remove();
                 },
                 error: function (a) {
                     console.log("Ajax error");
