@@ -335,7 +335,7 @@ $.extend(xgds_image_annotation, {
         });
 
         $('#deleteSelected').click(function() {
-            xgds_image_annotation.deleteActiveAnnotations();
+            xgds_image_annotation.deleteActiveAnnotation();
         });
 
         $('#deleteAll').click(function() {
@@ -348,16 +348,11 @@ $.extend(xgds_image_annotation, {
 
         $(document).keyup(function(e) {
             //TODO: change alert to some kind of error <p> tag
-            if(xgds_image_annotation.getMouseMode() != "editAnnotation") {
+            if(xgds_image_annotation.getMouseMode() != "editAnnotation" && e.which == 8) {
                 alert("Please enter edit annotation mode and select the annotation you would like to delete");
                 return;
-            }
-
-
-            if(e.which == 8) { // key code 8 is the delete key (on iOS devices). If the delete key doesn't work for PCs, try adding key code 46 too.
-                //TODO: check if an annotation is active
-
-                xgds_image_annotation.deleteActiveAnnotations();
+            }else if(e.which == 8) { // key code 8 is the delete key (on iOS devices). If the delete key doesn't work for PCs, try adding key code 46 too.
+                xgds_image_annotation.deleteActiveAnnotation();
             }
 
         });
@@ -786,7 +781,7 @@ $.extend(xgds_image_annotation, {
     },
 
     // Select the currently selected annotation from the canvas and pass on to deleteAnnotation
-    deleteActiveAnnotations: function() {
+    deleteActiveAnnotation: function() {
         // Break out if no annotation is currently selected
         if(this.overlay.fabricCanvas().getActiveObject() == null) {
             alert("Please select the annotation you would like to delete");
