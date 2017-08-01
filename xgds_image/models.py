@@ -32,7 +32,6 @@ from django.utils.text import slugify
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
-from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
@@ -568,9 +567,11 @@ class AbstractAnnotation(models.Model):
     fill = models.ForeignKey(AnnotationColor, related_name='%(app_label)s_%(class)s_fill', null=True, blank=True)
     size = models.CharField(max_length=16, default="medium")
 
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User, related_name='%(app_label)s_%(class)s_related')
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
-    image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+    image = 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+    # WARNING -- you cannot include the below in this class or it will cause a circular dependency in migrations
+    #image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='%(app_label)s_%(class)s_image')  
 
     class Meta:
         abstract = True
@@ -585,7 +586,7 @@ class AbstractAnnotation(models.Model):
         return result
 
 
-class TextAnnotation(AbstractAnnotation):
+class AbstractTextAnnotation(AbstractAnnotation):
     content = models.CharField(max_length=512, default='')
     isBold = models.BooleanField(default=False)
     isItalics = models.BooleanField(default=False)
@@ -596,50 +597,65 @@ class TextAnnotation(AbstractAnnotation):
     def getJsonType(self):
         return 'Text'
 
+    class Meta:
+        abstract = True
 
-class EllipseAnnotation(AbstractAnnotation):
+class TextAnnotation(AbstractTextAnnotation):
+    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+
+
+class AbstractEllipseAnnotation(AbstractAnnotation):
     radiusX = models.IntegerField()
     radiusY = models.IntegerField()
 
     def getJsonType(self):
         return 'Ellipse'
 
+    class Meta:
+        abstract = True
 
-class RectangleAnnotation(AbstractAnnotation):
+
+class EllipseAnnotation(AbstractEllipseAnnotation):
+    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+
+
+class AbstractRectangleAnnotation(AbstractAnnotation):
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
 
     def getJsonType(self):
         return 'Rectangle'
 
+    class Meta:
+        abstract = True
 
-class ArrowAnnotation(AbstractAnnotation):
+
+class RectangleAnnotation(AbstractRectangleAnnotation):
+    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+
+
+class AbstractArrowAnnotation(AbstractAnnotation):
     points = models.TextField(default='[]')
 
     def getJsonType(self):
         return 'Arrow'
 
+    class Meta:
+        abstract = True
+
+class ArrowAnnotation(AbstractArrowAnnotation):
+    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+
 
 # NOT USED YET
 # This will support the url to the saved annotated image download via url
-class AnnotatedImage(models.Model):
-    imageBinary = models.FileField(upload_to=settings.XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR)
-    width = models.PositiveIntegerField(default=250)
-    height = models.PositiveIntegerField(default=250)
-    author = models.ForeignKey(User)
-    creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
-    image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL,
-                              related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
-
-
-ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
-                                         [TextAnnotation,
-                                          EllipseAnnotation,
-                                          RectangleAnnotation,
-                                          ArrowAnnotation,
-                                          AnnotatedImage
-                                          ])
-
-
-
+# class AnnotatedScreenshot(models.Model):
+#     imageBinary = models.FileField(upload_to=settings.XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR)
+#     width = models.PositiveIntegerField(default=250)
+#     height = models.PositiveIntegerField(default=250)
+#     author = models.ForeignKey(User)
+#     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
+#     image = 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+#     # WARNING -- the below will cause a circular dependency so don't do it.  You have to have a derived class if you are planning to use this.  
+#     #image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='%(app_label)s_%(class)s_image')  # DEFAULT_SINGLE_IMAGE_FIELD # 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
 

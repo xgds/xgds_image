@@ -24,6 +24,10 @@ $.extend(xgds_image_annotation, {
     Used to check if an annotation is on the canvas to prevent duplicate loadAnnotations() calls from the user
     */
     annotationsDict: {},
+    
+    getDictKey: function(source){
+    		return source["annotationType"] + '_' + source['pk'];
+    },
 
     /*
     Stores a dictionary of pre-set (string)color -> (string)hex pairs.
@@ -657,13 +661,14 @@ $.extend(xgds_image_annotation, {
             type: "POST",
             url: '/xgds_image/addAnnotation/',
             datatype: 'json',
+            context: this,
             data: {
                 annotation: JSON.stringify(temp),
                 image_pk: this.imageJson["pk"]
             },
             success: function (data) {
                 fabricObject.set({pk: data["pk"], image: data["image_pk"]});
-                xgds_image_annotation.annotationsDict[data["pk"]] = data;
+                xgds_image_annotation.annotationsDict[this.getDictKey(data)] = data;
             },
             error: function (e) {
                 console.log("Ajax error");
@@ -770,7 +775,8 @@ $.extend(xgds_image_annotation, {
     // Remove the currently selected annotation from the canvas, annotationsDict, AND the database
     deleteActiveAnnotations: function() {
         var annotation = this.overlay.fabricCanvas().getActiveObject();
-        if (annotation["pk"] in this.annotationsDict) {
+        var dictKey = this.getDictKey(annotation);
+        if (dictKey in this.annotationsDict) {
             $.ajax({
                 type: "POST",
                 url: '/xgds_image/deleteAnnotation/',
@@ -780,7 +786,7 @@ $.extend(xgds_image_annotation, {
                 },
                 success: function (data) {
                     //delete from dict and database
-                    delete xgds_image_annotation.annotationsDict[annotation["pk"]];
+                    delete xgds_image_annotation.annotationsDict[dictKey];
                     xgds_image_annotation.overlay.fabricCanvas().getActiveObject().remove();
                 },
                 error: function (a) {
@@ -799,11 +805,12 @@ $.extend(xgds_image_annotation, {
      Given an annotation model, add it to the canvas if not already drawn
      */
     addAnnotationToCanvas: function(annotationJson) {
-        if (annotationJson["pk"] in this.annotationsDict) {
+    		var dictKey = this.getDictKey(annotationJson);
+        if (dictKey in this.annotationsDict) {
             console.log("Annotation is already drawn on canvas, aborting load for this annotation");
             return;
         } else { //otherwise, add annotation to annotationsDict and draw it by calling one of the addShapeToCanvas() functions below
-            this.annotationsDict[annotationJson["pk"]] = annotationJson;
+            this.annotationsDict[dictKey] = annotationJson;
         }
         if (annotationJson["annotationType"] == "Rectangle") {
             this.addRectToCanvas(annotationJson);

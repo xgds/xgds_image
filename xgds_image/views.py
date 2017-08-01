@@ -47,7 +47,8 @@ from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil import TimeUtil
 from geocamUtil.models.UuidField import makeUuid
-from geocamUtil.loader import LazyGetModelByName
+from geocamUtil.loader import LazyGetModelByName, getClassByName
+from geocamUtil.models.managers import ModelCollectionManager
 
 from geocamTrack.utils import getClosestPosition
 
@@ -64,6 +65,17 @@ GEOCAM_TRACK_RESOURCE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_
 
 XGDS_IMAGE_TEMPLATE_LIST = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
 XGDS_IMAGE_TEMPLATE_LIST = XGDS_IMAGE_TEMPLATE_LIST + settings.XGDS_CORE_TEMPLATE_DIRS[settings.XGDS_IMAGE_IMAGE_SET_MODEL]
+
+ARROW_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_ARROW_ANNOTATION_MODEL)
+ELLIPSE_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_ELLIPSE_ANNOTATION_MODEL)
+RECTANGLE_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_RECTANGLE_ANNOTATION_MODEL)
+TEXT_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_TEXT_ANNOTATION_MODEL)
+ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
+                                         [ARROW_ANNOTATION_MODEL.get(),
+                                          ELLIPSE_ANNOTATION_MODEL.get(),
+                                          RECTANGLE_ANNOTATION_MODEL.get(),
+                                          TEXT_ANNOTATION_MODEL.get()
+                                          ])
 
 
 @login_required
@@ -420,21 +432,21 @@ def saveAnnotations(request):
             # print "annotation type: {0}".format(annotationJSON["type"])
             # print annotationJSON['type']
             if annotationJSON["type"]=="rect":
-                annotationModel = RectangleAnnotation()
+                annotationModel =RECTANGLE_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
 
             elif annotationJSON["type"]=="ellipse":
-                annotationModel = EllipseAnnotation()
+                annotationModel = ELLIPSE_ANNOTATION_MODEL.get()()
                 annotationModel.radiusX = annotationJSON["rx"]
                 annotationModel.radiusY = annotationJSON["ry"]
 
             elif annotationJSON["type"]=="arrow":
-                annotationModel = ArrowAnnotation()
+                annotationModel = ARROW_ANNOTATION_MODEL.get()()
                 annotationModel.points = json.dumps(annotationJSON["points"])
 
             elif annotationJSON["type"]=="text":
-                annotationModel = TextAnnotation()
+                annotationModel = TEXT_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
                 print "annotationJSON[text]"
@@ -548,20 +560,20 @@ def addAnnotation(request):
         temp = request.POST.get('annotation', None)
         newAnnotation = json.loads(temp)
         if newAnnotation["type"] == "rect":
-            annotationModel = RectangleAnnotation()
+            annotationModel = RECTANGLE_ANNOTATION_MODEL.get()()
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
 
         elif newAnnotation["type"] == "ellipse":
-            annotationModel = EllipseAnnotation()
+            annotationModel = ELLIPSE_ANNOTATION_MODEL.get()()
             annotationModel.radiusX = newAnnotation["rx"]
             annotationModel.radiusY = newAnnotation["ry"]
 
         elif newAnnotation["type"] == "arrow":
-            annotationModel = ArrowAnnotation()
+            annotationModel = ARROW_ANNOTATION_MODEL.get()()
             annotationModel.points = json.dumps(newAnnotation["points"])
         else:  # it's text
-            annotationModel = TextAnnotation()
+            annotationModel = TEXT_ANNOTATION_MODEL.get()()
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["text"]
