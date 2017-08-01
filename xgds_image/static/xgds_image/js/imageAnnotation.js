@@ -26,7 +26,12 @@ $.extend(xgds_image_annotation, {
     annotationsDict: {},
     
     getDictKey: function(source){
-    		return source["annotationType"] + '_' + source['pk'];
+    		var theType = source['annotationType'];
+    		if (theType === undefined) {
+    			theType = source['type'];
+    		}
+    		theType = theType.toLowerCase();
+    		return theType + '_' + source['pk'];
     },
 
     /*
@@ -271,6 +276,9 @@ $.extend(xgds_image_annotation, {
                 // save annotation to database
                 xgds_image_annotation.createNewSerialization(xgds_image_annotation.currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
 
+                // Set fabric interactivity to false
+                xgds_image_annotation.setFabricCanvasInteractivity(false);
+
                 // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
                 if(xgds_image_annotation.currentAnnotationType.type == "text") {
                     xgds_image_annotation.setMouseMode("editAnnotation"); // break out into edit mode
@@ -315,8 +323,8 @@ $.extend(xgds_image_annotation, {
          */
         $('#downloadScreenshot').click(function (event) {
         		event.preventDefault();
-            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png");
-            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'});
+            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png"); // current OSD view
+            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'}); // image with annotations, transparent background
             var imagePK = xgds_image_annotation.imageJson["pk"];
             var postData = {
                     image1: OSD_layer,
@@ -335,12 +343,27 @@ $.extend(xgds_image_annotation, {
              });
         });
 
-        $('#deleteAnnotation').click(function () {
-            xgds_image_annotation.deleteActiveAnnotations();
+        $('#deleteSelected').click(function() {
+            xgds_image_annotation.deleteActiveAnnotation();
+        });
+
+        $('#deleteAll').click(function() {
+            xgds_image_annotation.deleteAllAnnotations();
         });
 
         $("#colorPicker").on('change.spectrum', function (e, color) {
             xgds_image_annotation.currentAnnotationColor = color.toHexString(); //convert to hex
+        });
+
+        $(document).keyup(function(e) {
+            //TODO: change alert to some kind of error <p> tag
+            if(xgds_image_annotation.getMouseMode() != "editAnnotation" && e.which == 8) {
+                alert("Please enter edit annotation mode and select the annotation you would like to delete");
+                return;
+            }else if(e.which == 8) { // key code 8 is the delete key (on iOS devices). If the delete key doesn't work for PCs, try adding key code 46 too.
+                xgds_image_annotation.deleteActiveAnnotation();
+            }
+
         });
 
     }, // end of initialize
@@ -367,7 +390,6 @@ $.extend(xgds_image_annotation, {
             strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
             stroke: this.currentAnnotationColor,
             fill: '',
-            selectable: true,
             originX: 'center',
             originY: 'center',
             scaleX: 1,
@@ -448,7 +470,6 @@ $.extend(xgds_image_annotation, {
             originY: 'top',
             scaleX: 1,
             scaleY: 1,
-            selectable: true,
             type: 'arrow',
             size: this.currentAnnotationSize
         });
@@ -475,7 +496,6 @@ $.extend(xgds_image_annotation, {
             strokeWidth: 2,
             originX: 'left',
             originY: 'top',
-            selectable: true,
             type: 'arrow',
             size: oldArrowSize
         });
@@ -527,9 +547,7 @@ $.extend(xgds_image_annotation, {
     },
 
     setFabricCanvasInteractivity: function(boolean) {
-        console.log("inside setFabricCanvasInteractivity");
         this.overlay.fabricCanvas().forEachObject(function (object) {
-            console.log("canvas interactivity set to " + boolean);
             object.selectable = boolean;
         });
     },
@@ -650,8 +668,8 @@ $.extend(xgds_image_annotation, {
             temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-             temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-             temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
             temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
             temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
@@ -772,10 +790,34 @@ $.extend(xgds_image_annotation, {
         return retval;
     },
 
-    // Remove the currently selected annotation from the canvas, annotationsDict, AND the database
-    deleteActiveAnnotations: function() {
+    // Select the currently selected annotation from the canvas and pass on to deleteAnnotation
+    deleteActiveAnnotation: function() {
+        // Break out if no annotation is currently selected
+        if(this.overlay.fabricCanvas().getActiveObject() == null) {
+            alert("Please select the annotation you would like to delete");
+            return;
+        }
         var annotation = this.overlay.fabricCanvas().getActiveObject();
-        var dictKey = this.getDictKey(annotation);
+        this.deleteAnnotation(annotation);
+    },
+
+    // Get all objects from canvas and pass each one to deleteAnnotation()
+    deleteAllAnnotations: function() {
+        var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
+        /* if objects is null, catch */
+        if(objects.length == 0) {
+            console.log("No annotations on canvas to delete");
+            return;
+        }
+
+        for (var i = 0; i < objects.length; i++) {
+            this.deleteAnnotation(objects[i]);
+        }
+    },
+
+    /* Delete annotation from annotationsDict and the database */
+    deleteAnnotation: function(annotation) {
+    		var dictKey = this.getDictKey(annotation);
         if (dictKey in this.annotationsDict) {
             $.ajax({
                 type: "POST",
@@ -787,7 +829,7 @@ $.extend(xgds_image_annotation, {
                 success: function (data) {
                     //delete from dict and database
                     delete xgds_image_annotation.annotationsDict[dictKey];
-                    xgds_image_annotation.overlay.fabricCanvas().getActiveObject().remove();
+                    annotation.remove();
                 },
                 error: function (a) {
                     console.log("Ajax error");
