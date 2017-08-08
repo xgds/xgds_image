@@ -809,9 +809,10 @@ $.extend(xgds_image_annotation, {
             console.log("No annotations on canvas to delete");
             return;
         }
-
-        for (var i = 0; i < objects.length; i++) {
-            this.deleteAnnotation(objects[i]);
+	
+	var objectsLength = objects.length
+        for (var i = 0; i < objectsLength; i++) {
+            this.deleteAnnotation(objects[objectsLength-i-1]);
         }
     },
 
