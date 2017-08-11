@@ -261,10 +261,12 @@ $.extend(xgds_image,{
 				  },
 				  async: false
 				});
-			if (imageJson.create_deepzoom || _.isEmpty(tiledImage)){
-				this.showRawImage(imageJson);
-				return;
-			}
+			
+			/* Hardcore showRawImage (don't check if image is tiled) */
+			// if (imageJson.create_deepzoom || _.isEmpty(tiledImage)){
+			this.showRawImage(imageJson);
+			return;
+			//}
 		}
 		
 		
