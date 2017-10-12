@@ -14,9 +14,7 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
-from django.conf import settings
-from django.conf.urls import *
-from django.views.generic.base import TemplateView
+from django.conf.urls import url, include
 from xgds_image import views
 
 urlpatterns = [
@@ -31,10 +29,13 @@ urlpatterns = [
     url(r'^checkTiles/(?P<imageSetPK>[\d]+)$', views.getTileState, {}, 'xgds_image_check_tiles'),
     #url(r'^testpage$', TemplateView.as_view(template_name='xgds_image/test.html'), {}, 'test'),
     url(r'^saveAnnotations/$', views.saveAnnotations, {}, 'xgds_image_save_annotations'),
-    url(r'^getAnnotations/(?P<imagePK>[\d]+)$', views.getAnnotationsJson, {}, 'xgds_image_get_annotations'),
     url(r'^alterAnnotation/$', views.alterAnnotation, {}, 'xgds_image_alter_annotations'),
-    url(r'^getAnnotationColors/$', views.getAnnotationColorsJson, {}, 'xgds_image_get_annotation_colors'),
     url(r'^deleteAnnotation/$', views.deleteAnnotation, {}, 'xgds_image_delete_annotation'),
     url(r'^addAnnotation/$', views.addAnnotation, {}, 'xgds_image_add_annotation'),
-    url(r'^mergeImages/$', views.mergeImages, {}, 'xgds_image_merge_images')
+    url(r'^mergeImages/$', views.mergeImages, {}, 'xgds_image_merge_images'),
+    
+    # Including these in this order ensures that reverse will return the non-rest urls for use in our server
+    url(r'^rest/', include('xgds_image.restUrls')),
+    url('', include('xgds_image.restUrls')),
+
 ]
