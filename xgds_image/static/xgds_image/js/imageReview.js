@@ -226,7 +226,7 @@ $.extend(xgds_image,{
 		} catch (err){
 			// pass
 		}
-		$('#display-image').prepend('<img id="raw-image" src="' + rawImage + '" />');
+		$('#display-image').prepend('<img id="raw-image" class="img-fluid" src="' + rawImage + '" />');
 	},
 	setupImageViewer: function(imageJson){
 		if (this.viewer != undefined){
@@ -263,10 +263,8 @@ $.extend(xgds_image,{
 				});
 			
 			/* Hardcore showRawImage (don't check if image is tiled) */
-			// if (imageJson.create_deepzoom || _.isEmpty(tiledImage)){
 			this.showRawImage(imageJson);
 			return;
-			//}
 		}
 		
 		
