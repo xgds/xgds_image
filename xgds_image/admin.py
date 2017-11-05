@@ -15,3 +15,7 @@
 #__END_LICENSE__
 
 from django.contrib import admin
+from xgds_image.models import *  # pylint: disable=W0401
+
+
+admin.site.register(Camera)
