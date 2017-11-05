@@ -355,17 +355,17 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.currentAnnotationColor = color.toHexString(); //convert to hex
         });
 
-        $(document).keyup(function(e) {
-            //TODO: change alert to some kind of error <p> tag
-            if(xgds_image_annotation.getMouseMode() != "editAnnotation" && e.which == 8) {
-                alert("Please enter edit annotation mode and select the annotation you would like to delete");
-                return;
-            }
-//            else if(e.which == 8) { // key code 8 is the delete key (on iOS devices). If the delete key doesn't work for PCs, try adding key code 46 too.
-//                xgds_image_annotation.deleteActiveAnnotation();
+//        $(document).keyup(function(e) {
+//            //TODO: change alert to some kind of error <p> tag
+//            if(xgds_image_annotation.getMouseMode() != "editAnnotation" && e.which == 8) {
+//                alert("Please enter edit annotation mode and select the annotation you would like to delete");
+//                return;
 //            }
-
-        });
+////            else if(e.which == 8) { // key code 8 is the delete key (on iOS devices). If the delete key doesn't work for PCs, try adding key code 46 too.
+////                xgds_image_annotation.deleteActiveAnnotation();
+////            }
+//
+//        });
 
     }, // end of initialize
 
