@@ -27,7 +27,6 @@ import requests
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render
 from django.http import HttpResponseRedirect,  HttpResponse, JsonResponse
@@ -78,7 +77,6 @@ ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
                                           ])
 
 
-@login_required
 def getImageImportPage(request):
     # map plus image templates for now
     templates = get_handlebars_templates(XGDS_IMAGE_TEMPLATE_LIST, 'XGDS_IMAGE_TEMPLATE_LIST')
@@ -93,7 +91,6 @@ def getImageImportPage(request):
                   )
 
 
-@login_required
 def editImage(request, imageSetID):
     imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imageSetID)
     if request.POST:
