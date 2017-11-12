@@ -17,7 +17,7 @@
 import os
 import datetime
 from io import BytesIO
-from PIL import Image, ExifTags
+from PIL import Image, ExifTags, ImageFile
 from django.conf import settings
 from django.core.files import File
 
@@ -32,6 +32,7 @@ Returns a file object containing the thumbnail image. It is the
 caller's responsibility to save it or do whatever else they wanna do...
 """
 def createThumbnailFile(src):
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
     size = 250, 250 
     im = Image.open(src)
     im.thumbnail(size, Image.ANTIALIAS)
