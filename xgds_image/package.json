@@ -1,0 +1,20 @@
+{
+  "name": "xgds_image",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "dropzone": "5.2.0",
+    "openseadragon": "openseadragon/site-build",
+    "openseadragon-annotations": "Emigre/openseadragon-annotations-bower",
+    "openseadragon-fabricjsOverlay": "https://github.com/altert/OpenseadragonFabricjsOverlay.git#2b6ce02dc6a920e6549dc6f5a4dd62b7bbf31970",
+    "fabric": "2.0.0-rc.3",
+    "spectrum": "bgrins/spectrum"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "Apache-2.0"
+}
