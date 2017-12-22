@@ -5,9 +5,9 @@
   "main": "index.js",
   "dependencies": {
     "dropzone": "5.2.0",
-    "openseadragon": "openseadragon/site-build",
-    "openseadragon-annotations": "Emigre/openseadragon-annotations-bower",
-    "openseadragon-fabricjsOverlay": "https://github.com/altert/OpenseadragonFabricjsOverlay.git#2b6ce02dc6a920e6549dc6f5a4dd62b7bbf31970",
+    "openseadragon": "2.3.1",
+    "openseadragon-annotations": "1.0.5",
+    "openseadragon-fabricjsOverlay": "altert/OpenseadragonFabricjsOverlay#2b6ce02dc6a920e6549dc6f5a4dd62b7bbf31970",
     "fabric": "2.0.0-rc.3",
     "spectrum": "bgrins/spectrum"
   },

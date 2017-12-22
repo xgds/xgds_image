@@ -11,3 +11,4 @@
 TEST
 /docs/_build
 migrations/
+node_modules
