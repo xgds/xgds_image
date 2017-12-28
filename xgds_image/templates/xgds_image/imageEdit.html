@@ -11,7 +11,7 @@
 {% block scripts %}
 {{block.super}}
 	{% include "xgds_notes2/NoteJS.html" %}
-	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/handlebars.min.js'></script>
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}/handlebars/dist/handlebars.min.js'></script>
     <script type="text/javascript" src="{{ EXTERNAL_URL }}/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
     <script type="text/javascript" src="{% static 'xgds_image/js/imageReview.js' %}"></script>
 	{% for template_name, template in templates.items %}
