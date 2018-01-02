@@ -62,8 +62,8 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
                                                                    '/static/xgds_image/js/imageAnnotation.js',
                                                                    '/static/openseadragon/built-openseadragon/openseadragon/openseadragon.js',
                                                                    '/static/fabric.js/dist/fabric.min.js',
-                                                                   '/static/openseadragon-fabricjsOverlay/openseadragon-fabricjs-overlay.js',
-                                                                   '/static/spectrum/spectrum.js',
+                                                                   '/static/openseadragon-fabricjs-overlay/openseadragon-fabricjs-overlay.js',
+                                                                   '/static/spectrum-colorpicker/spectrum.js',
                                                                    '/static/xgds_image/js/imageReview.js'],
 
 
