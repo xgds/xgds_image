@@ -11,6 +11,11 @@
     "fabric": "2.0.0-rc.3",
     "spectrum-colorpicker": "^1.8.0"
   },
+  "django": {
+    "spectrum-colorpicker": {
+      "exclude": [ "docs/*" ]
+    }
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
