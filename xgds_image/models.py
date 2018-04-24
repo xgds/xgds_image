@@ -35,7 +35,7 @@ from geocamUtil.modelJson import modelToDict
 from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
-from xgds_notes2.models import NoteMixin, NoteLinksMixin
+from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
 from xgds_core.models import SearchableModel
 from xgds_core.views import get_file_from_couch
@@ -497,7 +497,8 @@ class ImageSet(AbstractImageSet):
     exif_position = DEFAULT_EXIF_POSITION_FIELD()
     user_position = DEFAULT_USER_POSITION_FIELD()
     resource = DEFAULT_RESOURCE_FIELD()
-    
+    notes = DEFAULT_NOTES_GENERIC_RELATION()
+
 
 DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey(ImageSet, null=True, related_name="images")
 
