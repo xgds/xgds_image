@@ -13,7 +13,9 @@
   },
   "django": {
     "spectrum-colorpicker": {
-      "exclude": [ "docs/*" ]
+      "exclude": [
+        "docs/*"
+      ]
     }
   },
   "devDependencies": {},

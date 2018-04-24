@@ -44,6 +44,17 @@ XGDS_IMAGE_DATA_SUBDIRECTORY = "xgds_image/"
 #  If not defined, the following default directory name will be used:
 DEEPZOOM_ROOT = XGDS_IMAGE_DATA_SUBDIRECTORY + 'deepzoom_images/'
 
+#  These are the keyword arguments used to initialize the deep zoom creator:
+#  'tile_size', 'tile_overlap', 'tile_format', 'image_quality', 'resize_filter'.
+#  They strike a good (maybe best?) balance between image fidelity and file size.
+#  If not defined the following default values will be used:
+DEEPZOOM_PARAMS = {'tile_size': 256,
+                    'tile_overlap': 1,
+                    'tile_format': "jpg",
+                    'image_quality': 1.0,
+                    'resize_filter': "antialias"}
+
+
 XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
 XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
 XGDS_IMAGE_CAMERA_MODEL = 'xgds_image.Camera'
@@ -88,7 +99,7 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS[XGDS_IMAGE_IMAGE_SET_MONIKER + 's'] = '/xgds_image/import'
-XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM = False
+XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM = True
 
 XGDS_IMAGE_ANNOTATED_IMAGES_SUBDIR = 'xgds_image_annotations'
 
