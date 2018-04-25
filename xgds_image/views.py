@@ -39,7 +39,6 @@ from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
 from xgds_core.util import deletePostKey
-from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
 
 from geocamUtil.loader import getModelByName
