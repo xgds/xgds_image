@@ -72,7 +72,7 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
                                                         'columns': ['checkbox', 'acquisition_time', 'acquisition_timezone', 'author_name', 'name', 'description', 'thumbnail_image_url',  'pk', 'view_url',
                                                                     'camera_name', 'raw_image_url', 'app_label', 'model_type', 'type', 'lat', 'lon', 'alt', 'head','flight_name', 'deepzoom_file_url',
                                                                     'rotation_degrees', 'originalImageResolutionString', 'originalImageFileSizeMB', 'create_deepzoom','DT_RowId'],
-                                                        'hiddenColumns': ['pk', 'view_url', 'camera_name', 'raw_image_url', 'app_label',  'resource_name', 'model_type','type',
+                                                        'hiddenColumns': ['pk', 'view_url', 'camera_name', 'raw_image_url', 'app_label',  'vehicle_name', 'model_type','type',
                                                                           'lat','lon','alt','head','flight_name', 'deepzoom_file_url', 'rotation_degrees',
                                                                           'originalImageResolutionString', 'originalImageFileSizeMB', 'create_deepzoom', 'DT_RowId'],
                                                         'unsortableColumns': ['thumbnail_image_url'],

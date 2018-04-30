@@ -26,16 +26,15 @@ from models import SingleImage, ImageSet
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.forms.AbstractImportForm import getTimezoneChoices
 
-from geocamTrack.forms import AbstractImportTrackedForm
 from xgds_core.models import XgdsUser
-from xgds_core.forms import SearchForm
+from xgds_core.forms import SearchForm, AbstractImportVehicleForm
 
 
 LOCATION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 
  
-class UploadFileForm(AbstractImportTrackedForm):
+class UploadFileForm(AbstractImportVehicleForm):
     class Meta:
         model = SingleImage
         fields = ['file']

@@ -37,7 +37,7 @@ from geocamTrack import models as geocamTrackModels
 
 from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
-from xgds_core.models import SearchableModel
+from xgds_core.models import SearchableModel, Vehicle, AbstractVehicle, HasVehicle
 from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
@@ -57,19 +57,20 @@ def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
-class Camera(geocamTrackModels.AbstractResource):
-    serial = models.CharField(max_length=128, blank=True, null=True, db_index=True)
-    
+class Camera(AbstractVehicle):
     """
     Camera class
     """
-    pass
+    serial = models.CharField(max_length=128, blank=True, null=True, db_index=True)
+
 
 DEFAULT_CAMERA_FIELD = lambda: models.ForeignKey(Camera, null=True, blank=True)
 DEFAULT_TRACK_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True )
 DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
 DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
-DEFAULT_RESOURCE_FIELD = lambda: models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
+
+#TODO if you are not using the default vehicle model from xgds_core, you will have to override this in your version.
+DEFAULT_VEHICLE_FIELD = lambda: models.ForeignKey(Vehicle, null=True, blank=True)
 
 
 class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
@@ -202,7 +203,7 @@ class DeepZoomTiles(DeepZoom):
         return(dz_couch_destination, dz_relative_filepath)
     
 
-class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin):
+class AbstractImageSet(NoteMixin, SearchableModel, NoteLinksMixin, HasVehicle):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -221,7 +222,6 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
     acquisition_time = models.DateTimeField(editable=False, default=timezone.now, db_index=True)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE, db_index=True)
-    resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     uploadAndSaveTime = models.FloatField(null=True, blank=True)
     totalTimeSinceNotify = models.FloatField(null=True, blank=True)
     #Optionally generate deep zoom from uploaded image if set to True.
@@ -475,12 +475,12 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                 'description',
                 'author',
                 'camera',
-                'resource'
+                'vehicle'
                 ]
     
     @classmethod
     def getSearchFieldOrder(cls):
-        return ['resource',
+        return ['vehicle',
                 'author',
                 'name',
                 'description',
@@ -493,10 +493,10 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
 class ImageSet(AbstractImageSet):
     # set foreign key fields from parent model to point to correct types
     camera = DEFAULT_CAMERA_FIELD()
+    vehicle = DEFAULT_VEHICLE_FIELD()
     track_position = DEFAULT_TRACK_POSITION_FIELD()
     exif_position = DEFAULT_EXIF_POSITION_FIELD()
     user_position = DEFAULT_USER_POSITION_FIELD()
-    resource = DEFAULT_RESOURCE_FIELD()
     notes = DEFAULT_NOTES_GENERIC_RELATION()
 
 
