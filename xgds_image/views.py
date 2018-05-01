@@ -39,6 +39,7 @@ from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
 from xgds_core.util import deletePostKey
+from xgds_core.flightUtils import getFlight
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
 
 from geocamUtil.loader import getModelByName
@@ -362,7 +363,9 @@ def saveImage(request):
             newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
 
             newImageSet.author = author
-            newImageSet.vehicle = vehicle
+            # newImageSet.vehicle = vehicle
+            if vehicle:
+                newImageSet.flight = getFlight(newImageSet.acquisition_time, vehicle)
             newImageSet.finish_initialization(request)
 
             nowTime = time.time()
