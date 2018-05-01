@@ -103,7 +103,8 @@ class ImageSetForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-        
+
+
 class SearchImageSetForm(SearchForm):
     author = forms.ModelChoiceField(XgdsUser.objects.all(), 
                                     required=False,
@@ -152,7 +153,6 @@ class SearchImageSetForm(SearchForm):
         if fieldname == 'description' or fieldname == 'name':
             return self.buildContainsQuery(fieldname, field, value)
         return super(SearchImageSetForm, self).buildQueryForField(fieldname, field, value, minimum, maximum)
-        
 
     class Meta:
         model = IMAGE_SET_MODEL.get()

@@ -435,7 +435,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     
     @classmethod
     def getSearchableFields(self):
-        return ['name', 'description', 'author__first_name', 'author__last_name']
+        return ['name', 'description', 'author__first_name', 'author__last_name', 'flight__name']
     
     @classmethod
     def getSearchFormFields(cls):
@@ -443,12 +443,12 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
                 'description',
                 'author',
                 'camera',
-                #'vehicle'
+                'flight__vehicle'
                 ]
     
     @classmethod
     def getSearchFieldOrder(cls):
-        return [#'vehicle',
+        return ['flight__vehicle',
                 'author',
                 'name',
                 'description',
