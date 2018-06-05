@@ -39,7 +39,7 @@ from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
 from xgds_core.util import deletePostKey
-from xgds_data.forms import SearchForm, SpecializedForm
+from xgds_core.flightUtils import getFlight
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
 
 from geocamUtil.loader import getModelByName
@@ -60,7 +60,7 @@ SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-GEOCAM_TRACK_RESOURCE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
+XGDS_CORE_VEHICLE_MODEL = LazyGetModelByName(settings.XGDS_CORE_VEHICLE_MODEL)
 
 XGDS_IMAGE_TEMPLATE_LIST = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
 XGDS_IMAGE_TEMPLATE_LIST = XGDS_IMAGE_TEMPLATE_LIST + settings.XGDS_CORE_TEMPLATE_DIRS[settings.XGDS_IMAGE_IMAGE_SET_MODEL]
@@ -177,24 +177,25 @@ def deleteImages(request):
         return HttpResponse(json.dumps({}), content_type = "application/json")
 
 
-def createCameraResource(camera):
-    ''' Create or retrieve resource instance for this exact camera
-    '''
+def createCamera(camera):
+    """ Create or retrieve camera instance for this exact camera.  Note that cameras act like vehicles if we use their
+    exif data for positions.  These are stored in a separate table from regular vehicles.
+    """
     name = camera.name
     if camera.serial:
-        name = name + "_" +  camera.serial
+        name = name + "_" + camera.serial
     try:
-        found = GEOCAM_TRACK_RESOURCE_MODEL.get().objects.get(name=name)
+        found = XGDS_CORE_VEHICLE_MODEL.get().objects.get(name=name, type='Camera')
         return found
     except:
-        return GEOCAM_TRACK_RESOURCE_MODEL.get().objects.create(name=name)
+        return XGDS_CORE_VEHICLE_MODEL.get().objects.create(name=name, type='Camera')
 
 
 def getCameraObject(exif):
-    '''
+    """
     Given image exif data, either creates a new camera object or returns an
     existing one.
-    '''
+    """
     cameraName = getExifValue(exif, 'Model')
     if cameraName:
         serial = getExifValue(exif, 'BodySerialNumber')
@@ -206,11 +207,11 @@ def getCameraObject(exif):
     return None
 
 
-def buildExifPosition(exif, camera, resource, exifTime, form_tz):
-    '''
+def buildExifPosition(exif, camera, vehicle, exifTime, form_tz):
+    """
     Given the image's exif data and a camera object, 
     creates a new position object that contains the lat and lon information.
-    '''
+    """
     gpsLatLon = getLatLon(exif)
     gpsTimeStamp = getGPSDatetime(exif)
     if gpsTimeStamp:
@@ -232,11 +233,11 @@ def buildExifPosition(exif, camera, resource, exifTime, form_tz):
     return None
 
 
-def getTrackPosition(timestamp, resource):
-    '''
+def getTrackPosition(timestamp, vehicle):
+    """
     Look up and return the closest tracked position if there is one.
-    '''
-    return getClosestPosition(timestamp=timestamp, resource=resource)
+    """
+    return getClosestPosition(timestamp=timestamp, vehicle=vehicle)
 
 
 def getRotationValue(request):
@@ -293,7 +294,7 @@ def saveImage(request):
             newSingleImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
 
             form_tz = form.getTimezone()
-            resource = form.getResource()
+            vehicle = form.getVehicle()
             exifData = getExifData(newSingleImage)
 
             # save image dimensions and file size
@@ -358,11 +359,13 @@ def saveImage(request):
             newImageSet.name = fileName
             newImageSet.camera = getCameraObject(exifData)
 
-            newImageSet.track_position = getTrackPosition(exifTime, resource)
-            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, resource, exifTime, form_tz)
+            newImageSet.track_position = getTrackPosition(exifTime, vehicle)
+            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
 
             newImageSet.author = author
-            newImageSet.resource = resource
+            # newImageSet.vehicle = vehicle
+            if vehicle:
+                newImageSet.flight = getFlight(newImageSet.acquisition_time, vehicle)
             newImageSet.finish_initialization(request)
 
             nowTime = time.time()

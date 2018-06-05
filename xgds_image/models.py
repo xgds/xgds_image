@@ -35,9 +35,9 @@ from geocamUtil.modelJson import modelToDict
 from geocamUtil.UserUtil import getUserName
 from geocamTrack import models as geocamTrackModels
 
-from xgds_notes2.models import NoteMixin, NoteLinksMixin
+from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
-from xgds_core.models import SearchableModel
+from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight
 from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
@@ -57,19 +57,23 @@ def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
-class Camera(geocamTrackModels.AbstractResource):
-    serial = models.CharField(max_length=128, blank=True, null=True, db_index=True)
-    
+class Camera(AbstractVehicle):
     """
     Camera class
     """
-    pass
+    serial = models.CharField(max_length=128, blank=True, null=True, db_index=True)
 
+
+# TODO change these in your model classes if you are not using defaults
 DEFAULT_CAMERA_FIELD = lambda: models.ForeignKey(Camera, null=True, blank=True)
 DEFAULT_TRACK_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True )
 DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
 DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
-DEFAULT_RESOURCE_FIELD = lambda: models.ForeignKey(geocamTrackModels.Resource, null=True, blank=True)
+DEFAULT_FLIGHT_FIELD = lambda: models.ForeignKey('xgds_core.Flight', related_name='%(app_label)s_%(class)s_related',
+                                                 verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True, null=True)
+# TODO if you are not using the default image set model you will have to override this in your classes
+DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey('xgds_image.ImageSet', related_name='%(app_label)s_%(class)s_related',
+                                                    verbose_name=settings.XGDS_IMAGE_IMAGE_SET_MONIKER, blank=True, null=True)
 
 
 class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
@@ -202,7 +206,7 @@ class DeepZoomTiles(DeepZoom):
         return(dz_couch_destination, dz_relative_filepath)
     
 
-class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin):
+class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -221,7 +225,6 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     modification_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
     acquisition_time = models.DateTimeField(editable=False, default=timezone.now, db_index=True)
     acquisition_timezone = models.CharField(null=True, blank=False, max_length=128, default=settings.TIME_ZONE, db_index=True)
-    resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     uploadAndSaveTime = models.FloatField(null=True, blank=True)
     totalTimeSinceNotify = models.FloatField(null=True, blank=True)
     #Optionally generate deep zoom from uploaded image if set to True.
@@ -235,6 +238,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                                             editable=False,
                                             on_delete=models.SET_NULL)
     rotation_degrees = models.PositiveSmallIntegerField(null=True, default=0)
+    flight = "TODO set to DEFAULT_FLIGHT_FIELD or similar"
     
     @classmethod
     def timesearchField(self):
@@ -251,7 +255,6 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                 return ''
             deepzoomSlug = filename[0] + "_deepzoom_" + str(self.id)
             return deepzoomSlug.lower()
-    
     
     def create_deepzoom_image(self):
         """
@@ -277,9 +280,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         except:
             print("Unexpected error creating deep zoom: {0}".format(sys.exc_info()[1:2]))
             raise
-        
- 
- 
+
     def delete_image_file(self, path_of_image_to_delete=None):
         """
         Deletes uploaded image file from storage.
@@ -351,7 +352,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         return None
     
     def finish_initialization(self, request):
-        ''' during construction, if you have extra data to fill in you can override this method'''
+        """ during construction, if you have extra data to fill in you can override this method"""
         pass
         
     class Meta:
@@ -371,10 +372,10 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
         return None
         
     def getPositionDict(self):
-        ''' override if you want to change the logic for how the positions are prioritized in JSON.
+        """ override if you want to change the logic for how the positions are prioritized in JSON.
         Right now exif_position is from the camera, track_position is from the track, and user_position stores any hand edits.
         track provides lat lon and altitude, exif provides heading, and user trumps all.
-        '''
+        """
         result = {}
         result['alt'] = ""
         result['head'] = ""
@@ -415,39 +416,6 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
             
         return result
         
-#     def toMapDict(self):
-#         """
-#         Return a reduced dictionary that will be turned to JSON for rendering in a map
-#         """
-#         result = modelToDict(self)
-#         result['pk'] = int(self.pk)
-#         result['app_label'] = self.app_label
-#         t = type(self)
-#         if t._deferred:
-#             t = t.__base__
-#         result['model_type'] = t._meta.object_name
-#         
-#         result['description'] = self.description
-#         result['view_url'] = self.view_url
-#         result['type'] = 'ImageSet'
-#         if self.camera:
-#             result['camera_name'] = self.camera.name
-#         else:
-#             result['camera_name'] = ''
-#         result['author_name'] = getUserName(self.author)
-#         result['creation_time'] = self.creation_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-#         result['acquisition_time'] = self.acquisition_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-#         result['timezone'] = self.acquisition_timezone
-#         rawImage = self.getRawImage()
-#         if rawImage:
-#             result['raw_image_url'] = rawImage.file.url
-#         result['thumbnail_image_url'] = self.thumbnail_image_url        
-#         result['deepzoom_file_url'] = self.deepzoom_file_url
-#         if not result['deepzoom_file_url']:
-#             result['deepzoom_file_url'] = ''
-#         result.update(self.getPositionDict())
-#         return result
-
     def getRawImage(self):
         rawImages = self.images.filter(raw=True)
         if rawImages:
@@ -467,7 +435,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
     
     @classmethod
     def getSearchableFields(self):
-        return ['name', 'description', 'author__first_name', 'author__last_name']
+        return ['name', 'description', 'author__first_name', 'author__last_name', 'flight__name']
     
     @classmethod
     def getSearchFormFields(cls):
@@ -475,12 +443,12 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin)
                 'description',
                 'author',
                 'camera',
-                'resource'
+                'flight__vehicle'
                 ]
     
     @classmethod
     def getSearchFieldOrder(cls):
-        return ['resource',
+        return ['flight__vehicle',
                 'author',
                 'name',
                 'description',
@@ -496,10 +464,9 @@ class ImageSet(AbstractImageSet):
     track_position = DEFAULT_TRACK_POSITION_FIELD()
     exif_position = DEFAULT_EXIF_POSITION_FIELD()
     user_position = DEFAULT_USER_POSITION_FIELD()
-    resource = DEFAULT_RESOURCE_FIELD()
-    
+    notes = DEFAULT_NOTES_GENERIC_RELATION()
+    flight = DEFAULT_FLIGHT_FIELD()
 
-DEFAULT_IMAGE_SET_FIELD = lambda: models.ForeignKey(ImageSet, null=True, related_name="images")
 
 couchStore = CouchDbStorage()
 
@@ -544,7 +511,8 @@ class SingleImage(AbstractSingleImage):
     """ This can be used for screenshots or non geolocated images 
     """
     # set foreign key fields from parent model to point to correct types
-    imageSet = DEFAULT_IMAGE_SET_FIELD()
+    imageSet = models.ForeignKey('xgds_image.ImageSet', related_name='images',
+                                 verbose_name=settings.XGDS_IMAGE_IMAGE_SET_MONIKER, blank=True, null=True)
     
 
 DEFAULT_SINGLE_IMAGE_FIELD = lambda: models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name="image")
@@ -553,6 +521,7 @@ DEFAULT_SINGLE_IMAGE_FIELD = lambda: models.ForeignKey(settings.XGDS_IMAGE_SINGL
 class AnnotationColor(models.Model):
     name = models.CharField(max_length=16, db_index=True)
     hex = models.CharField(max_length=16)
+
 
 class AbstractAnnotation(models.Model):
     left = models.IntegerField(null=False, blank=False)
@@ -586,13 +555,20 @@ class AbstractAnnotation(models.Model):
         return result
 
 
-class AbstractTextAnnotation(AbstractAnnotation):
+class NormalAnnotation(AbstractAnnotation):
+    """ The default type of annotation, referring to an xgds_image.ImageSet """
+    image = DEFAULT_IMAGE_SET_FIELD()
+
+    class Meta:
+        abstract = True
+
+
+class AbstractTextAnnotation(models.Model):
     content = models.CharField(max_length=512, default='')
     isBold = models.BooleanField(default=False)
     isItalics = models.BooleanField(default=False)
     width = models.PositiveIntegerField(default=1)
     height = models.PositiveIntegerField(default=1)
-
 
     def getJsonType(self):
         return 'Text'
@@ -600,11 +576,12 @@ class AbstractTextAnnotation(AbstractAnnotation):
     class Meta:
         abstract = True
 
-class TextAnnotation(AbstractTextAnnotation):
-    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+
+class TextAnnotation(AbstractTextAnnotation, NormalAnnotation):
+    pass
 
 
-class AbstractEllipseAnnotation(AbstractAnnotation):
+class AbstractEllipseAnnotation(models.Model):
     radiusX = models.IntegerField()
     radiusY = models.IntegerField()
 
@@ -615,11 +592,11 @@ class AbstractEllipseAnnotation(AbstractAnnotation):
         abstract = True
 
 
-class EllipseAnnotation(AbstractEllipseAnnotation):
-    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+class EllipseAnnotation(AbstractEllipseAnnotation, NormalAnnotation):
+    pass
 
 
-class AbstractRectangleAnnotation(AbstractAnnotation):
+class AbstractRectangleAnnotation(models.Model):
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
 
@@ -630,11 +607,11 @@ class AbstractRectangleAnnotation(AbstractAnnotation):
         abstract = True
 
 
-class RectangleAnnotation(AbstractRectangleAnnotation):
-    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
+class RectangleAnnotation(AbstractRectangleAnnotation, NormalAnnotation):
+    pass
 
 
-class AbstractArrowAnnotation(AbstractAnnotation):
+class AbstractArrowAnnotation(models.Model):
     points = models.TextField(default='[]')
 
     def getJsonType(self):
@@ -643,9 +620,9 @@ class AbstractArrowAnnotation(AbstractAnnotation):
     class Meta:
         abstract = True
 
-class ArrowAnnotation(AbstractArrowAnnotation):
-    image = models.ForeignKey(ImageSet, related_name='%(app_label)s_%(class)s_image')  
 
+class ArrowAnnotation(AbstractArrowAnnotation, NormalAnnotation):
+    pass
 
 # NOT USED YET
 # This will support the url to the saved annotated image download via url
