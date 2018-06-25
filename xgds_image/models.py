@@ -37,7 +37,7 @@ from geocamTrack import models as geocamTrackModels
 
 from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
-from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight
+from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight, HasDownloadableFiles
 from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
@@ -206,7 +206,7 @@ class DeepZoomTiles(DeepZoom):
         return(dz_couch_destination, dz_relative_filepath)
     
 
-class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight):
+class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -422,6 +422,12 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             return rawImages[0]
         else:
             return None
+
+    def getDownloadableFiles(self):
+        """
+        :return: list of file objects, each with their own `read()` functions
+        """
+        return [self.getRawImage().file]
 
     def getLowerResImages(self):
         return self.images.filter(raw=False, thumbnail=False)
