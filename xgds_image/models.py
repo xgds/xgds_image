@@ -47,10 +47,15 @@ from StringIO import StringIO
 from datetime import datetime
 from xgds_core.couchDbStorage import CouchDbStorage
 from email.mime import image
+import couchdb
 
 logger = logging.getLogger("deepzoom.models")
-couchStore = CouchDbStorage()
-couchDatabase = couchStore.get_couchDb()
+# This global declaration does not work when the database name has to be changed
+# at run time (e.g. when running unit tests), so the global declaration has been
+# moved to a couple places where it is needed here and may need to be fixed
+# elsewhere if the change has other unintended and undetected consequences
+# couchStore = CouchDbStorage()
+# couchDatabase = couchStore.get_couchDb()
 
 
 def getNewImageFileName(instance, filename):
@@ -95,6 +100,11 @@ class DeepZoomImageDescriptor(deepzoom.DZIDescriptor):
         f = os.path.basename(destination)
         fpath = os.path.dirname(destination)
         full_file_name = os.path.join(fpath, f)
+        #################
+        # these were global, now defined locally:
+        couchStore = CouchDbStorage()
+        couchDatabase = couchStore.get_couchDb()
+        #################
         couchDatabase[full_file_name] = {"category": "xgds_image", "basename": f, "name": fpath, 
                                          "creation_time": datetime.utcnow().isoformat()}
         newDoc = couchDatabase[full_file_name]
@@ -136,6 +146,11 @@ class DeepZoomImageCreator(deepzoom.ImageCreator):
                 tile.save(myIo, format='JPEG')
                 tileBytesIO = myIo.getvalue()
                 # basename and name are for convenience so we can look it up later.
+                #################
+                # these were global, now defined locally:
+                couchStore = CouchDbStorage()
+                couchDatabase = couchStore.get_couchDb()
+                #################
                 couchDatabase[full_tile_name] = {"category":"xgds_image", "basename": tile_name,  "name": tile_path,
                              "creation_time": datetime.utcnow().isoformat() }
                 newDoc = couchDatabase[full_tile_name]
@@ -280,6 +295,15 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         except:
             print("Unexpected error creating deep zoom: {0}".format(sys.exc_info()[1:2]))
             raise
+        finally:
+            # Mark the thread inactive in the couchdb in case there's another
+            # thread waiting for this to be finished
+            dbServer = couchdb.Server()
+            db = dbServer[settings.COUCHDB_FILESTORE_NAME]
+            myFlag = db['create_deepzoom_thread']
+            myFlag['active'] = False
+            db['create_deepzoom_thread'] = myFlag
+
 
     def delete_image_file(self, path_of_image_to_delete=None):
         """

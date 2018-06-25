@@ -76,6 +76,7 @@ ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
                                           TEXT_ANNOTATION_MODEL.get()
                                           ])
 
+import couchdb
 
 def getImageImportPage(request):
     # map plus image templates for now
@@ -393,6 +394,10 @@ def saveImage(request):
                                                     raw = False,
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
+
+            dbServer = couchdb.Server()
+            db = dbServer[settings.COUCHDB_FILESTORE_NAME]
+            db['create_deepzoom_thread'] = {'active':True}
 
             # create deep zoom tiles for viewing in openseadragon.
             if (newImageSet.create_deepzoom):
