@@ -400,6 +400,7 @@ def saveImage(request):
                                                     thumbnail = True,
                                                     imageSet = newImageSet)
 
+            # TODO: replace this with a BoundedSemaphore
             dbServer = couchdb.Server()
             db = dbServer[settings.COUCHDB_FILESTORE_NAME]
             if 'create_deepzoom_thread' in db:
