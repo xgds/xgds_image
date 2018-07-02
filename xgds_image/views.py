@@ -296,7 +296,12 @@ def saveImage(request):
 
             form_tz = form.getTimezone()
             vehicle = form.getVehicle()
+
+            # If this image has exif data in it, extract it
             exifData = getExifData(newSingleImage)
+            # If the POST included exif data, get that
+            if exifData is None and 'exifData' in request.POST:
+                exifData = request.POST['exifData']
 
             # save image dimensions and file size
             try:
@@ -397,7 +402,12 @@ def saveImage(request):
 
             dbServer = couchdb.Server()
             db = dbServer[settings.COUCHDB_FILESTORE_NAME]
-            db['create_deepzoom_thread'] = {'active':True}
+            if 'create_deepzoom_thread' in db:
+                myFlag = db['create_deepzoom_thread']
+                myFlag['active'] = True
+                db['create_deepzoom_thread'] = myFlag
+            else:
+                db['create_deepzoom_thread'] = {'active':True}
 
             # create deep zoom tiles for viewing in openseadragon.
             if (newImageSet.create_deepzoom):
