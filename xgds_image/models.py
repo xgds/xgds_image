@@ -264,17 +264,17 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             if found.exists():
                 moniker = settings.XGDS_IMAGE_IMAGE_SET_MONIKER + 's'
                 flight = found[0].flight
-                result = {"title": moniker,
-                          "selected": False,
-                          "tooltip": "%s for %s " % (moniker, flight.name),
-                          "key": "%s_%s" % (flight.uuid, moniker),
-                          "data": {"json": reverse('xgds_map_server_objectsJson',
-                                                   kwargs={'object_name': 'XGDS_IMAGE_IMAGE_SET_MODEL',
-                                                           'filter': 'flight__pk:' + str(flight.pk)}),
-                                   "sseUrl": "",
-                                   "type": 'MapLink',
-                                   }
-                          }
+                result = [{"title": moniker,
+                           "selected": False,
+                           "tooltip": "%s for %s " % (moniker, flight.name),
+                           "key": "%s_%s" % (flight.uuid, moniker),
+                           "data": {"json": reverse('xgds_map_server_objectsJson',
+                                                    kwargs={'object_name': 'XGDS_IMAGE_IMAGE_SET_MODEL',
+                                                            'filter': 'flight__pk:' + str(flight.pk)}),
+                                    "sseUrl": "",
+                                    "type": 'MapLink',
+                                    }
+                           }]
             return result
         except ObjectDoesNotExist:
             return None
