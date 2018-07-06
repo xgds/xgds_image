@@ -23,11 +23,12 @@ import xml.dom.minidom
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.text import slugify
-
+from django.urls import reverse
 
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
@@ -37,7 +38,7 @@ from geocamTrack import models as geocamTrackModels
 
 from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
-from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight, HasDownloadableFiles
+from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight, HasDownloadableFiles, IsFlightChild
 from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
@@ -221,7 +222,7 @@ class DeepZoomTiles(DeepZoom):
         return(dz_couch_destination, dz_relative_filepath)
     
 
-class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles):
+class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles, IsFlightChild):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -254,6 +255,29 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
                                             on_delete=models.SET_NULL)
     rotation_degrees = models.PositiveSmallIntegerField(null=True, default=0)
     flight = "TODO set to DEFAULT_FLIGHT_FIELD or similar"
+
+    @classmethod
+    def get_tree_json(cls, parent_class, parent_pk):
+        try:
+            found = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL).get().objects.filter(flight__id=parent_pk)
+            result = None
+            if found.exists():
+                moniker = settings.XGDS_IMAGE_IMAGE_SET_MONIKER + 's'
+                flight = found[0].flight
+                result = {"title": moniker,
+                          "selected": False,
+                          "tooltip": "%s for %s " % (moniker, flight.name),
+                          "key": "%s_%s" % (flight.uuid, moniker),
+                          "data": {"json": reverse('xgds_map_server_objectsJson',
+                                                   kwargs={'object_name': 'XGDS_IMAGE_IMAGE_SET_MODEL',
+                                                           'filter': 'flight__pk:' + str(flight.pk)}),
+                                   "sseUrl": "",
+                                   "type": 'MapLink',
+                                   }
+                          }
+            return result
+        except ObjectDoesNotExist:
+            return None
     
     @classmethod
     def timesearchField(self):
