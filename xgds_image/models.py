@@ -38,7 +38,8 @@ from geocamTrack import models as geocamTrackModels
 
 from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
-from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight, HasDownloadableFiles, IsFlightChild
+from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight, HasDownloadableFiles, IsFlightChild, \
+    IsFlightData
 from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
@@ -222,7 +223,7 @@ class DeepZoomTiles(DeepZoom):
         return(dz_couch_destination, dz_relative_filepath)
     
 
-class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles, IsFlightChild):
+class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles, IsFlightChild, IsFlightData):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -278,7 +279,19 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             return result
         except ObjectDoesNotExist:
             return None
-    
+
+    @classmethod
+    def get_info_json(cls, flight_pk):
+        found = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL).get().objects.filter(flight__id=flight_pk)
+        result = None
+        if found.exists():
+            result = {'name': settings.XGDS_IMAGE_IMAGE_SET_MONIKER + 's',
+                      'count': found.count(),
+                      'url': reverse('search_map_object_filter', kwargs={'modelName':settings.XGDS_IMAGE_IMAGE_SET_MONIKER,
+                                                                         'filter': 'flight__pk:' + str(flight_pk)})
+                      }
+        return result
+
     @classmethod
     def timesearchField(self):
         return 'acquisition_time'
