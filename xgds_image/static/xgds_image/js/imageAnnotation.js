@@ -554,7 +554,7 @@ $.extend(xgds_image_annotation, {
     },
 
     deselectFabricObjects: function(){
-        this.overlay.fabricCanvas().deactivateAll().renderAll();
+        this.overlay.fabricCanvas().discardActiveObject().renderAll();
     },
 
     setMouseMode: function(mode) {
@@ -657,8 +657,10 @@ $.extend(xgds_image_annotation, {
                 size: this.currentAnnotationSize
             });
             this.currentAnnotationType = this.text;
-            this.overlay.fabricCanvas().add(this.text);
-            this.textboxPreview.remove();
+            var fc = this.overlay.fabricCanvas();
+            fc.add(this.text);
+            fc.remove(this.textboxPreview);
+            //this.textboxPreview.remove();
             fabricObject = this.text;
         }
         var temp = this.duplicateObject(fabricObject);
@@ -819,7 +821,8 @@ $.extend(xgds_image_annotation, {
 
     /* Delete annotation from annotationsDict and the database */
     deleteAnnotation: function(annotation) {
-    		var dictKey = this.getDictKey(annotation);
+        var dictKey = this.getDictKey(annotation);
+        var fabricCanvas = this.overlay.fabricCanvas();
         if (dictKey in this.annotationsDict) {
             $.ajax({
                 type: "POST",
@@ -831,7 +834,8 @@ $.extend(xgds_image_annotation, {
                 success: function (data) {
                     //delete from dict and database
                     delete xgds_image_annotation.annotationsDict[dictKey];
-                    annotation.remove();
+                    fabricCanvas.remove(annotation);
+                    //annotation.remove();
                 },
                 error: function (a) {
                     console.log("Ajax error");
@@ -841,7 +845,8 @@ $.extend(xgds_image_annotation, {
             });
         } else {
             //annotation not saved in database anyways, just remove from canvas
-            this.overlay.fabricCanvas().getActiveObject().remove();
+            var ao = fabricCanvas.getActiveObject();
+            fabricCanvas.remove(ao);
         }
     },
 
