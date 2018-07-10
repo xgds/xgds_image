@@ -269,7 +269,7 @@ $.extend(xgds_image,{
 		
 		
 		// build tile sources for openseadragon image viewer
-		var prefixUrl = '/static/openseadragon/built-openseadragon/openseadragon/images/';
+		var prefixUrl = '/static/openseadragon/build/openseadragon/images/';
 		try {
 			var displayImage = $('#display-image');
 			if (displayImage.length == 0){
