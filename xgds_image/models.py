@@ -64,11 +64,12 @@ def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
+"""
+Camera class
+"""
 class Camera(AbstractVehicle):
-    """
-    Camera class
-    """
-    serial = models.CharField(max_length=128, blank=True, null=True, db_index=True)
+    serial = models.CharField(max_length=128, blank=True, null=True)
+    name = models.CharField(max_length=64, blank=True)
 
 
 # TODO change these in your model classes if you are not using defaults
