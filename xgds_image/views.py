@@ -300,8 +300,10 @@ def saveImage(request):
             # If this image has exif data in it, extract it
             exifData = getExifData(newSingleImage)
             # If the POST included exif data, get that
-            if exifData is None and 'exifData' in request.POST:
-                exifData = request.POST['exifData']
+            #if exifData is None and 'exifData' in request.POST:
+            #    exifData = request.POST['exifData']
+            if 'exifData' in request.POST:
+                exifData.update(json.loads(request.POST['exifData']))
 
             # save image dimensions and file size
             try:
@@ -319,7 +321,7 @@ def saveImage(request):
                 exifTimeString = getExifValue(exifData, 'DateTime')
 
             if exifTimeString:
-                exifTime = datetime.strptime(str(exifTimeString), '%Y:%m:%d %H:%M:%S')
+                exifTime = dateparser(str(exifTimeString))
                 if (form_tz != pytz.utc) and exifTime:
                     localized_time = form_tz.localize(exifTime)
                     exifTime = TimeUtil.timeZoneToUtc(localized_time)
