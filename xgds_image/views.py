@@ -238,10 +238,7 @@ def getTrackPosition(timestamp, vehicle):
     """
     Look up and return the closest tracked position if there is one.
     """
-    return None
-    # TODO fix right now we need a flexible pointer to any type of position this will be a model change
-
-    # return getClosestPosition(timestamp=timestamp, vehicle=vehicle)
+    return getClosestPosition(timestamp=timestamp, vehicle=vehicle)
 
 
 def getRotationValue(request):

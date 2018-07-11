@@ -74,9 +74,10 @@ class Camera(AbstractVehicle):
 
 # TODO change these in your model classes if you are not using defaults
 DEFAULT_CAMERA_FIELD = lambda: models.ForeignKey(Camera, null=True, blank=True)
-DEFAULT_TRACK_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True )
-DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
-DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(geocamTrackModels.PastResourcePosition, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
+
+DEFAULT_TRACK_POSITION_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True )
+DEFAULT_EXIF_POSITION_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_exif_set" )
+DEFAULT_USER_POSITION_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name="%(app_label)s_%(class)s_image_user_set" )
 DEFAULT_FLIGHT_FIELD = lambda: models.ForeignKey('xgds_core.Flight', related_name='%(app_label)s_%(class)s_related',
                                                  verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True, null=True)
 # TODO if you are not using the default image set model you will have to override this in your classes
