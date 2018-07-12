@@ -371,9 +371,7 @@ def saveImage(request):
             newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
 
             newImageSet.author = author
-            # newImageSet.vehicle = vehicle
-            if vehicle:
-                newImageSet.flight = getFlight(newImageSet.acquisition_time, vehicle)
+            newImageSet.flight = getFlight(newImageSet.acquisition_time, vehicle)
             newImageSet.finish_initialization(request)
 
             nowTime = time.time()
