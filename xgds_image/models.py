@@ -25,6 +25,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.text import slugify
@@ -64,12 +65,13 @@ def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
 
 
-"""
-Camera class
-"""
 class Camera(AbstractVehicle):
-    serial = models.CharField(max_length=128, blank=True, null=True)
+    """
+    Camera class
+    """
+    serial = models.CharField(max_length=128, blank=True, null=True, unique=True)
     name = models.CharField(max_length=64, blank=True)
+    heading_offset_degrees = models.FloatField(default=0, validators=[MinValueValidator(-360.0), MaxValueValidator(360.0)])
 
 
 # TODO change these in your model classes if you are not using defaults
