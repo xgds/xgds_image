@@ -448,13 +448,17 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         result['alt'] = ""
         result['head'] = ""
 
+        heading_offset_degrees = 0
+        if self.camera:
+            heading_offset_degrees = camera.heading_offset_degrees
+
         if self.user_position:
             result['lat'] = self.user_position.latitude
             result['lon'] = self.user_position.longitude
             if hasattr(self.user_position, 'altitude'):
                 result['alt'] = self.user_position.altitude
             if hasattr(self.user_position, 'heading'):
-                result['head'] = self.user_position.heading
+                result['head'] = self.user_position.heading + heading_offset_degrees
             return result
         
         result['position_id'] = ""
@@ -465,9 +469,9 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
                 result['alt'] = self.track_position.altitude
             if self.exif_position:
                 if hasattr(self.exif_position, 'heading'):
-                    result['head'] = self.exif_position.heading
+                    result['head'] = self.exif_position.heading + heading_offset_degrees
                 elif hasattr(self.track_position, 'heading'):
-                    result['head'] = self.track_position.heading
+                    result['head'] = self.track_position.heading + heading_offset_degrees
                 if result['alt'] == '' and hasattr(self.exif_position, 'altitude'):
                     result['alt'] = self.track_position.altitude
             return result
@@ -477,7 +481,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             if hasattr(self.exif_position, 'altitude'):
                 result['alt'] = self.exif_position.altitude
             if hasattr(self.exif_position, 'heading'):
-                result['head'] = self.exif_position.heading
+                result['head'] = self.exif_position.heading + heading_offset_degrees
         else: 
             result['lat'] = ""
             result['lon'] = ""
