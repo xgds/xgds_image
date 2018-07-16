@@ -282,6 +282,7 @@ def sdWriteEvent(request):
     fCheck.start()
     return HttpResponse("OK", content_type='text/plain')
 
+
 def saveImage(request):
     """
     Image drag and drop, saves the files and to the database.
@@ -418,11 +419,9 @@ def saveImage(request):
 
             imageSetDict = newImageSet.toMapDict()
             # pass the image set to the client as json.
-            return HttpResponse(json.dumps({'success': 'true',
-                                            'json': imageSetDict}, cls=DatetimeJsonEncoder),
-                                content_type='application/json')
+            return JsonResponse({'success': 'true', 'json': imageSetDict}, encoder=DatetimeJsonEncoder, safe=False)
         else:
-            return HttpResponse(json.dumps({'error': 'Imported image is not valid','details':form.errors}), content_type='application/json')
+            return JsonResponse({'error': 'Imported image is not valid', 'details': form.errors}, status=406)
 
 
 def getTileState(request, imageSetPK):
