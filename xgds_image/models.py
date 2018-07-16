@@ -450,7 +450,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
 
         heading_offset_degrees = 0
         if self.camera:
-            heading_offset_degrees = camera.heading_offset_degrees
+            heading_offset_degrees = self.camera.heading_offset_degrees
 
         if self.user_position:
             result['lat'] = self.user_position.latitude
