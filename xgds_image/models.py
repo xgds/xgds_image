@@ -438,6 +438,19 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         if self.track_position:
             return self.track_position
         return None
+
+    @property
+    def head(self):
+        """ heading """
+        try:
+            position = self.getPosition()
+            if position:
+                if self.camera:
+                    return position.heading + self.camera.heading_offset_degrees
+                return position.heading
+        except:
+            pass
+        return None
         
     def getPositionDict(self):
         """ override if you want to change the logic for how the positions are prioritized in JSON.
