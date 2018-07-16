@@ -467,14 +467,12 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             result['lon'] = self.track_position.longitude
             if self.track_position.altitude:
                 result['alt'] = self.track_position.altitude
-            if self.exif_position:
-                if hasattr(self.exif_position, 'heading'):
-                    result['head'] = self.exif_position.heading + heading_offset_degrees
-                elif hasattr(self.track_position, 'heading'):
-                    result['head'] = self.track_position.heading + heading_offset_degrees
-                if result['alt'] == '' and hasattr(self.exif_position, 'altitude'):
-                    result['alt'] = self.track_position.altitude
+            if hasattr(self.track_position, 'heading'):
+                result['head'] = self.track_position.heading + heading_offset_degrees
+            if result['alt'] == '' and hasattr(self.exif_position, 'altitude'):
+                result['alt'] = self.track_position.altitude
             return result
+
         elif self.exif_position:
             result['lat'] = self.exif_position.latitude
             result['lon'] = self.exif_position.longitude
