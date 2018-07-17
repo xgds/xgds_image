@@ -199,27 +199,14 @@ def getCameraByExif(exif):
     """
     cameraName = getExifValue(exif, 'Model')
     if cameraName:
+        cameras = CAMERA_MODEL.get().objects.filter(name=cameraName)
         serial = getExifValue(exif, 'BodySerialNumber')
-        cameras = CAMERA_MODEL.get().objects.filter(name=cameraName, serial=serial)
+        if serial:
+            cameras.filter(serial=serial)
         if cameras.exists():
             return cameras[0]
         else:
             return CAMERA_MODEL.get().objects.create(name=cameraName, serial=serial)
-    return None
-
-
-def getCameraByName(name, serial=None):
-    """
-    Given the name, return or create a camera model
-    """
-    if name:
-        cameras = CAMERA_MODEL.get().objects.filter(name=name)
-        if serial:
-            cameras = cameras.filter(serial=serial)
-        if cameras.exists():
-            return cameras[0]
-        else:
-            return CAMERA_MODEL.get().objects.create(name=name, serial=serial)
     return None
 
 
@@ -383,12 +370,6 @@ def saveImage(request):
             newImageSet.name = fileName
 
             newImageSet.camera = getCameraByExif(exifData)
-            if not newImageSet.camera:
-                if 'camera' in request.POST:
-                    serial = None
-                    if 'camera_serial' in request.POST:
-                        serial = request.POST['camera_serial']
-                    newImageSet.camera = getCameraByName(request.POST['camera'], serial)
 
             newImageSet.track_position = getTrackPosition(exifTime, vehicle)
             newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
