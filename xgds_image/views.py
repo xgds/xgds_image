@@ -326,7 +326,7 @@ def saveImage(request):
 
             if exifTimeString:
                 exifTime = dateparser(str(exifTimeString))
-                if (form_tz != pytz.utc) and exifTime:
+                if (form_tz != pytz.utc) and exifTime and exifTime.tzinfo is None:
                     localized_time = form_tz.localize(exifTime)
                     exifTime = TimeUtil.timeZoneToUtc(localized_time)
                 else:
