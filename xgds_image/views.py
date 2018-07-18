@@ -76,6 +76,7 @@ ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
                                           TEXT_ANNOTATION_MODEL.get()
                                           ])
 
+
 import couchdb
 
 def getImageImportPage(request):
@@ -295,7 +296,7 @@ def saveImage(request):
         if form.is_valid():
             # create and save a single image obj
             uploadedFile = request.FILES['file']
-            newSingleImage = SINGLE_IMAGE_MODEL.get()(file = uploadedFile)
+            newSingleImage = SINGLE_IMAGE_MODEL.get()(file=uploadedFile, imageType=ImageType.full.value)
 
             form_tz = form.getTimezone()
             vehicle = form.getVehicle()
@@ -399,10 +400,11 @@ def saveImage(request):
                 addRelay(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
             # create a thumbnail
             thumbnailStream = createThumbnailFile(newSingleImage.file)
-            SINGLE_IMAGE_MODEL.get().objects.create(file = thumbnailStream,
-                                                    raw = False,
-                                                    thumbnail = True,
-                                                    imageSet = newImageSet)
+            SINGLE_IMAGE_MODEL.get().objects.create(file=thumbnailStream,
+                                                    raw=False,
+                                                    thumbnail=True,
+                                                    imageSet=newImageSet,
+                                                    imageType=ImageType.thumbnail.value)
 
             # TODO: replace this with a BoundedSemaphore
             dbServer = couchdb.Server()

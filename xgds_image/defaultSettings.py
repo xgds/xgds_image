@@ -107,3 +107,5 @@ XGDS_IMAGE_ELLIPSE_ANNOTATION_MODEL = 'xgds_image.EllipseAnnotation'
 XGDS_IMAGE_RECTANGLE_ANNOTATION_MODEL = 'xgds_image.RectangleAnnotation'
 XGDS_IMAGE_TEXT_ANNOTATION_MODEL = 'xgds_image.TextAnnotation'
 
+XGDS_IMAGE_ACCEPTED_WEB_FORMATS = ['JPEG', 'PNG', 'WEBP']
+

@@ -14,6 +14,7 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+from enum import Enum
 import os
 import logging
 import sys
@@ -31,6 +32,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.urls import reverse
 
+from geocamUtil.models import AbstractEnumModel
 from geocamUtil.loader import LazyGetModelByName, getClassByName
 from geocamUtil.defaultSettings import HOSTNAME
 from geocamUtil.modelJson import modelToDict
@@ -63,6 +65,19 @@ logger = logging.getLogger("deepzoom.models")
 
 def getNewImageFileName(instance, filename):
     return settings.XGDS_IMAGE_DATA_SUBDIRECTORY + filename
+
+
+class ImageType(Enum):
+    """
+    Definitions of image type here.
+    Currently this will include:
+     SOURCE, for images which get converted.
+     FULL, for images which are full size renderable
+     THUMBNAIL, renderable thumbnail images
+    """
+    full = 0
+    source = 1
+    thumbnail = 2
 
 
 class Camera(AbstractVehicle):
@@ -506,6 +521,13 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         else:
             return None
 
+    def getSourceImage(self):
+        sourceImages = self.images.filter(imageType=ImageType.source.value)
+        if sourceImages:
+            return sourceImages[0]
+        else:
+            return None
+
     def getDownloadableFiles(self):
         """
         :return: list of file objects, each with their own `read()` functions
@@ -570,9 +592,10 @@ class AbstractSingleImage(models.Model):
     raw = models.BooleanField(default=True)
     imageSet = 'set this to DEFAULT_IMAGE_SET_FIELD() or similar in derived models'
     thumbnail = models.BooleanField(default=False)
-    width = models.IntegerField(blank=True,null=True)
-    height = models.IntegerField(blank=True,null=True)
-    fileSizeBytes = models.IntegerField(blank=True,null=True)
+    width = models.IntegerField(blank=True, null=True)
+    height = models.IntegerField(blank=True, null=True)
+    fileSizeBytes = models.IntegerField(blank=True, null=True)
+    imageType = models.IntegerField(blank=True, null=True)
 
     @property
     def acquisition_time(self):
@@ -600,7 +623,7 @@ class SingleImage(AbstractSingleImage):
     """ This can be used for screenshots or non geolocated images 
     """
     # set foreign key fields from parent model to point to correct types
-    imageSet = models.ForeignKey('xgds_image.ImageSet', related_name='images',
+    imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='images',
                                  verbose_name=settings.XGDS_IMAGE_IMAGE_SET_MONIKER, blank=True, null=True)
     
 
