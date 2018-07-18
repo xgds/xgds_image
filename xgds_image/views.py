@@ -207,7 +207,7 @@ def getCameraByExif(exif):
         cameras = CAMERA_MODEL.get().objects.filter(name=cameraName)
         serial = getExifValue(exif, 'BodySerialNumber')
         if serial:
-            cameras.filter(serial=serial)
+            cameras = cameras.filter(serial=serial)
         if cameras.exists():
             return cameras[0]
         else:
