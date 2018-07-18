@@ -359,7 +359,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         except:
             print("Unexpected error creating deep zoom: {0}".format(sys.exc_info()[1:2]))
             raise
-        finally:
+        # finally:
             # Mark the thread inactive in the couchdb in case there's another
             # thread waiting for this to be finished
             # TODO: come up with a better multithreaded way to do this
