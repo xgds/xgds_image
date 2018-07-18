@@ -84,9 +84,12 @@ class Camera(AbstractVehicle):
     """
     Camera class
     """
-    serial = models.CharField(max_length=128, blank=True, null=True, unique=True)
+    serial = models.CharField(max_length=128, blank=True, null=True)
     name = models.CharField(max_length=64, blank=True)
     heading_offset_degrees = models.FloatField(default=0, validators=[MinValueValidator(-360.0), MaxValueValidator(360.0)])
+
+    class Meta:
+        unique_together = ("name", "serial")
 
 
 # TODO change these in your model classes if you are not using defaults
