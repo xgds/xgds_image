@@ -33,7 +33,7 @@ caller's responsibility to save it or do whatever else they wanna do...
 """
 def createThumbnailFile(src):
     ImageFile.LOAD_TRUNCATED_IMAGES = True
-    size = 250, 250 
+    size = settings.XGDS_IMAGE_THUMBNAIL_WIDTH, settings.XGDS_IMAGE_THUMBNAIL_HEIGHT
     im = Image.open(src)
     im.thumbnail(size, Image.ANTIALIAS)
     srcName, srcExt = os.path.splitext(os.path.basename(src.name))
@@ -55,8 +55,8 @@ def getHeightWidthFromPIL(imageModelInstance):
 Exif utility Functions
 referenced: https://gist.github.com/erans/983821
 """
-def getExifData(imageModelInstance):
-    pilImageObj = Image.open(imageModelInstance.file)
+def getExifData(image_file):
+    pilImageObj = Image.open(image_file)
     exifData = {}
     try: 
         pilExif = pilImageObj._getexif()

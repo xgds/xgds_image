@@ -237,13 +237,6 @@ def buildExifPosition(exif, camera, vehicle, exifTime, form_tz):
     return None
 
 
-def getTrackPosition(timestamp, vehicle):
-    """
-    Look up and return the closest tracked position if there is one.
-    """
-    return getClosestPosition(timestamp=timestamp, vehicle=vehicle)
-
-
 def getRotationValue(request):
     if request.method == 'POST':
         postDict = request.POST.dict()
@@ -294,36 +287,23 @@ def saveImage(request):
         timeMark = time.time()
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            # create and save a single image obj
             uploadedFile = request.FILES['file']
-            newSingleImage = SINGLE_IMAGE_MODEL.get()(file=uploadedFile, imageType=ImageType.full.value)
-
-            form_tz = form.getTimezone()
-            vehicle = form.getVehicle()
 
             # If this image has exif data in it, extract it
-            exifData = getExifData(newSingleImage)
-            # If the POST included exif data, get that
-            #if exifData is None and 'exifData' in request.POST:
-            #    exifData = request.POST['exifData']
+            exifData = getExifData(uploadedFile)
             if 'exifData' in request.POST:
+                # update the parsed exif dictionary with the incoming exif json
                 exifData.update(json.loads(request.POST['exifData']))
 
-            # save image dimensions and file size
-            try:
-                newSingleImage.width = int(getExifValue(exifData, 'ExifImageWidth'))
-                newSingleImage.height = int(getExifValue(exifData, 'ExifImageHeight'))
-            except:
-                pass
-
-            newSingleImage.fileSizeBytes = uploadedFile.size
-
-            # get exif time
-            exifTime  = None
+            # get metadata for image set, create the image set
+            # get exif time for image set
+            exifTime = None
             exifTimeString = getExifValue(exifData, 'DateTimeOriginal')
             if not exifTimeString:
                 exifTimeString = getExifValue(exifData, 'DateTime')
 
+            # correct the timezone, we store time in utc
+            form_tz = form.getTimezone()
             if exifTimeString:
                 exifTime = dateparser(str(exifTimeString))
                 if (form_tz != pytz.utc) and exifTime and exifTime.tzinfo is None:
@@ -348,8 +328,8 @@ def saveImage(request):
                             exifTime = TimeUtil.timeZoneToUtc(localized_time)
             if not exifTime:
                 exifTime = datetime.now(pytz.utc)
-            # create a new image set instance
 
+            # create a new image set instance
             author = None
             if request.user.is_authenticated():
                 author = request.user  # set user as image author
@@ -367,18 +347,21 @@ def saveImage(request):
 
             newImageSet.acquisition_time = exifTime
             newImageSet.acquisition_timezone = form.getTimezoneName()
-            fileName = uploadedFile.name
-            newImageSet.name = fileName
+            newImageSet.name = uploadedFile.name
 
             newImageSet.camera = getCameraByExif(exifData)
+            vehicle = form.getVehicle()
 
-            newImageSet.track_position = getTrackPosition(exifTime, vehicle)
-            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
-
-            newImageSet.author = author
             newImageSet.flight = getFlight(newImageSet.acquisition_time, vehicle)
+            track = None
+            if newImageSet.flight:
+                track = newImageSet.flight.track
+            newImageSet.track_position = getClosestPosition(track=track, timestamp=exifTime, vehicle=vehicle)
+            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
+            newImageSet.author = author
             newImageSet.finish_initialization(request)
 
+            # timing stats
             nowTime = time.time()
             uploadAndSaveTime = nowTime - timeMark
             newImageSet.uploadAndSaveTime = uploadAndSaveTime
@@ -386,11 +369,30 @@ def saveImage(request):
             if overallStartTime:
                 totalTimeSinceNotify = nowTime - float(overallStartTime)
                 newImageSet.totalTimeSinceNotify = totalTimeSinceNotify
+            # end timing stats
+
             newImageSet.save()
 
-            # link the "image set" to "image".
-            newSingleImage.imageSet = newImageSet
-            newSingleImage.save()
+            # build the metadata for the single image
+            single_image_metadata = {}
+
+            # save image dimensions and file size
+            try:
+                # these will change for source file
+                single_image_metadata['fileSizeBytes'] = uploadedFile.size
+                single_image_metadata['file'] = uploadedFile
+                single_image_metadata['imageType'] = ImageType.full.value
+                single_image_metadata['raw'] = True
+                single_image_metadata['thumbnail'] = False
+
+                # these should stay the same
+                single_image_metadata['imageSet'] = newImageSet
+                single_image_metadata['width'] = int(getExifValue(exifData, 'ExifImageWidth'))
+                single_image_metadata['height'] = int(getExifValue(exifData, 'ExifImageHeight'))
+            except:
+                pass
+
+            newSingleImage = SINGLE_IMAGE_MODEL.get().objects.create(**single_image_metadata)
 
             # relay if needed
             if 'relay' in request.POST:
@@ -398,11 +400,19 @@ def saveImage(request):
                 # fire a message for new data
                 deletePostKey(request.POST, 'relay')
                 addRelay(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
+
             # create a thumbnail
-            thumbnailStream = createThumbnailFile(newSingleImage.file)
-            SINGLE_IMAGE_MODEL.get().objects.create(file=thumbnailStream,
+            thumbnail_file = createThumbnailFile(newSingleImage.file)
+            old_file_position = thumbnail_file.tell()
+            thumbnail_file.seek(0, os.SEEK_END)
+            thumbnail_size = thumbnail_file.tell()
+            thumbnail_file.seek(old_file_position, os.SEEK_SET)
+            SINGLE_IMAGE_MODEL.get().objects.create(file=thumbnail_file,
+                                                    fileSizeBytes=thumbnail_size,
                                                     raw=False,
                                                     thumbnail=True,
+                                                    width=settings.XGDS_IMAGE_THUMBNAIL_WIDTH,
+                                                    height=settings.XGDS_IMAGE_THUMBNAIL_HEIGHT,
                                                     imageSet=newImageSet,
                                                     imageType=ImageType.thumbnail.value)
 
@@ -420,11 +430,9 @@ def saveImage(request):
             if (newImageSet.create_deepzoom):
                 deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
                 deepzoomTilingThread.start()
-#                newImageSet.create_deepzoom_image()
 
-            imageSetDict = newImageSet.toMapDict()
             # pass the image set to the client as json.
-            return JsonResponse({'success': 'true', 'json': imageSetDict}, encoder=DatetimeJsonEncoder, safe=False)
+            return JsonResponse({'success': 'true', 'json': newImageSet.toMapDict()}, encoder=DatetimeJsonEncoder, safe=False)
         else:
             return JsonResponse({'error': 'Imported image is not valid', 'details': form.errors}, status=406)
 
@@ -622,6 +630,8 @@ def addAnnotation(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
                             status=406)
+
+
 # Pastes the annotation canvas image onto the OSD canvas image to get a new "downloadable" image of annotations + OSD
 # canvas combined.
 def mergeImages(request):
@@ -630,7 +640,7 @@ def mergeImages(request):
         imagePK = request.POST.get('imagePK', None)
         imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imagePK)
         image = imageSet.getRawImage()
-        exifData = getExifData(image)
+        exifData = getExifData(image.file)
 
         # load images
         temp1 = request.POST.get('image1', None)
