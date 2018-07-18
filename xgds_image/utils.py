@@ -27,11 +27,12 @@ def getExifValue(exif, key):
     except: 
         return None
 
-"""
-Returns a file object containing the thumbnail image. It is the 
-caller's responsibility to save it or do whatever else they wanna do...
-"""
+
 def createThumbnailFile(src):
+    """
+    Returns a file object containing the thumbnail image. It is the
+    caller's responsibility to save it or do whatever else they wanna do...
+    """
     ImageFile.LOAD_TRUNCATED_IMAGES = True
     size = settings.XGDS_IMAGE_THUMBNAIL_WIDTH, settings.XGDS_IMAGE_THUMBNAIL_HEIGHT
     im = Image.open(src)
@@ -43,6 +44,26 @@ def createThumbnailFile(src):
     thumbFile = File(dstBytes)
     thumbFile.name = dstFileName
     return File(thumbFile)
+
+
+def convert_to_jpg_if_needed(src):
+    """
+    If the src image is not in the supported image format list, convert it to jpg
+    :param src: the source file
+    :returns: None, or the new file (django file)
+    """
+    im = Image.open(src)
+    if im.format in settings.XGDS_IMAGE_ACCEPTED_WEB_FORMATS:
+        return None
+
+    dest_bytes = BytesIO()
+    im.save(dest_bytes, "JPEG")
+
+    dest_file = File(dest_bytes)
+    src_name, src_ext = os.path.splitext(os.path.basename(src.name))
+    dest_file.name = '%s.jpg' % src_name
+    return File(dest_file)
+
 
 
 def getHeightWidthFromPIL(imageModelInstance):

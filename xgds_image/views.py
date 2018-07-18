@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
+
 import pytz
 import json
 import os
@@ -28,6 +29,8 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.core.files import File
+
 from django.shortcuts import render
 from django.http import HttpResponseRedirect,  HttpResponse, JsonResponse
 from django.template import RequestContext
@@ -40,7 +43,8 @@ from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
 from xgds_core.util import deletePostKey
 from xgds_core.flightUtils import getFlight
-from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, getExifValue, getHeightWidthFromPIL
+from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, \
+    getExifValue, getHeightWidthFromPIL, convert_to_jpg_if_needed
 
 from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
@@ -374,21 +378,33 @@ def saveImage(request):
             newImageSet.save()
 
             # build the metadata for the single image
-            single_image_metadata = {}
-
-            # save image dimensions and file size
+            single_image_metadata = {'imageSet': newImageSet}
             try:
-                # these will change for source file
+                single_image_metadata['width'] = int(getExifValue(exifData, 'ExifImageWidth'))
+                single_image_metadata['height'] = int(getExifValue(exifData, 'ExifImageHeight'))
+            except:
+                pass
+
+            # convert the image if needed
+            converted_file = convert_to_jpg_if_needed(uploadedFile)
+            if converted_file:
+                # create the single image for the source
+                single_image_metadata['fileSizeBytes'] = uploadedFile.size
+                single_image_metadata['file'] = uploadedFile
+                single_image_metadata['imageType'] = ImageType.source.value
+                single_image_metadata['raw'] = False
+                single_image_metadata['thumbnail'] = False
+                source_single_image = SINGLE_IMAGE_MODEL.get().objects.create(**single_image_metadata)
+                uploadedFile = converted_file
+
+
+            # create the single image for the raw / full / renderable
+            try:
                 single_image_metadata['fileSizeBytes'] = uploadedFile.size
                 single_image_metadata['file'] = uploadedFile
                 single_image_metadata['imageType'] = ImageType.full.value
                 single_image_metadata['raw'] = True
                 single_image_metadata['thumbnail'] = False
-
-                # these should stay the same
-                single_image_metadata['imageSet'] = newImageSet
-                single_image_metadata['width'] = int(getExifValue(exifData, 'ExifImageWidth'))
-                single_image_metadata['height'] = int(getExifValue(exifData, 'ExifImageHeight'))
             except:
                 pass
 
