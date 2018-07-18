@@ -433,17 +433,20 @@ def saveImage(request):
                                                     imageType=ImageType.thumbnail.value)
 
             # TODO: replace this with a BoundedSemaphore
-            dbServer = couchdb.Server()
-            db = dbServer[settings.COUCHDB_FILESTORE_NAME]
-            if 'create_deepzoom_thread' in db:
-                myFlag = db['create_deepzoom_thread']
-                myFlag['active'] = True
-                db['create_deepzoom_thread'] = myFlag
-            else:
-                db['create_deepzoom_thread'] = {'active':True}
+            # TODO: we are pretty sure this was causing the fail in tiling and in importing images because many deepzoom
+            # threads are kicked off at the same time yet this code uses just one flag.  #FIX
+            # TODO: suggest putting a single flag for each image we are tiling into REDIS
+            # dbServer = couchdb.Server()
+            # db = dbServer[settings.COUCHDB_FILESTORE_NAME]
+            # if 'create_deepzoom_thread' in db:
+            #     myFlag = db['create_deepzoom_thread']
+            #     myFlag['active'] = True
+            #     db['create_deepzoom_thread'] = myFlag
+            # else:
+            #     db['create_deepzoom_thread'] = {'active': True}
 
             # create deep zoom tiles for viewing in openseadragon.
-            if (newImageSet.create_deepzoom):
+            if newImageSet.create_deepzoom:
                 deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
                 deepzoomTilingThread.start()
 

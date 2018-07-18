@@ -175,8 +175,10 @@ class DeepZoomImageCreator(deepzoom.ImageCreator):
                 couchStore = CouchDbStorage()
                 couchDatabase = couchStore.get_couchDb()
                 #################
-                couchDatabase[full_tile_name] = {"category":"xgds_image", "basename": tile_name,  "name": tile_path,
-                             "creation_time": datetime.utcnow().isoformat() }
+                couchDatabase[full_tile_name] = {"category":"xgds_image",
+                                                 "basename": tile_name,
+                                                 "name": tile_path,
+                                                 "creation_time": datetime.utcnow().isoformat()}
                 newDoc = couchDatabase[full_tile_name]
                 couchDatabase.put_attachment(newDoc, tileBytesIO, filename=tile_name)
         self.descriptor.save(destination)
@@ -342,8 +344,8 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         try:
             deepzoomSlug = self.create_deepzoom_slug()
             rawImageUrl = self.getRawImage().file.url
-            dz, created = DeepZoomTiles.objects.get_or_create(associated_image = rawImageUrl,
-                                         name=deepzoomSlug)
+            dz, created = DeepZoomTiles.objects.get_or_create(associated_image=rawImageUrl,
+                                                              name=deepzoomSlug)
             if created: 
                 dz.slug = slugify(deepzoomSlug)
                 dz.save()
@@ -360,11 +362,12 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         finally:
             # Mark the thread inactive in the couchdb in case there's another
             # thread waiting for this to be finished
-            dbServer = couchdb.Server()
-            db = dbServer[settings.COUCHDB_FILESTORE_NAME]
-            myFlag = db['create_deepzoom_thread']
-            myFlag['active'] = False
-            db['create_deepzoom_thread'] = myFlag
+            # TODO: come up with a better multithreaded way to do this
+            # dbServer = couchdb.Server()
+            # db = dbServer[settings.COUCHDB_FILESTORE_NAME]
+            # myFlag = db['create_deepzoom_thread']
+            # myFlag['active'] = False
+            # db['create_deepzoom_thread'] = myFlag
 
 
     def delete_image_file(self, path_of_image_to_delete=None):
@@ -535,6 +538,9 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
         """
         :return: list of file objects, each with their own `read()` functions
         """
+        sourceImage = self.getSourceImage()
+        if sourceImage:
+            return [sourceImage.file]
         return [self.getRawImage().file]
 
     def getLowerResImages(self):
