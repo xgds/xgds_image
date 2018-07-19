@@ -2,12 +2,15 @@ import django
 import traceback
 django.setup()
 
-from basaltApp.models import BasaltImageSet
+from django.conf import settings
+from geocamUtil.loader import LazyGetModelByName
+
 from xgds_image.models import DeepZoomTiles
 
-allImageSets = BasaltImageSet.objects.all()
+IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 
-#TODO: REFACTOR INTO XGDS_IMAGE SCRIPTS.  (use lazy get model)
+allImageSets = IMAGE_SET_MODEL.get().objects.all()
+
 
 """
 Find imagesets that does not have associated_deepzoom. 
