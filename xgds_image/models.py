@@ -363,7 +363,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             # Mark the thread inactive in the couchdb in case there's another
             # thread waiting for this to be finished
             # TODO: come up with a better multithreaded way to do this
-            # dbServer = couchdb.server(settings.COUCHDB_URL)
+            # dbServer = couchdb.Server(settings.COUCHDB_URL)
             # db = dbServer[settings.COUCHDB_FILESTORE_NAME]
             # myFlag = db['create_deepzoom_thread']
             # myFlag['active'] = False

@@ -436,7 +436,7 @@ def saveImage(request):
             # TODO: we are pretty sure this was causing the fail in tiling and in importing images because many deepzoom
             # threads are kicked off at the same time yet this code uses just one flag.  #FIX
             # TODO: suggest putting a single flag for each image we are tiling into REDIS
-            # dbServer = couchdb.server(settings.COUCHDB_URL)
+            # dbServer = couchdb.Server(settings.COUCHDB_URL)
             # db = dbServer[settings.COUCHDB_FILESTORE_NAME]
             # if 'create_deepzoom_thread' in db:
             #     myFlag = db['create_deepzoom_thread']
