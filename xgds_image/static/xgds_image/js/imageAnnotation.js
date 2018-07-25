@@ -11,7 +11,6 @@ $.extend(xgds_image_annotation, {
     textboxPreview: "",
     origX: "",
     origY: "",
-
     currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which variable (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
 
     overlay: "",
@@ -78,20 +77,22 @@ $.extend(xgds_image_annotation, {
 
     /*
     Dictionary of different annotation sizes. Stroke is the stroke size used for non-arrow shapes. Arrow size is controlled by headlen.
-    TODO: add font sizes
      */
     annotationSizes: {
         "small": {
             "stroke": 5,
-            "arrow": 50
+            "arrow": 50,
+            "font": 25
         },
         "medium": {
             "stroke": 15,
-            "arrow": 75
+            "arrow": 75,
+            "font": 50
         },
         "large": {
             "stroke": 25,
-            "arrow": 100
+            "arrow": 100,
+            "font": 100
         },
     },
 
@@ -437,6 +438,7 @@ $.extend(xgds_image_annotation, {
            left: x,
            top: y,
            fill: "",
+           fontSize: this.annotationSizes[this.currentAnnotationSize]["font"],
            strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
            stroke: this.currentAnnotationColor,
            width: 1,
@@ -642,11 +644,11 @@ $.extend(xgds_image_annotation, {
     /* JSON currentAnnotationShape -> Ajax -> Django ORM/MariaDB */
     createNewSerialization: function(fabricObject, x, y) {
         if (fabricObject.type == "textboxPreview") {
-            this.text = new fabric.Textbox('MyText', {
+            this.text = new fabric.Textbox('dblClick', {
                 width: x - this.origX,
                 top: this.origY,
                 left: this.origX,
-                fontSize: 100,
+                fontSize: this.annotationSizes[this.currentAnnotationSize].font, //heretamar
                 stroke: this.currentAnnotationColor,
                 fill: this.currentAnnotationColor,
                 borderColor: this.currentAnnotationColor,
@@ -660,7 +662,6 @@ $.extend(xgds_image_annotation, {
             var fc = this.overlay.fabricCanvas();
             fc.add(this.text);
             fc.remove(this.textboxPreview);
-            //this.textboxPreview.remove();
             fabricObject = this.text;
         }
         var temp = this.duplicateObject(fabricObject);
@@ -946,7 +947,8 @@ $.extend(xgds_image_annotation, {
     addTextToCanvas: function(annotationJson) {
         console.log("text annotation object");
         console.log(annotationJson);
-        this.text = new fabric.Textbox("hello world", {
+        var textbox_id = "text_" + annotationJson["pk"];
+        this.text = new fabric.Textbox(textbox_id, {
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
