@@ -703,9 +703,8 @@ $.extend(xgds_image_annotation, {
         var temp = this.duplicateObject(fabricObject);
 
         if(fabricObject.type == "arrow") { //arrow only needs fill
-            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
             temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
-
+            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
             temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
             temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
@@ -714,16 +713,17 @@ $.extend(xgds_image_annotation, {
             temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
         }
 
+        var data = {annotation: JSON.stringify(temp),
+                    image_pk: this.imageJson["pk"]
+                   }
         $.ajax({
             type: "POST",
             url: '/xgds_image/alterAnnotation/',
             datatype: 'json',
-            data: {
-                annotation: JSON.stringify(temp),
-                image_pk: this.imageJson["pk"]
-            },
+            data: data,
             success: function (data) {
-
+                // console.log('altered annotation');
+                // console.log(data);
             },
             error: function (a) {
                 console.log("Alter annotation ajax error");

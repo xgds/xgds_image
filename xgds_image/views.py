@@ -554,7 +554,6 @@ def alterAnnotation(request):
         else: #it's text
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
-            print newAnnotation["text"]
             annotationModel.content = newAnnotation["text"]
 
         # add common variables
@@ -569,7 +568,7 @@ def alterAnnotation(request):
 
         annotationModel.save()
         return HttpResponse(json.dumps(newAnnotation),  # useless HttpResponse
-                        content_type='application/json')
+                            content_type='application/json')
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json', status=406)
 
@@ -640,8 +639,6 @@ def addAnnotation(request):
 
         annotationModel.author = request.user
         annotationModel.image_id = int(request.POST.get('image_pk'))
-        print 'save annotation image id from request.POST ' + request.POST.get('image_pk')
-        print annotationModel.image_id
         annotationModel.save()
 
         return HttpResponse(json.dumps(annotationModel.toJson()),
