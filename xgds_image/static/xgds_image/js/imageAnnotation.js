@@ -419,7 +419,7 @@ $.extend(xgds_image_annotation, {
             height: 1,
             scaleX: 1,
             scaleY: 1,
-            type: 'rect',
+            type: 'rectangle',
             size: this.currentAnnotationSize
         });
         this.currentAnnotationType = this.rectangle;
@@ -805,41 +805,47 @@ $.extend(xgds_image_annotation, {
         this.deleteAnnotation(annotation);
     },
 
-    // Get all objects from canvas and pass each one to deleteAnnotation()
     deleteAllAnnotations: function() {
-        var objects = xgds_image_annotation.overlay.fabricCanvas().getObjects();
-        /* if objects is null, catch */
-        if(objects.length == 0) {
-            console.log("No annotations on canvas to delete");
-            return;
-        }
-	
-	var objectsLength = objects.length
-        for (var i = 0; i < objectsLength; i++) {
-            this.deleteAnnotation(objects[objectsLength-i-1]);
-        }
+        this.deleteAnnotation(undefined, true);
     },
 
     /* Delete annotation from annotationsDict and the database */
-    deleteAnnotation: function(annotation) {
-        var dictKey = this.getDictKey(annotation);
+    deleteAnnotation: function(annotation, all) {
+        if (all === undefined){
+            all = false;
+        }
+        var dictKey = undefined;
         var fabricCanvas = this.overlay.fabricCanvas();
-        if (dictKey in this.annotationsDict) {
+        var data = {};
+        var proceed = false;
+        if (all){
+            data['image_pk'] = this.imageJson["pk"];
+            proceed = true;
+        } else {
+            dictKey = this.getDictKey(annotation);
+            data['pk'] = annotation['pk'];
+            data['type'] = annotation['type'];
+            proceed = dictKey in this.annotationsDict;
+        }
+
+        if (proceed) {
             $.ajax({
                 type: "POST",
                 url: '/xgds_image/deleteAnnotation/',
                 datatype: "json",
-                data: {
-                    pk: annotation["pk"]
-                },
+                data: data,
                 success: function (data) {
-                    //delete from dict and database
-                    delete xgds_image_annotation.annotationsDict[dictKey];
-                    fabricCanvas.remove(annotation);
-                    //annotation.remove();
+                    if (all) {
+                        xgds_image_annotation.annotationsDict = {};
+                        fabricCanvas.clear()
+                    } else {
+                        delete xgds_image_annotation.annotationsDict[dictKey];
+                        fabricCanvas.remove(annotation);
+
+                    }
                 },
                 error: function (a) {
-                    console.log("Ajax error");
+                    console.log("Error deleting annotation(s)");
                     console.log(a)
                     throw new Error("Unable to delete the annotation's entry from the database");
                 }
@@ -887,7 +893,7 @@ $.extend(xgds_image_annotation, {
             angle: annotationJson["angle"],
             width: annotationJson["width"],
             height: annotationJson["height"],
-            type: 'rect',
+            type: 'rectangle',
             scaleX: annotationJson["scaleX"],
             scaleY: annotationJson["scaleY"],
             pk: annotationJson["pk"],
@@ -939,14 +945,11 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"],
             size: annotationJson["size"]
         });
-        console.log("image and pk pls");
         this.overlay.fabricCanvas().add(this.arrow);
         this.overlay.fabricCanvas().renderAll();
     },
 
     addTextToCanvas: function(annotationJson) {
-        console.log("text annotation object");
-        console.log(annotationJson);
         var textbox_id = "text_" + annotationJson["pk"];
         this.text = new fabric.Textbox(textbox_id, {
             left: annotationJson["left"],

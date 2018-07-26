@@ -74,11 +74,11 @@ ELLIPSE_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_ELLIPSE_ANNOTA
 RECTANGLE_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_RECTANGLE_ANNOTATION_MODEL)
 TEXT_ANNOTATION_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_TEXT_ANNOTATION_MODEL)
 ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
-                                         [ARROW_ANNOTATION_MODEL.get(),
-                                          ELLIPSE_ANNOTATION_MODEL.get(),
-                                          RECTANGLE_ANNOTATION_MODEL.get(),
-                                          TEXT_ANNOTATION_MODEL.get()
-                                          ])
+                                            [ARROW_ANNOTATION_MODEL.get(),
+                                             ELLIPSE_ANNOTATION_MODEL.get(),
+                                             RECTANGLE_ANNOTATION_MODEL.get(),
+                                             TEXT_ANNOTATION_MODEL.get()
+                                            ])
 
 
 import couchdb
@@ -478,7 +478,7 @@ def saveAnnotations(request):
         for annotationJSON in mapAnnotations["objects"]:
             # print "annotation type: {0}".format(annotationJSON["type"])
             # print annotationJSON['type']
-            if annotationJSON["type"]=="rect":
+            if annotationJSON["type"]=="rectangle":
                 annotationModel =RECTANGLE_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
@@ -541,7 +541,7 @@ def alterAnnotation(request):
             print "406 exception threw as {0}".format(e)
             return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json', status=406)
 
-        if newAnnotation["type"] == "rect":
+        if newAnnotation["type"] == "rectangle":
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
 
@@ -590,22 +590,53 @@ def getAnnotationColorsJson(request):
 
 
 def deleteAnnotation(request):
+
+    """
+    Either delete all annotations for an image or delete a single annotation
+    :param request:
+    :return: success or failure
+    """
     try:
         pk = request.POST.get('pk', None)
-        queryResult = ANNOTATION_MANAGER.filter(pk=pk)
+        image_pk = request.POST.get('image_pk', None)
+        if image_pk:
+            found_annotations = ANNOTATION_MANAGER.filter(image__pk=int(image_pk))
+            count = found_annotations.count()
+            if count:
+                found_annotations.delete()
+                return HttpResponse(json.dumps({'success':'Removed %d annotations' % count}), content_type='application/json')
+        elif pk:
+            pk = int(pk)
+            # in this case we want to delete the correct type of annotation so do not use annotaiton manager
+            atype = request.POST.get('type', None)
+            found_annotation = None
+            if atype == 'ellipse':
+                found_annotation = ELLIPSE_ANNOTATION_MODEL.get().objects.get(pk=pk)
+            elif atype == 'rectangle':
+                found_annotation = RECTANGLE_ANNOTATION_MODEL.get().objects.get(pk=pk)
+            elif atype == 'arrow':
+                found_annotation = ARROW_ANNOTATION_MODEL.get().objects.get(pk=pk)
+            elif atype == 'text':
+                found_annotation = TEXT_ANNOTATION_MODEL.get().objects.get(pk=pk)
+
+            if found_annotation:
+                found_annotation.delete()
+                return HttpResponse(json.dumps({'success': 'Removed annotation',
+                                                'type': atype,
+                                                'pk': pk}),
+                                    content_type='application/json')
+
     except:
-        return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json',
-                            status=406)
-    annotationModel = queryResult[0]
-    annotationModel.delete()
-    return HttpResponse('')
+        pass
+    return HttpResponse(json.dumps({'error': 'Could not delete annotation'}), content_type='application/json',
+                        status=406)
 
 
 def addAnnotation(request):
     if request.method == 'POST':
         temp = request.POST.get('annotation', None)
         newAnnotation = json.loads(temp)
-        if newAnnotation["type"] == "rect":
+        if newAnnotation["type"] == "rectangle":
             annotationModel = RECTANGLE_ANNOTATION_MODEL.get()()
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
