@@ -266,12 +266,14 @@ def saveRotationValue(request):
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json')
 
+
 def checkForNewFiles(sdCardIp):
     print "Calling file loader @ %s..." % sdCardIp
     r = requests.get("http://%s/fileUpdate.lua" % sdCardIp)
     print "response:", r.text
     cache.delete("imageAutoloadGlobalTimeMark")
     print ""
+
 
 def sdWriteEvent(request):
     print "Write event called.  queue event here..."
@@ -476,34 +478,24 @@ def saveAnnotations(request):
         mapAnnotations = json.loads(temp)
 
         for annotationJSON in mapAnnotations["objects"]:
-            # print "annotation type: {0}".format(annotationJSON["type"])
-            # print annotationJSON['type']
             if annotationJSON["type"]=="rectangle":
-                annotationModel =RECTANGLE_ANNOTATION_MODEL.get()()
+                annotationModel = RECTANGLE_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
-
             elif annotationJSON["type"]=="ellipse":
                 annotationModel = ELLIPSE_ANNOTATION_MODEL.get()()
                 annotationModel.radiusX = annotationJSON["rx"]
                 annotationModel.radiusY = annotationJSON["ry"]
-
             elif annotationJSON["type"]=="arrow":
                 annotationModel = ARROW_ANNOTATION_MODEL.get()()
                 annotationModel.points = json.dumps(annotationJSON["points"])
-
             elif annotationJSON["type"]=="text":
                 annotationModel = TEXT_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
-                print "annotationJSON[text]"
-                print annotationJSON["text"]
                 annotationModel.content = annotationJSON["text"] #not sure if this is where text content is stored
-
             else:
-                print "That shape doesn't exist"
-                #your shape doesn't exist
-                #throw some kind of error
+                raise Exception("Invalid annotation shape requested %s" % annotationJSON["type"])
 
             #add common variables
             annotationModel.left = annotationJSON["left"]
@@ -529,29 +521,29 @@ def saveAnnotations(request):
 
 
 def alterAnnotation(request):
-    if request.method=='POST':
+    if request.method == 'POST':
         temp = request.POST.get('annotation', None)
         newAnnotation = json.loads(temp)
         try:
-            image = request.POST.get('image_pk')
             pk = newAnnotation["pk"]
-            queryResult = ANNOTATION_MANAGER.filter(image__pk=image, pk=pk)
-            annotationModel = queryResult[0]
+            atype = newAnnotation["type"]
+            annotationModel = get_annotation(pk, atype)
         except Exception as e:
-            print "406 exception threw as {0}".format(e)
             return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json', status=406)
 
-        if newAnnotation["type"] == "rectangle":
+        if not annotationModel:
+            return HttpResponse(json.dumps({'error': 'Could not load annotation'}), content_type='application/json',
+                                status=406)
+
+        if atype == "rectangle":
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
-
-        elif newAnnotation["type"] == "ellipse":
+        elif atype == "ellipse":
             annotationModel.radiusX = newAnnotation["rx"]
             annotationModel.radiusY = newAnnotation["ry"]
-
-        elif newAnnotation["type"] == "arrow":
+        elif atype == "arrow":
             annotationModel.points = json.dumps(newAnnotation["points"])
-        else: #it's text
+        elif atype == "text":
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["text"]
@@ -589,6 +581,29 @@ def getAnnotationColorsJson(request):
     return HttpResponse(json.dumps(result), content_type='application/json');
 
 
+def get_annotation(pk, atype):
+    """
+    Look up the annotation from the db
+    :param pk: the primary key of the annotation
+    :param atype: the string type, lowercase
+    :return: the annotation, or none
+    """
+    pk = int(pk)
+    try:
+        found_annotation = None
+        if atype == 'ellipse':
+            found_annotation = ELLIPSE_ANNOTATION_MODEL.get().objects.get(pk=pk)
+        elif atype == 'rectangle':
+            found_annotation = RECTANGLE_ANNOTATION_MODEL.get().objects.get(pk=pk)
+        elif atype == 'arrow':
+            found_annotation = ARROW_ANNOTATION_MODEL.get().objects.get(pk=pk)
+        elif atype == 'text':
+            found_annotation = TEXT_ANNOTATION_MODEL.get().objects.get(pk=pk)
+    except:
+        pass
+    return found_annotation
+
+
 def deleteAnnotation(request):
 
     """
@@ -606,24 +621,15 @@ def deleteAnnotation(request):
                 found_annotations.delete()
                 return HttpResponse(json.dumps({'success':'Removed %d annotations' % count}), content_type='application/json')
         elif pk:
-            pk = int(pk)
             # in this case we want to delete the correct type of annotation so do not use annotaiton manager
             atype = request.POST.get('type', None)
-            found_annotation = None
-            if atype == 'ellipse':
-                found_annotation = ELLIPSE_ANNOTATION_MODEL.get().objects.get(pk=pk)
-            elif atype == 'rectangle':
-                found_annotation = RECTANGLE_ANNOTATION_MODEL.get().objects.get(pk=pk)
-            elif atype == 'arrow':
-                found_annotation = ARROW_ANNOTATION_MODEL.get().objects.get(pk=pk)
-            elif atype == 'text':
-                found_annotation = TEXT_ANNOTATION_MODEL.get().objects.get(pk=pk)
+            found_annotation = get_annotation(pk, atype)
 
             if found_annotation:
                 found_annotation.delete()
                 return HttpResponse(json.dumps({'success': 'Removed annotation',
                                                 'type': atype,
-                                                'pk': pk}),
+                                                'pk': int(pk)}),
                                     content_type='application/json')
 
     except:

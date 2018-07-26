@@ -11,7 +11,7 @@ $.extend(xgds_image_annotation, {
     textboxPreview: "",
     origX: "",
     origY: "",
-    currentAnnotationType: "arrow", //stores the type of the current annotation being drawn so we know which variable (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
+    selectedFabricObject: "arrow", //stores the type of the current annotation being drawn so we know which variable (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
 
     overlay: "",
 
@@ -82,7 +82,7 @@ $.extend(xgds_image_annotation, {
         "small": {
             "stroke": 5,
             "arrow": 50,
-            "font": 25
+            "font": 30
         },
         "medium": {
             "stroke": 15,
@@ -135,7 +135,7 @@ $.extend(xgds_image_annotation, {
         this.viewer = osdViewer;  // TODO: do we need to load this every time?
         this.overlay = this.viewer.fabricjsOverlay();
 
-        this.currentAnnotationType = "arrow";
+        this.selectedFabricObject = "arrow";
 
         this.annotationType = "arrow";
         this.currentAnnotationColor = "red";
@@ -190,15 +190,13 @@ $.extend(xgds_image_annotation, {
                                              E V E N T  L I S T E N E R S
 
         *****************************************************************************************************************/
-        //event listeners
-        // fabricJS mouse-down event listener
 
         /*
         mouse:down event listener
         On mousedown:
             - mark isDown as true. On mouse:up, we draw annotations if isDown is true.
             - set origX, origY as the initial click location.
-            - initialize the correct function based on what the currentAnnotationType is.
+            - initialize the correct function based on what the selectedFabricObject is.
          */
         this.overlay.fabricCanvas().observe('mouse:down', function (o) {
             xgds_image_annotation.setMouseMode(xgds_image_annotation.mouseMode);
@@ -272,19 +270,19 @@ $.extend(xgds_image_annotation, {
          */
         this.overlay.fabricCanvas().on('mouse:up', function (o) {
             if(xgds_image_annotation.getMouseMode() == "addAnnotation") {
+                xgds_image_annotation.selectedFabricObject.selectable = true;
                 var pointerOnMouseUp = xgds_image_annotation.overlay.fabricCanvas().getPointer(event.e);
 
                 // save annotation to database
-                xgds_image_annotation.createNewSerialization(xgds_image_annotation.currentAnnotationType, pointerOnMouseUp.x, pointerOnMouseUp.y);
+                xgds_image_annotation.createNewSerialization(xgds_image_annotation.selectedFabricObject, pointerOnMouseUp.x, pointerOnMouseUp.y);
 
                 // Set fabric interactivity to false
                 xgds_image_annotation.setFabricCanvasInteractivity(false);
 
                 // If we just added a textbox, stay in edit mode so the user can edit. Otherwise, return to OSD navigation mode.
-                if(xgds_image_annotation.currentAnnotationType.type == "text") {
+                if(xgds_image_annotation.selectedFabricObject.type == "text") {
                     xgds_image_annotation.setMouseMode("editAnnotation"); // break out into edit mode
                     $("#editAnnotation").click(); // set nav bar to editAnnotation
-                    console.log("text added")
                 }
             }
             xgds_image_annotation.isDown = false;
@@ -399,13 +397,13 @@ $.extend(xgds_image_annotation, {
             type: 'ellipse',
             size: this.currentAnnotationSize
         });
-        this.currentAnnotationType = this.ellipse
+        this.selectedFabricObject = this.ellipse
         this.overlay.fabricCanvas().add(this.ellipse);
     },
 
     updateEllipse: function(x, y) {
         this.ellipse.set({rx: Math.abs(this.origX - x), ry: Math.abs(this.origY - y)});
-        this.currentAnnotationType = this.ellipse
+        this.selectedFabricObject = this.ellipse
     },
 
     initializeRectangle: function(x, y) {
@@ -422,7 +420,7 @@ $.extend(xgds_image_annotation, {
             type: 'rectangle',
             size: this.currentAnnotationSize
         });
-        this.currentAnnotationType = this.rectangle;
+        this.selectedFabricObject = this.rectangle;
         this.overlay.fabricCanvas().add(this.rectangle);
     },
 
@@ -430,7 +428,7 @@ $.extend(xgds_image_annotation, {
         var width = Math.abs(x - this.origX);
         var height = Math.abs(y - this.origY);
         this.rectangle.set({width: width, height: height});
-        this.currentAnnotationType = this.rectangle;
+        this.selectedFabricObject = this.rectangle;
     },
 
     initializeTextboxPreview: function(x, y) {
@@ -446,7 +444,7 @@ $.extend(xgds_image_annotation, {
            type: 'textboxPreview',
            size: this.currentAnnotationSize
        });
-       this.currentAnnotationType = this.textboxPreview;
+       this.selectedFabricObject = this.textboxPreview;
        this.overlay.fabricCanvas().add(this.textboxPreview);
     },
 
@@ -454,7 +452,7 @@ $.extend(xgds_image_annotation, {
         var width = Math.abs(x - this.origX);
         var height = Math.abs(y - this.origY);
         this.textboxPreview.set({width: width, height: height});
-        this.currentAnnotationType = this.textboxPreview;
+        this.selectedFabricObject = this.textboxPreview;
     },
 
     /*
@@ -476,7 +474,7 @@ $.extend(xgds_image_annotation, {
             type: 'arrow',
             size: this.currentAnnotationSize
         });
-        this.currentAnnotationType = this.arrow;
+        this.selectedFabricObject = this.arrow;
         this.overlay.fabricCanvas().add(this.arrow);
     },
 
@@ -502,7 +500,7 @@ $.extend(xgds_image_annotation, {
             type: 'arrow',
             size: oldArrowSize
         });
-        this.currentAnnotationType = this.arrow;
+        this.selectedFabricObject = this.arrow;
         this.overlay.fabricCanvas().add(this.arrow);
         this.overlay.fabricCanvas().renderAll();
     },
@@ -549,9 +547,11 @@ $.extend(xgds_image_annotation, {
         return points;
     },
 
-    setFabricCanvasInteractivity: function(boolean) {
-        this.overlay.fabricCanvas().forEachObject(function (object) {
-            object.selectable = boolean;
+    setFabricCanvasInteractivity: function(selectable) {
+        var fabricCanvas = this.overlay.fabricCanvas();
+
+        fabricCanvas.forEachObject(function (object) {
+            object.selectable = selectable;
         });
     },
 
@@ -643,6 +643,7 @@ $.extend(xgds_image_annotation, {
 
     /* JSON currentAnnotationShape -> Ajax -> Django ORM/MariaDB */
     createNewSerialization: function(fabricObject, x, y) {
+        var fabricCanvas = this.overlay.fabricCanvas();
         if (fabricObject.type == "textboxPreview") {
             this.text = new fabric.Textbox('dblClick', {
                 width: x - this.origX,
@@ -658,11 +659,14 @@ $.extend(xgds_image_annotation, {
                 type: 'text',
                 size: this.currentAnnotationSize
             });
-            this.currentAnnotationType = this.text;
-            var fc = this.overlay.fabricCanvas();
-            fc.add(this.text);
-            fc.remove(this.textboxPreview);
+            this.selectedFabricObject = this.text;
+
+            fabricCanvas.add(this.text);
+            fabricCanvas.remove(this.textboxPreview);
             fabricObject = this.text;
+        } else {
+            // this makes it so we can select it later.
+            fabricCanvas.add(this.selectedFabricObject);
         }
         var temp = this.duplicateObject(fabricObject);
 
@@ -970,7 +974,7 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"],
             textAlign: 'center',
-            fontSize: 100, //Font size is static for now
+            fontSize: this.annotationSizes[annotationJson['size']].font,
             size: annotationJson["size"]
         });
 
