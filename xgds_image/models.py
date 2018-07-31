@@ -19,6 +19,7 @@ import os
 import logging
 import sys
 import six
+import tempfile
 import xml.dom.minidom
 
 from django.db import models
@@ -47,6 +48,9 @@ from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
 from deepzoom import deepzoom
+import gi
+gi.require_version('Vips', '8.0')
+from gi.repository import Vips
 
 from StringIO import StringIO
 from datetime import datetime
@@ -278,6 +282,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
                                             related_name="%(app_label)s_%(class)s",
                                             editable=False,
                                             on_delete=models.SET_NULL)
+    local_deepzoom_slug = models.CharField(null=True, blank=True, max_length=255)
     rotation_degrees = models.PositiveSmallIntegerField(null=True, default=0)
     flight = "TODO set to DEFAULT_FLIGHT_FIELD or similar"
 
@@ -369,6 +374,28 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             # myFlag['active'] = False
             # db['create_deepzoom_thread'] = myFlag
 
+    def create_vips_deepzoom_image(self):
+        """
+        Creates and processes deep zoom image files to local storage.
+        """
+        try:
+            deepzoomSlug = self.create_deepzoom_slug()
+            self.local_deepzoom_slug = deepzoomSlug
+            self.associated_deepzoom = None
+            rawImageFile = self.getRawImage().file
+            tempImageFile = tempfile.NamedTemporaryFile(delete=False)
+            tempImageFile.write(rawImageFile.read())
+            tempImageFile.close()
+            baseImage = Vips.Image.new_from_file(tempImageFile.name)
+            tileOutputDir = "%s%s%s" % (settings.DATA_ROOT, settings.DEEPZOOM_ROOT, deepzoomSlug)
+            os.mkdir(tileOutputDir)
+            baseImage.dzsave("%s/%s" % (tileOutputDir, deepzoomSlug))
+            os.remove(tempImageFile.name)
+            self.create_deepzoom = False
+            self.save()
+        except:
+            print("Unexpected error creating deep zoom: {0}".format(sys.exc_info()[1:2]))
+            raise
 
     def delete_image_file(self, path_of_image_to_delete=None):
         """
@@ -433,11 +460,16 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     
     @property
     def deepzoom_file_url(self):
+        # For backward compatibility we check the associated_deepzoom object first, but we are moving toward
+        # tiling images with VIPS at each node at storing locally (2nd if clause).
         if self.associated_deepzoom:
             deepzoomSlug = self.associated_deepzoom.slug
             docDir = settings.DEEPZOOM_ROOT + deepzoomSlug
             docFile = deepzoomSlug + '.dzi'
             return reverse('get_db_attachment', kwargs={'docDir': docDir,'docName': docFile})
+        if self.local_deepzoom_slug:
+            return settings.DATA_URL + settings.DEEPZOOM_ROOT + self.local_deepzoom_slug + \
+                   "/" + self.local_deepzoom_slug + ".dzi"
         return None
     
     def finish_initialization(self, request):

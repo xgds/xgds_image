@@ -230,12 +230,21 @@ def buildExifPosition(exif, camera, vehicle, exifTime, form_tz):
 
     if gpsTimeStamp and gpsLatLon[0] and gpsLatLon[1]:
         #TODO this requires that the position model has heading and altitude ...
-        position = POSITION_MODEL.get().objects.create(serverTimestamp=gpsTimeStamp,
-                                                       timestamp= gpsTimeStamp,
-                                                       latitude = gpsLatLon[0],
-                                                       longitude= gpsLatLon[1],
-                                                       heading= getHeading(exif),
-                                                       altitude=getAltitude(exif))
+        #TODO right now this is hardcoded, instead there should be a classmethod to build a position dict
+        # given some incoming data and the classmethod should be on the position model
+        position_class = POSITION_MODEL.get()
+        position_dict = {'serverTimestamp':gpsTimeStamp,
+                         'timestamp':gpsTimeStamp,
+                         'latitude': gpsLatLon[0],
+                         'longitude': gpsLatLon[1]}
+        if hasattr(position_class, 'yaw'):
+            position_dict['yaw'] = getHeading(exif)
+        elif hasattr(position_class, 'heading'):
+            position_dict['heading'] = getHeading(exif)
+        if hasattr(position_class, 'altitude'):
+            position_dict['altitude'] = getAltitude(exif)
+
+        position = POSITION_MODEL.get().objects.create(**position_dict)
         return position
 
     return None
@@ -449,8 +458,12 @@ def saveImage(request):
 
             # create deep zoom tiles for viewing in openseadragon.
             if newImageSet.create_deepzoom:
-                deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
-                deepzoomTilingThread.start()
+                if settings.USE_PYTHON_DEEPZOOM_TILER:
+                    deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
+                    deepzoomTilingThread.start()
+                else:
+                    deepzoomTilingThread = Thread(target=newImageSet.create_vips_deepzoom_image)
+                    deepzoomTilingThread.start()
 
             # pass the image set to the client as json.
             return JsonResponse({'success': 'true', 'json': newImageSet.toMapDict()}, encoder=DatetimeJsonEncoder, safe=False)

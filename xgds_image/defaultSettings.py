@@ -54,6 +54,11 @@ DEEPZOOM_PARAMS = {'tile_size': 256,
                     'image_quality': 1.0,
                     'resize_filter': "antialias"}
 
+#
+# By default we use the VIPS library deepzoom tiler beacause it's much faster than the python based one
+# in django-deepzoom.  But we have this flag for backward compatibility with the BASALT site until we
+# get it migrated.
+USE_PYTHON_DEEPZOOM_TILER = False
 
 XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
 XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
