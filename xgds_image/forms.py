@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
+
 import datetime
 import pytz
 from django import forms
@@ -114,7 +115,7 @@ class SearchImageSetForm(SearchForm):
                                                label='Min Time',
                                                widget=forms.DateTimeInput(attrs={'class': 'datetimepicker'}))
     max_acquisition_time = forms.DateTimeField(input_formats=settings.XGDS_CORE_DATE_FORMATS, required=False,
-                                               label = 'Max Time',
+                                               label='Max Time',
                                                widget=forms.DateTimeInput(attrs={'class': 'datetimepicker'}))
     
     acquisition_timezone = forms.ChoiceField(required=False, choices=lazy(getTimezoneChoices, list)(empty=True), 
