@@ -49,10 +49,13 @@ DEEPZOOM_ROOT = XGDS_IMAGE_DATA_SUBDIRECTORY + 'deepzoom_images/'
 #  They strike a good (maybe best?) balance between image fidelity and file size.
 #  If not defined the following default values will be used:
 DEEPZOOM_PARAMS = {'tile_size': 256,
-                    'tile_overlap': 1,
-                    'tile_format': "jpg",
-                    'image_quality': 1.0,
-                    'resize_filter': "antialias"}
+                   'tile_overlap': 1,
+                   'tile_format': "jpg",
+                   'image_quality': 1.0,
+                   'resize_filter': "antialias"}
+
+VIPS_PARAMS = {'tile_size': 256,
+               'overlap' : 10}
 
 #
 # By default we use the VIPS library deepzoom tiler beacause it's much faster than the python based one
