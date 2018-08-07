@@ -23,6 +23,7 @@ import tempfile
 import xml.dom.minidom
 
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -611,6 +612,40 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
                 'min_acquisition_time',
                 'max_acquisition_time']
 
+    @classmethod
+    def buildTextAnnotationQuery(cls, search_keywords):
+        """
+        Build a query that will search for an image set that is pointed to by a text annotation containing keyword
+        :param search_keywords: keywords to search for in the format keyword and keyword or keyword etc
+        :return: the found list of pks
+        """
+
+        master_query = LazyGetModelByName(settings.XGDS_IMAGE_TEXT_ANNOTATION_MODEL).get().objects.all()
+
+        counter = 0
+        last_query = None
+        keyword_query = None
+        while counter < len(search_keywords):
+            if counter % 2 == 0:
+                last_query = Q(**{'content__icontains': search_keywords[counter]})
+            else:
+                if not keyword_query:
+                    keyword_query = last_query
+                else:
+                    join_type = search_keywords[counter]
+                    if join_type == 'and':
+                        keyword_query &= last_query
+                    else:
+                        keyword_query |= last_query
+            counter += 1
+        if not keyword_query:
+            keyword_query = last_query
+
+        result = master_query.filter(keyword_query)
+        image_ids = result.values_list('image_id', flat=True)
+
+        return list(image_ids)
+
 
 class ImageSet(AbstractImageSet):
     # set foreign key fields from parent model to point to correct types
@@ -693,7 +728,8 @@ class AbstractAnnotation(models.Model):
 
     author = models.ForeignKey(User, related_name='%(app_label)s_%(class)s_related')
     creation_time = models.DateTimeField(blank=True, default=timezone.now, editable=False, db_index=True)
-    image = 'set this to DEFAULT_SINGLE_IMAGE_FIELD or similar in derived classes'
+    image = 'set this to DEFAULT_IMAGE_SET_FIELD or similar in derived classes'
+
     # WARNING -- you cannot include the below in this class or it will cause a circular dependency in migrations
     #image = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='%(app_label)s_%(class)s_image')  
 
