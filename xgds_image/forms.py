@@ -82,24 +82,34 @@ class ImageSetForm(forms.ModelForm):
 #                 if not self.cleaned_data['collection_time']:
 #                     msg = "Must enter collection time to record position"
 #                     self.add_error('collection_time', msg)
-                    
-                    
+
     def save(self, commit=True):
         instance = super(ImageSetForm, self).save(commit=False)
         if (('latitude' in self.changed_data) and ('longitude' in self.changed_data)) or ('altitude' in self.changed_data) or ('heading' in self.changed_data):
-            if instance.user_position is None:
-                instance.user_position = LOCATION_MODEL.get().objects.create(serverTimestamp = datetime.datetime.now(pytz.utc),
-                                                                             timestamp = instance.acquisition_time,
-                                                                             latitude = self.cleaned_data['latitude'],
-                                                                             longitude = self.cleaned_data['longitude'], 
-                                                                             altitude = self.cleaned_data['altitude'],
-                                                                             heading = self.cleaned_data['heading'])
-            else:
-                instance.user_position.latitude = self.cleaned_data['latitude']
-                instance.user_position.longitude = self.cleaned_data['longitude']
-                instance.user_position.altitude = self.cleaned_data['altitude']
-                instance.user_position.heading = self.cleaned_data['heading']
-                instance.user_position.save()
+            changed = False
+            if instance.head != self.cleaned_data['heading']:  # TODO I really do not understand this but they are showing as not equal even though the values are equal
+                changed = True
+            if instance.lat != self.cleaned_data['latitude']:
+                changed = True
+            if instance.lon != self.cleaned_data['longitude']:
+                changed = True
+            if instance.alt != self.cleaned_data['altitude']:
+                changed = True
+
+            if changed:
+                if instance.user_position is None:
+                    instance.user_position = LOCATION_MODEL.get().objects.create(serverTimestamp=datetime.datetime.now(pytz.utc),
+                                                                                 timestamp=instance.acquisition_time,
+                                                                                 latitude=self.cleaned_data['latitude'],
+                                                                                 longitude=self.cleaned_data['longitude'],
+                                                                                 altitude=self.cleaned_data['altitude'])
+                    instance.user_position.setHeading(self.cleaned_data['heading'])
+                else:
+                    instance.user_position.latitude = self.cleaned_data['latitude']
+                    instance.user_position.longitude = self.cleaned_data['longitude']
+                    instance.user_position.altitude = self.cleaned_data['altitude']
+                    instance.user_position.setHeading(self.cleaned_data['heading'])
+                    instance.user_position.save()
 
         if commit:
             instance.save()
