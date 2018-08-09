@@ -24,6 +24,7 @@ from django.db.models import Q
 from dal import autocomplete
 
 from models import SingleImage, ImageSet
+from geocamUtil import TimeUtil
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.forms.AbstractImportForm import getTimezoneChoices
 
@@ -143,11 +144,7 @@ class SearchImageSetForm(SearchForm):
         return self.clean_time('max_acquisition_time', self.clean_acquisition_timezone())
     
     def clean_acquisition_timezone(self):
-        if self.cleaned_data['acquisition_timezone'] == 'utc':
-            return 'Etc/UTC'
-        else:
-            return self.cleaned_data['acquisition_timezone']
-        return None
+        return TimeUtil.clean_timezone(self.cleaned_data['acquisition_timezone'])
 
     def clean(self):
         cleaned_data = super(SearchImageSetForm, self).clean()
@@ -163,6 +160,7 @@ class SearchImageSetForm(SearchForm):
                 )
             else:
                 del cleaned_data["acquisition_timezone"]
+        return cleaned_data
 
     def buildQueryForField(self, fieldname, field, value, minimum=False, maximum=False):
         if fieldname == 'description' or fieldname == 'name':
