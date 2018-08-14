@@ -49,9 +49,10 @@ from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
 from deepzoom import deepzoom
-import gi
-gi.require_version('Vips', '8.0')
-from gi.repository import Vips
+if not USE_PYTHON_DEEPZOOM_TILER:
+    import gi
+    gi.require_version('Vips', '8.0')
+    from gi.repository import Vips
 
 from StringIO import StringIO
 from datetime import datetime
