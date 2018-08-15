@@ -49,7 +49,7 @@ from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
 from deepzoom import deepzoom
-if not USE_PYTHON_DEEPZOOM_TILER:
+if not settings.USE_PYTHON_DEEPZOOM_TILER:
     import gi
     gi.require_version('Vips', '8.0')
     from gi.repository import Vips
