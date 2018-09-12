@@ -19,3 +19,4 @@ from xgds_image.models import *  # pylint: disable=W0401
 
 
 admin.site.register(Camera)
+admin.site.register(ImageSet)
