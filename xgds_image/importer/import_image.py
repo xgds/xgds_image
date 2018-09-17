@@ -28,10 +28,15 @@ import datetime
 from dateutil.parser import parse as dateparser
 import pytz
 import json
+from xgds_core.importer.validate_timestamps import get_timestamp_from_filename
 
 HTTP_PREFIX = 'https'
 
 from django.contrib.sites.models import Site
+# mysite = Site.objects.get_current()
+# mysite.domain = 'localhost'
+# mysite.name = 'My Site'
+# mysite.save()
 URL_PREFIX = Site.objects.get_current().domain
 
 
@@ -42,26 +47,34 @@ def fixTimezone(the_time):
     return the_time
 
 
-def parse_timestamp(string):
-    float_seconds_pattern = '(?<!\d)(\d{10}\.\d*)(?!\d)' # ten digits, a '.', and more digits
-    int_microseconds_pattern = '(?<!\d)(\d{16})(?!\d)' # sixteen digits
-    match = re.search(float_seconds_pattern,string)
-    if match:
-        return datetime.datetime.utcfromtimestamp(float(match.group(0))).replace(tzinfo=pytz.utc)
-    match = re.search(int_microseconds_pattern,string)
-    if match:
-        return datetime.datetime.utcfromtimestamp(1.e-6*int(match.group(0))).replace(tzinfo=pytz.utc)
+def parse_timestamp(string, time_format, regex):
+    if time_format is not None:
+        return get_timestamp_from_filename(filename, time_format, regex)
+
+    else:
+        float_seconds_pattern = '(?<!\d)(\d{10}\.\d*)(?!\d)' # ten digits, a '.', and more digits
+        int_microseconds_pattern = '(?<!\d)(\d{16})(?!\d)' # sixteen digits
+
+        match = re.search(float_seconds_pattern, string)
+        if match:
+            return datetime.datetime.utcfromtimestamp(float(match.group(0))).replace(tzinfo=pytz.utc)
+
+        match = re.search(int_microseconds_pattern, string)
+        if match:
+            return datetime.datetime.utcfromtimestamp(1.e-6 * int(match.group(0))).replace(tzinfo=pytz.utc)
+
     return None
 
 
-def import_image(filename, camera, username, password, camera_serial):
+def import_image(filename, camera, username, password, camera_serial, time_format=None, regex=None):
     data ={
         'timezone': settings.TIME_ZONE,
         'vehicle': '',
         'username': username
     }
+    print 'Happy to be processing ', filename
     # If we get a timestamp from filename then add it to exifData:
-    timestamp = parse_timestamp(filename)
+    timestamp = parse_timestamp(filename, time_format, regex)
     exifData = {}
     if timestamp is not None:
         exifData['DateTimeOriginal'] = timestamp.isoformat()
@@ -79,6 +92,8 @@ def import_image(filename, camera, username, password, camera_serial):
     # url = reverse('xgds_save_image')
     # ... so roll it like this:
     url = "%s://%s%s" % (HTTP_PREFIX, URL_PREFIX, '/xgds_image/rest/saveImage/')
+
+    print url
 
     r = requests.post(url, data=data, files=files, verify=False, auth=(username, password))
     if r.status_code == 200:
@@ -102,6 +117,10 @@ if __name__=='__main__':
                       help='Serial number of the camera this image came from')
     parser.add_option('-u', '--username', default='irg', help='username for xgds auth')
     parser.add_option('-p', '--password', help='authtoken for xgds authentication.  Can get it from https://xgds_server_name/accounts/rest/genToken/<username>')
+    parser.add_option('-t', '--timeformat',
+                      help='seconds, microseconds, or dateparser')
+    parser.add_option('-r', '--regex',
+                      help='If timeformat is dateparser, regex to get timestamp from filename')
 
     opts, args = parser.parse_args()
     camera = opts.camera

@@ -319,6 +319,8 @@ def saveImage(request):
 
             # correct the timezone, we store time in utc
             form_tz = form.getTimezone()
+            if 'UTC' in form_tz.zone:
+                form_tz = pytz.utc
             if exifTimeString:
                 exifTime = dateparser(str(exifTimeString))
                 if (form_tz != pytz.utc) and exifTime and exifTime.tzinfo is None:
