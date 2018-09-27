@@ -72,7 +72,6 @@ def import_image(filename, camera, username, password, camera_serial, time_forma
         'vehicle': '',
         'username': username
     }
-    print 'Happy to be processing ', filename
     # If we get a timestamp from filename then add it to exifData:
     timestamp = parse_timestamp(filename, time_format, regex)
     exifData = {}
@@ -125,5 +124,6 @@ if __name__=='__main__':
     opts, args = parser.parse_args()
     camera = opts.camera
     filename = args[0]
-    retval = import_image(filename, camera=camera, username=opts.username, password=opts.password, camera_serial=opts.serial)
+    retval = import_image(filename, camera=camera, username=opts.username, password=opts.password, camera_serial=opts.serial,
+                          time_format=opts.timeformat, regex=opts.regex)
     sys.exit(retval)

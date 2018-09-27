@@ -314,8 +314,12 @@ def saveImage(request):
             # get exif time for image set
             exifTime = None
             exifTimeString = getExifValue(exifData, 'DateTimeOriginal')
+
             if not exifTimeString:
                 exifTimeString = getExifValue(exifData, 'DateTime')
+            elif exifTimeString is None:
+                return HttpResponse(json.dumps({'error': 'Could not determine image date'}), content_type='application/json',
+                                    status=406)
 
             # correct the timezone, we store time in utc
             form_tz = form.getTimezone()
