@@ -1,12 +1,15 @@
 [
     {
-        "pk": 20000,
-        "model": "auth.User",
-        "fields": {
-            "username": "camera",
-            "first_name": "Some",
-            "last_name": "Camera"
-        }
+    "model": "auth.user",
+    "pk": 10,
+    "fields": {
+        "password": "*",
+        "username": "camera",
+        "first_name": "Some",
+        "last_name": "Camera",
+        "is_staff": false,
+        "is_active": false
+      }
     },
     {
         "pk": 1,
