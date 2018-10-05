@@ -87,6 +87,7 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olI
                                                                           'originalImageResolutionString', 'originalImageFileSizeMB', 'create_deepzoom', 'DT_RowId'],
                                                         'unsortableColumns': ['thumbnail_image_url'],
                                                         'columnTitles': ['Time', 'TZ', 'Author', 'Name',  'Description', 'Image'],
+                                                        'order_columns': ['pk', 'acquisition_time', 'acquisition_timezone' 'author__first_name', 'name', 'description'],
                                                         'viewHandlebars': 'xgds_image/templates/handlebars/image-view2.handlebars',
                                                         'viewJS': [EXTERNAL_URL + 'openseadragon/build/openseadragon/openseadragon.min.js',
                                                                    EXTERNAL_URL + 'fabric/dist/fabric.js',
