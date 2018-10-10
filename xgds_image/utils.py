@@ -20,6 +20,9 @@ from io import BytesIO
 from PIL import Image, ExifTags, ImageFile
 from django.conf import settings
 from django.core.files import File
+from geocamUtil.loader import LazyGetModelByName
+
+CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 
 def getExifValue(exif, key):
     try: 
@@ -64,8 +67,6 @@ def convert_to_jpg_if_needed(src):
     dest_file.name = '%s.jpg' % src_name
     return File(dest_file)
 
-
-
 def getHeightWidthFromPIL(imageModelInstance):
     """ Read size and width with PIL
     """
@@ -101,6 +102,22 @@ def getExifData(image_file):
         exifData['ExifImageHeight'] = height
     return exifData
 
+def getCameraByExif(exif):
+    """
+    Given image exif data, either creates a new camera object or returns an
+    existing one.
+    """
+    cameraName = getExifValue(exif, 'Model')
+    if cameraName:
+        cameras = CAMERA_MODEL.get().objects.filter(name=cameraName)
+        serial = getExifValue(exif, 'BodySerialNumber')
+        if serial:
+            cameras = cameras.filter(serial=serial)
+        if cameras.exists():
+            return cameras[0]
+        else:
+            return CAMERA_MODEL.get().objects.create(name=cameraName, serial=serial)
+    return None
 
 def getIfExists(data, key):
     if key in data:
@@ -108,9 +125,13 @@ def getIfExists(data, key):
         
     return None
 
-
 def convertToDegrees(value):
     """Helper function to convert the GPS coordinates stored in the EXIF to degress in float format"""
+    for j in range(3):
+        for i in range(3):
+            if str(value[j][i] == '0/0' or value[j][i] == 0):
+                return None
+
     d0 = value[0][0]
     d1 = value[0][1]
     d = float(d0) / float(d1)
@@ -155,9 +176,8 @@ def getLatLon(exifData):
     lat = None
     lon = None
 
-    if "GPSInfo" in exifData:        
+    if "GPSInfo" in exifData:
         gpsInfo = exifData["GPSInfo"]
-
         latitude = getIfExists(gpsInfo, "GPSLatitude")
         latitudeRef = getIfExists(gpsInfo, 'GPSLatitudeRef')
         longitude = getIfExists(gpsInfo, 'GPSLongitude')
@@ -165,10 +185,16 @@ def getLatLon(exifData):
 
         if latitude and latitudeRef and longitude and longitudeRef:
             lat = convertToDegrees(latitude)
-            if latitudeRef != "N":                     
-                lat = 0 - lat
+            if lat is None:
+                return None, None
 
             lon = convertToDegrees(longitude)
+            if lon is None:
+                return None, None
+
+            if latitudeRef != "N":
+                lat = 0 - lat
+
             if longitudeRef != "E":
                 lon = 0 - lon
 

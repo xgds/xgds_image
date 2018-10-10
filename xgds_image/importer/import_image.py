@@ -29,7 +29,10 @@ from dateutil.parser import parse as dateparser
 import pytz
 import json
 from xgds_core.importer.validate_timestamps import get_timestamp_from_filename
+from geocamUtil.loader import LazyGetModelByName
+from xgds_sample.models import *
 
+from xgds_image.utils import getCameraByExif
 HTTP_PREFIX = 'https'
 
 from django.contrib.sites.models import Site
@@ -38,7 +41,8 @@ from django.contrib.sites.models import Site
 # mysite.name = 'My Site'
 # mysite.save()
 URL_PREFIX = Site.objects.get_current().domain
-
+IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
+CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 
 def fixTimezone(the_time):
     if not the_time.tzinfo or the_time.tzinfo.utcoffset(the_time) is None:
@@ -47,9 +51,16 @@ def fixTimezone(the_time):
     return the_time
 
 
-def parse_timestamp(string, time_format, regex):
+def parse_timestamp(filename, time_format, regex):
     if time_format is not None:
-        return get_timestamp_from_filename(filename, time_format, regex)
+        if time_format == 'labphoto':
+            # find the name of the sample
+            tokens = filename.split('/')
+            sampleID = tokens[len(tokens) - 3]
+            sample = Sample.objects.get(name=sampleID)  # NA100-123 for example
+            return sample.collection_time
+        else:
+            return get_timestamp_from_filename(filename, time_format, regex)
 
     else:
         float_seconds_pattern = '(?<!\d)(\d{10}\.\d*)(?!\d)' # ten digits, a '.', and more digits
@@ -65,13 +76,48 @@ def parse_timestamp(string, time_format, regex):
 
     return None
 
+def check_data_exists(filename, timestamp, exif):
+    """
+    See if there is already identical data
+    :return: True if it already exists, false otherwise
+    """
+    # get short filename
+    tokens = filename.split('/')
+    shortname = tokens[len(tokens) - 1]
+    cameraId = getCameraByExif(exif)
+
+    if cameraId is None:
+        found = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL).get().objects.filter(
+            name=shortname,
+            acquisition_time=timestamp)
+    else:
+        found = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL).get().objects.filter(
+            name=shortname,
+            acquisition_time=timestamp,
+            camera_id=cameraId)
+
+    if found:
+        return True
+    return False
 
 def import_image(filename, camera, username, password, camera_serial, time_format=None, regex=None):
+    """
+    Imports a file into the database
+    :param filename: full path to the file
+    :param camera: Hercules, Argus, Acoustic, ...
+    :param username: to put things in database
+    :param password: to put things in database
+    :param camera_serial: is stuffed into exif if it's provided
+    :param time_format: seconds, microseconds, dateparser, or labphoto (takes time from dive)
+    :param regex: for the dateparser if the time_format is dateparser
+    :return:
+    """
     data ={
         'timezone': settings.TIME_ZONE,
         'vehicle': '',
         'username': username
     }
+
     # If we get a timestamp from filename then add it to exifData:
     timestamp = parse_timestamp(filename, time_format, regex)
     exifData = {}
@@ -83,6 +129,11 @@ def import_image(filename, camera, username, password, camera_serial, time_forma
         exifData['BodySerialNumber'] = camera_serial
 
     data['exifData'] = json.dumps(exifData)
+
+    # check if image exists in database and error if it does
+    if check_data_exists(filename, timestamp, exifData):
+        print " ABORTING: MATCHING DATA FOUND"
+        raise Exception('Matching data found, image already imported', filename)
 
     fp = open(filename)
     files = {'file': fp}
