@@ -44,7 +44,7 @@ from xgds_core.views import get_handlebars_templates, addRelay
 from xgds_core.util import deletePostKey
 from xgds_core.flightUtils import getFlight
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, \
-    getExifValue, getHeightWidthFromPIL, convert_to_jpg_if_needed
+    getExifValue, getHeightWidthFromPIL, convert_to_jpg_if_needed, getCameraByExif
 
 from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
@@ -61,7 +61,6 @@ import base64
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 SINGLE_IMAGE_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL)
-CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 XGDS_CORE_VEHICLE_MODEL = LazyGetModelByName(settings.XGDS_CORE_VEHICLE_MODEL)
@@ -197,27 +196,9 @@ def createCamera(camera):
         return XGDS_CORE_VEHICLE_MODEL.get().objects.create(name=name, type='Camera')
 
 
-def getCameraByExif(exif):
-    """
-    Given image exif data, either creates a new camera object or returns an
-    existing one.
-    """
-    cameraName = getExifValue(exif, 'Model')
-    if cameraName:
-        cameras = CAMERA_MODEL.get().objects.filter(name=cameraName)
-        serial = getExifValue(exif, 'BodySerialNumber')
-        if serial:
-            cameras = cameras.filter(serial=serial)
-        if cameras.exists():
-            return cameras[0]
-        else:
-            return CAMERA_MODEL.get().objects.create(name=cameraName, serial=serial)
-    return None
-
-
 def buildExifPosition(exif, camera, vehicle, exifTime, form_tz):
     """
-    Given the image's exif data and a camera object, 
+    Given the image's exif data and a camera object,
     creates a new position object that contains the lat and lon information.
     """
     gpsLatLon = getLatLon(exif)
@@ -248,7 +229,6 @@ def buildExifPosition(exif, camera, vehicle, exifTime, form_tz):
         return position
 
     return None
-
 
 def getRotationValue(request):
     if request.method == 'POST':
