@@ -18,19 +18,17 @@
 import django
 django.setup()
 from django.conf import settings
-from django.core.urlresolvers import reverse
 
 import sys
 import re
 import requests
 
 import datetime
-from dateutil.parser import parse as dateparser
 import pytz
 import json
 from xgds_core.importer.validate_timestamps import get_timestamp_from_filename
 from geocamUtil.loader import LazyGetModelByName
-from xgds_sample.models import *
+
 
 from xgds_image.utils import getCameraByExif
 HTTP_PREFIX = 'https'
@@ -44,6 +42,7 @@ URL_PREFIX = Site.objects.get_current().domain
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 
+
 def fixTimezone(the_time):
     if not the_time.tzinfo or the_time.tzinfo.utcoffset(the_time) is None:
         the_time = pytz.timezone('utc').localize(the_time)
@@ -53,28 +52,22 @@ def fixTimezone(the_time):
 
 def parse_timestamp(filename, time_format, regex):
     if time_format is not None:
-        if time_format == 'labphoto':
-            # find the name of the sample
-            tokens = filename.split('/')
-            sampleID = tokens[len(tokens) - 3]
-            sample = Sample.objects.get(name=sampleID)  # NA100-123 for example
-            return sample.collection_time
-        else:
-            return get_timestamp_from_filename(filename, time_format, regex)
+        return get_timestamp_from_filename(filename, time_format, regex)
 
     else:
         float_seconds_pattern = '(?<!\d)(\d{10}\.\d*)(?!\d)' # ten digits, a '.', and more digits
         int_microseconds_pattern = '(?<!\d)(\d{16})(?!\d)' # sixteen digits
 
-        match = re.search(float_seconds_pattern, string)
+        match = re.search(float_seconds_pattern, filename)
         if match:
             return datetime.datetime.utcfromtimestamp(float(match.group(0))).replace(tzinfo=pytz.utc)
 
-        match = re.search(int_microseconds_pattern, string)
+        match = re.search(int_microseconds_pattern, filename)
         if match:
             return datetime.datetime.utcfromtimestamp(1.e-6 * int(match.group(0))).replace(tzinfo=pytz.utc)
 
     return None
+
 
 def check_data_exists(filename, timestamp, exif):
     """
@@ -100,7 +93,8 @@ def check_data_exists(filename, timestamp, exif):
         return True
     return False
 
-def import_image(filename, camera, username, password, camera_serial, time_format=None, regex=None):
+
+def import_image(filename, camera, username, password, camera_serial, time_format=None, regex=None, timestamp=None):
     """
     Imports a file into the database
     :param filename: full path to the file
@@ -119,10 +113,13 @@ def import_image(filename, camera, username, password, camera_serial, time_forma
     }
 
     # If we get a timestamp from filename then add it to exifData:
-    timestamp = parse_timestamp(filename, time_format, regex)
+    if timestamp:
+        internal_timestamp = timestamp
+    else:
+        internal_timestamp = parse_timestamp(filename, time_format, regex)
     exifData = {}
-    if timestamp is not None:
-        exifData['DateTimeOriginal'] = timestamp.isoformat()
+    if internal_timestamp:
+        exifData['DateTimeOriginal'] = internal_timestamp.isoformat()
     if camera:
         exifData['Model'] = camera
     if camera_serial:
@@ -131,7 +128,7 @@ def import_image(filename, camera, username, password, camera_serial, time_forma
     data['exifData'] = json.dumps(exifData)
 
     # check if image exists in database and error if it does
-    if check_data_exists(filename, timestamp, exifData):
+    if check_data_exists(filename, internal_timestamp, exifData):
         print " ABORTING: MATCHING DATA FOUND"
         raise Exception('Matching data found, image already imported', filename)
 
