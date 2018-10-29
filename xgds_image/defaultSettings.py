@@ -76,7 +76,7 @@ XGDS_CORE_TEMPLATE_DIRS[XGDS_IMAGE_IMAGE_SET_MODEL] = [os.path.join('xgds_image'
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 STATIC_URL = '/static/'
 EXTERNAL_URL = STATIC_URL
-XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_SET_MONIKER] = {'ol': 'xgds_image/js/olImageMap.js',
+XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_MODEL_NAME] = {'ol': 'xgds_image/js/olImageMap.js',
                                                         'model': XGDS_IMAGE_IMAGE_SET_MODEL,
                                                         'searchableColumns': ['name','description','flight_name', 'author_name', 'camera_name'],
                                                         'columns': ['checkbox', 'acquisition_time', 'acquisition_timezone', 'author_name', 'name', 'description', 'thumbnail_image_url',  'pk', 'view_url',
