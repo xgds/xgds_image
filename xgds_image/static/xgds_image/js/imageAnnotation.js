@@ -649,7 +649,7 @@ $.extend(xgds_image_annotation, {
                 width: x - this.origX,
                 top: this.origY,
                 left: this.origX,
-                fontSize: this.annotationSizes[this.currentAnnotationSize].font, //heretamar
+                fontSize: this.annotationSizes[this.currentAnnotationSize].font,
                 stroke: this.currentAnnotationColor,
                 fill: this.currentAnnotationColor,
                 borderColor: this.currentAnnotationColor,
