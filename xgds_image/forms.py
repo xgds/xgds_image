@@ -49,7 +49,8 @@ class ImageSetForm(forms.ModelForm):
     heading = forms.FloatField(required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
     
-    id= forms.CharField(widget=forms.HiddenInput())
+    id = forms.CharField(widget=forms.HiddenInput())
+
     class Meta:
         model = ImageSet
         fields = ['id', 'description', 'name']
