@@ -46,6 +46,8 @@ from xgds_core.flightUtils import getFlight
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, \
     getExifValue, getHeightWidthFromPIL, convert_to_jpg_if_needed, getCameraByExif
 
+from xgds_video.views import grab_frame
+
 from geocamUtil.loader import getModelByName
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil import TimeUtil
@@ -57,6 +59,7 @@ from geocamTrack.utils import getClosestPosition
 
 from PIL import Image
 from io import BytesIO
+from cStringIO import StringIO
 import base64
 
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
@@ -78,7 +81,7 @@ ANNOTATION_MANAGER = ModelCollectionManager(AbstractAnnotation,
                                              RECTANGLE_ANNOTATION_MODEL.get(),
                                              TEXT_ANNOTATION_MODEL.get()
                                             ])
-
+CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 
 import couchdb
 
@@ -196,6 +199,16 @@ def createCamera(camera):
         return XGDS_CORE_VEHICLE_MODEL.get().objects.create(name=name, type='Camera')
 
 
+def buildExifPositionFromLatLon(latlon, exif_time):
+    position_dict = {'serverTimestamp': exif_time,
+                     'timestamp': exif_time,
+                     'latitude': latlon[0],
+                     'longitude': latlon[1]}
+    # we know we don't have heading or altitude
+    position = POSITION_MODEL.get().objects.create(**position_dict)
+    return position
+
+
 def buildExifPosition(exif, camera, vehicle, exifTime, form_tz):
     """
     Given the image's exif data and a camera object,
@@ -274,6 +287,64 @@ def sdWriteEvent(request):
     return HttpResponse("OK", content_type='text/plain')
 
 
+def getExifTimeString(request, uploadedFile):
+    exifData = getExifData(uploadedFile)
+
+    if 'exifData' in request.POST:
+        # update the parsed exif dictionary with the incoming exif json
+        exifData.update(json.loads(request.POST['exifData']))
+
+    # get metadata for image set, create the image set
+    # get exif time for image set
+    exifTime = None
+    exifTimeString = getExifValue(exifData, 'DateTimeOriginal')
+
+    if not exifTimeString:
+        exifTimeString = getExifValue(exifData, 'DateTime')
+    elif exifTimeString is None:
+        return HttpResponse(json.dumps({'error': 'Could not determine image date'}), content_type='application/json',
+                            status=406)
+    return exifData, exifTimeString
+
+
+def getExifTime(request, exifTimeString, uploadedFile, form_tz):
+    # correct the timezone, we store time in utc
+    if 'UTC' in form_tz.zone:
+        form_tz = pytz.utc
+    if exifTimeString:
+        exifTime = dateparser(str(exifTimeString))
+        if (form_tz != pytz.utc) and exifTime and exifTime.tzinfo is None:
+            localized_time = form_tz.localize(exifTime)
+            exifTime = TimeUtil.timeZoneToUtc(localized_time)
+        else:
+            exifTime = exifTime.replace(tzinfo=pytz.utc)
+    else:
+        # read the time from the last modified time that we pushed in from imageUpload.js
+        if 'HTTP_LASTMOD' in request.META:
+            modtimesString = request.META['HTTP_LASTMOD']
+            if modtimesString:
+                modtime = None
+                theImages = modtimesString.split(',')
+                for i in theImages:
+                    k, v = i.split('||')
+                    if k == str(uploadedFile.name):
+                        modtime = datetime.fromtimestamp(int(v) / 1000)
+                        break
+                if modtime:
+                    localized_time = form_tz.localize(modtime)
+                    exifTime = TimeUtil.timeZoneToUtc(localized_time)
+    return exifTime
+
+
+def relayIfNeeded(request, newImageSet):
+    # relay if needed
+    if 'relay' in request.POST:
+        # create the record for the datum
+        # fire a message for new data
+        deletePostKey(request.POST, 'relay')
+        addRelay(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
+
+
 def saveImage(request):
     """
     Image drag and drop, saves the files and to the database.
@@ -283,178 +354,225 @@ def saveImage(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             uploadedFile = request.FILES['file']
-
+            print "Uploaded file = " + str(uploadedFile)
+            print "request = " + str(request)
             # If this image has exif data in it, extract it
-            exifData = getExifData(uploadedFile)
-            if 'exifData' in request.POST:
-                # update the parsed exif dictionary with the incoming exif json
-                exifData.update(json.loads(request.POST['exifData']))
 
-            # get metadata for image set, create the image set
-            # get exif time for image set
-            exifTime = None
-            exifTimeString = getExifValue(exifData, 'DateTimeOriginal')
+            exifData, exifTimeString = getExifTimeString(request, uploadedFile)
 
-            if not exifTimeString:
-                exifTimeString = getExifValue(exifData, 'DateTime')
-            elif exifTimeString is None:
-                return HttpResponse(json.dumps({'error': 'Could not determine image date'}), content_type='application/json',
-                                    status=406)
-
-            # correct the timezone, we store time in utc
             form_tz = form.getTimezone()
-            if 'UTC' in form_tz.zone:
-                form_tz = pytz.utc
-            if exifTimeString:
-                exifTime = dateparser(str(exifTimeString))
-                if (form_tz != pytz.utc) and exifTime and exifTime.tzinfo is None:
-                    localized_time = form_tz.localize(exifTime)
-                    exifTime = TimeUtil.timeZoneToUtc(localized_time)
-                else:
-                    exifTime = exifTime.replace(tzinfo=pytz.utc)
-            else:
-                # read the time from the last modified time that we pushed in from imageUpload.js
-                if 'HTTP_LASTMOD' in request.META:
-                    modtimesString = request.META['HTTP_LASTMOD']
-                    if modtimesString:
-                        modtime = None
-                        theImages = modtimesString.split(',')
-                        for i in theImages:
-                            k,v = i.split('||')
-                            if k == str(uploadedFile.name):
-                                modtime = datetime.fromtimestamp(int(v)/1000)
-                                break
-                        if modtime:
-                            localized_time = form_tz.localize(modtime)
-                            exifTime = TimeUtil.timeZoneToUtc(localized_time)
-            if not exifTime:
-                exifTime = datetime.now(pytz.utc)
+            exifTime = getExifTime(request, exifTimeString, uploadedFile, form_tz)
+
+            author = computeAuthor(request)
+            vehicle = form.getVehicle()
+            camera = getCameraByExif(exifData)
 
             # create a new image set instance
-            author = None
-            if request.user.is_authenticated():
-                author = request.user  # set user as image author
-            elif 'username' in request.POST:
-                try:
-                    username = str(request.POST['username'])
-                    author = User.objects.get(username=username)
-                except:
-                    author = User.objects.get(username='camera')
+            newImageSet = createNewImageSet(file=uploadedFile, filename=uploadedFile.name,
+                                            filesize=uploadedFile.size, author=author,
+                                            vehicle=vehicle, camera=camera,
+                                            form_tz=form_tz, form_tz_name=form.getTimezoneName(),
+                                            exif_data=exifData,
+                                            exif_time=exifTime, object_id=request.POST.get('object_id', None),
+                                            time_mark=timeMark)
 
-            if 'object_id' in request.POST:
-                newImageSet = IMAGE_SET_MODEL.get()(pk=int(request.POST['object_id']))
-            else:
-                newImageSet = IMAGE_SET_MODEL.get()()
-
-            newImageSet.acquisition_time = exifTime
-            newImageSet.acquisition_timezone = form.getTimezoneName()
-            newImageSet.name = uploadedFile.name
-
-            newImageSet.camera = getCameraByExif(exifData)
-            vehicle = form.getVehicle()
-
-            newImageSet.flight = getFlight(newImageSet.acquisition_time, vehicle)
-            track = None
-            if newImageSet.flight:
-                track = newImageSet.flight.track
-            newImageSet.track_position = getClosestPosition(track=track, timestamp=exifTime, vehicle=vehicle)
-            newImageSet.exif_position = buildExifPosition(exifData, newImageSet.camera, vehicle, exifTime, form_tz)
-            newImageSet.author = author
             newImageSet.finish_initialization(request)
-
-            # timing stats
-            nowTime = time.time()
-            uploadAndSaveTime = nowTime - timeMark
-            newImageSet.uploadAndSaveTime = uploadAndSaveTime
-            overallStartTime = cache.get("imageAutoloadGlobalTimeMark", None)
-            if overallStartTime:
-                totalTimeSinceNotify = nowTime - float(overallStartTime)
-                newImageSet.totalTimeSinceNotify = totalTimeSinceNotify
-            # end timing stats
-
-            newImageSet.save()
-
-            # build the metadata for the single image
-            single_image_metadata = {'imageSet': newImageSet}
-            try:
-                single_image_metadata['width'] = int(getExifValue(exifData, 'ExifImageWidth'))
-                single_image_metadata['height'] = int(getExifValue(exifData, 'ExifImageHeight'))
-            except:
-                pass
-
-            # convert the image if needed
-            converted_file = convert_to_jpg_if_needed(uploadedFile)
-            if converted_file:
-                # create the single image for the source
-                single_image_metadata['fileSizeBytes'] = uploadedFile.size
-                single_image_metadata['file'] = uploadedFile
-                single_image_metadata['imageType'] = ImageType.source.value
-                single_image_metadata['raw'] = False
-                single_image_metadata['thumbnail'] = False
-                source_single_image = SINGLE_IMAGE_MODEL.get().objects.create(**single_image_metadata)
-                uploadedFile = converted_file
-
-
-            # create the single image for the raw / full / renderable
-            try:
-                single_image_metadata['fileSizeBytes'] = uploadedFile.size
-                single_image_metadata['file'] = uploadedFile
-                single_image_metadata['imageType'] = ImageType.full.value
-                single_image_metadata['raw'] = True
-                single_image_metadata['thumbnail'] = False
-            except:
-                pass
-
-            newSingleImage = SINGLE_IMAGE_MODEL.get().objects.create(**single_image_metadata)
-
-            # relay if needed
-            if 'relay' in request.POST:
-                # create the record for the datum
-                # fire a message for new data
-                deletePostKey(request.POST, 'relay')
-                addRelay(newImageSet, request.FILES, json.dumps(request.POST), reverse('xgds_save_image'))
-
-            # create a thumbnail
-            thumbnail_file = createThumbnailFile(newSingleImage.file)
-            old_file_position = thumbnail_file.tell()
-            thumbnail_file.seek(0, os.SEEK_END)
-            thumbnail_size = thumbnail_file.tell()
-            thumbnail_file.seek(old_file_position, os.SEEK_SET)
-            SINGLE_IMAGE_MODEL.get().objects.create(file=thumbnail_file,
-                                                    fileSizeBytes=thumbnail_size,
-                                                    raw=False,
-                                                    thumbnail=True,
-                                                    width=settings.XGDS_IMAGE_THUMBNAIL_WIDTH,
-                                                    height=settings.XGDS_IMAGE_THUMBNAIL_HEIGHT,
-                                                    imageSet=newImageSet,
-                                                    imageType=ImageType.thumbnail.value)
-
-            # TODO: replace this with a BoundedSemaphore
-            # TODO: we are pretty sure this was causing the fail in tiling and in importing images because many deepzoom
-            # threads are kicked off at the same time yet this code uses just one flag.  #FIX
-            # TODO: suggest putting a single flag for each image we are tiling into REDIS
-            # dbServer = couchdb.Server(settings.COUCHDB_URL)
-            # db = dbServer[settings.COUCHDB_FILESTORE_NAME]
-            # if 'create_deepzoom_thread' in db:
-            #     myFlag = db['create_deepzoom_thread']
-            #     myFlag['active'] = True
-            #     db['create_deepzoom_thread'] = myFlag
-            # else:
-            #     db['create_deepzoom_thread'] = {'active': True}
-
-            # create deep zoom tiles for viewing in openseadragon.
-            if newImageSet.create_deepzoom:
-                if settings.USE_PYTHON_DEEPZOOM_TILER:
-                    deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
-                    deepzoomTilingThread.start()
-                else:
-                    deepzoomTilingThread = Thread(target=newImageSet.create_vips_deepzoom_image)
-                    deepzoomTilingThread.start()
+            relayIfNeeded(request, newImageSet)
 
             # pass the image set to the client as json.
-            return JsonResponse({'success': 'true', 'json': newImageSet.toMapDict()}, encoder=DatetimeJsonEncoder, safe=False)
+            return JsonResponse({'success': 'true', 'json': newImageSet.toMapDict()}, encoder=DatetimeJsonEncoder,
+                                safe=False)
         else:
             return JsonResponse({'error': 'Imported image is not valid', 'details': form.errors}, status=406)
+
+
+def grabFrameAndSave(request):
+    '''Times need to be in UTC'''
+    start = request.POST.get('start_time')
+    grab = request.POST.get('grab_time')
+    starttime = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
+    grabtime = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
+    img_bytes = grab_frame(request.POST.get('path'), starttime, grabtime)
+    mimeType = "image/png"
+    filename = 'Framegrab_' + grab + '.png'
+    # something like this
+    file_jpgdata = StringIO(img_bytes)
+    dt = Image.open(file_jpgdata)
+    filesize = dt.size
+    author = computeAuthor(request)
+
+    vehicle_name = request.POST.get('vehicle')
+    vehicle = XGDS_CORE_VEHICLE_MODEL.get().objects.get(name=vehicle_name)
+    cam_name = request.POST.get('camera')
+    camera = CAMERA_MODEL.get().objects.get(name=cam_name)
+
+    # everything should be in UTC, right?
+    form_tz = pytz.utc
+    form_tz_name = 'Etc/UTC'
+
+    pastresourceposedepth = getClosestPosition(track=None, timestamp=grabtime,
+                                               max_time_difference_seconds=settings.GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS,
+                                               vehicle=vehicle)
+
+    lat_lon = {'lat': pastresourceposedepth.coords_array[0],
+               'long': pastresourceposedepth.coords_array[1] }
+
+    new_image_set = createNewImageSet(file=img_bytes, filename=filename, filesize=filesize, author=author,
+                                      vehicle=vehicle, camera=camera,
+                                      form_tz=form_tz, form_tz_name=form_tz_name,
+                                      latlon=lat_lon)
+    new_image_set.finish_initialization(request)
+
+
+def createNewImageSet(file, filename, filesize, author,
+                      vehicle, camera,
+                      form_tz, form_tz_name,
+                      exif_data=None, exif_time=None, object_id=None, time_mark=None, latlon=None):
+    if not exif_time:
+        exif_time = datetime.now(pytz.utc)
+
+    # create a new image set instance
+    if object_id:
+        new_image_set = IMAGE_SET_MODEL.get()(pk=int(object_id))
+    else:
+        new_image_set = IMAGE_SET_MODEL.get()()
+
+    new_image_set.acquisition_time = exif_time
+    new_image_set.acquisition_timezone = form_tz_name
+    new_image_set.name = filename
+
+    if isinstance(camera, Camera):
+        new_image_set.camera = camera
+
+    new_image_set.flight = getFlight(new_image_set.acquisition_time, vehicle)
+    track = None
+    if new_image_set.flight:
+        print 'Hi I am a debug statement! ' + str(vehicle)
+        print new_image_set.flight.name
+        try:
+            track = new_image_set.flight.track
+        except:
+            traceback.print_exc()
+    new_image_set.track_position = getClosestPosition(track=track, timestamp=exif_time, vehicle=vehicle)
+    if exif_data:
+        new_image_set.exif_position = buildExifPosition(exif_data, new_image_set.camera, vehicle, exif_time, form_tz)
+    elif latlon:
+        new_image_set.exif_position = buildExifPositionFromLatLon(latlon, exif_time)
+    new_image_set.author = author
+
+    # timing stats
+    if time_mark:
+        now_time = time.time()
+        upload_and_save_time = now_time - time_mark
+        new_image_set.uploadAndSaveTime = upload_and_save_time
+
+    overall_start_time = cache.get("imageAutoloadGlobalTimeMark", None)
+    if overall_start_time:
+        total_time_since_notify = now_time - float(overall_start_time)
+        new_image_set.totalTimeSinceNotify = total_time_since_notify
+    # end timing stats
+
+    new_image_set.save()
+
+    # build the metadata for the single image
+    single_image_metadata = {'imageSet': new_image_set}
+    try:
+        if exif_data:
+            single_image_metadata['width'] = int(getExifValue(exif_data, 'ExifImageWidth'))
+            single_image_metadata['height'] = int(getExifValue(exif_data, 'ExifImageHeight'))
+        else:
+            single_image_metadata['width'] = filesize[0]
+            single_image_metadata['height'] = filesize[1]
+    except:
+        pass
+
+    # convert the image if needed
+    converted_file = convert_to_jpg_if_needed(file)
+
+    if converted_file:
+        # create the single image for the source
+        single_image_metadata['fileSizeBytes'] = filesize
+        single_image_metadata['file'] = file
+        single_image_metadata['imageType'] = ImageType.source.value
+        single_image_metadata['raw'] = False
+        single_image_metadata['thumbnail'] = False
+        source_single_image = SINGLE_IMAGE_MODEL.get().objects.create(**single_image_metadata)
+        file = converted_file
+
+    # create the single image for the raw / full / renderable
+    try:
+        single_image_metadata['fileSizeBytes'] = filesize
+        single_image_metadata['file'] = file
+        single_image_metadata['imageType'] = ImageType.full.value
+        single_image_metadata['raw'] = True
+        single_image_metadata['thumbnail'] = False
+    except:
+        pass
+
+    new_single_image = SINGLE_IMAGE_MODEL.get().objects.create(**single_image_metadata)
+
+    # relay was here
+
+    createThumbnail(new_single_image, new_image_set)
+
+
+    # TODO: replace this with a BoundedSemaphore
+    # TODO: we are pretty sure this was causing the fail in tiling and in importing images because many deepzoom
+    # threads are kicked off at the same time yet this code uses just one flag.  #FIX
+    # TODO: suggest putting a single flag for each image we are tiling into REDIS
+    # dbServer = couchdb.Server(settings.COUCHDB_URL)
+    # db = dbServer[settings.COUCHDB_FILESTORE_NAME]
+    # if 'create_deepzoom_thread' in db:
+    #     myFlag = db['create_deepzoom_thread']
+    #     myFlag['active'] = True
+    #     db['create_deepzoom_thread'] = myFlag
+    # else:
+    #     db['create_deepzoom_thread'] = {'active': True}
+
+    createDeepzoomTiles(new_image_set)
+
+    return new_image_set
+
+
+def computeAuthor(request):
+    author = None
+    if request.user.is_authenticated():
+        author = request.user  # set user as image author
+    elif 'username' in request.POST:
+        try:
+            username = str(request.POST['username'])
+            author = User.objects.get(username=username)
+        except:
+            author = User.objects.get(username='camera')
+    return author
+
+
+def createThumbnail(newSingleImage, newImageSet):
+    # create a thumbnail
+    thumbnail_file = createThumbnailFile(newSingleImage.file)
+    old_file_position = thumbnail_file.tell()
+    thumbnail_file.seek(0, os.SEEK_END)
+    thumbnail_size = thumbnail_file.tell()
+    thumbnail_file.seek(old_file_position, os.SEEK_SET)
+    SINGLE_IMAGE_MODEL.get().objects.create(file=thumbnail_file,
+                                            fileSizeBytes=thumbnail_size,
+                                            raw=False,
+                                            thumbnail=True,
+                                            width=settings.XGDS_IMAGE_THUMBNAIL_WIDTH,
+                                            height=settings.XGDS_IMAGE_THUMBNAIL_HEIGHT,
+                                            imageSet=newImageSet,
+                                            imageType=ImageType.thumbnail.value)
+
+
+def createDeepzoomTiles(newImageSet):
+    # create deep zoom tiles for viewing in openseadragon.
+    if newImageSet.create_deepzoom:
+        if settings.USE_PYTHON_DEEPZOOM_TILER:
+            deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
+            deepzoomTilingThread.start()
+        else:
+            deepzoomTilingThread = Thread(target=newImageSet.create_vips_deepzoom_image)
+            deepzoomTilingThread.start()
 
 
 def getTileState(request, imageSetPK):
@@ -463,11 +581,11 @@ def getTileState(request, imageSetPK):
         return HttpResponse(json.dumps({'pk': imageSetPK,
                                         'create_deepzoom': image.create_deepzoom,
                                         'deepzoom_file_url': image.deepzoom_file_url}),
-                                        content_type='application/json')
+                            content_type='application/json')
     except Exception, e:
         return HttpResponse(json.dumps({'pk': imageSetPK,
                                         'error': str(e)}),
-                                        content_type='application/json',
+                            content_type='application/json',
                                             status=404)
 
 

@@ -1,0 +1,15 @@
+[
+{
+    "model": "xgds_image.camera",
+    "pk": 1,
+    "fields": {
+        "notes": "Screen captures off of the Hercules main video feed",
+        "type": "screen_capture",
+        "extras": "{}",
+        "primary": false,
+        "serial": "HERC",
+        "name": "Hercules",
+        "heading_offset_degrees": 0.0
+    }
+}
+]
