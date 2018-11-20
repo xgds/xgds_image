@@ -14,6 +14,7 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+import pydevd
 import pytz
 import json
 import os
@@ -36,13 +37,14 @@ from django.http import HttpResponseRedirect,  HttpResponse, JsonResponse
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.forms.models import model_to_dict
 
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
 from xgds_core.util import deletePostKey
-from xgds_core.flightUtils import getFlight
+from xgds_core.flightUtils import getFlight, lookup_vehicle
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, \
     getExifValue, getHeightWidthFromPIL, convert_to_jpg_if_needed, getCameraByExif
 
@@ -368,13 +370,13 @@ def saveImage(request):
             camera = getCameraByExif(exifData)
 
             # create a new image set instance
-            newImageSet = createNewImageSet(file=uploadedFile, filename=uploadedFile.name,
-                                            filesize=uploadedFile.size, author=author,
-                                            vehicle=vehicle, camera=camera,
-                                            form_tz=form_tz, form_tz_name=form.getTimezoneName(),
-                                            exif_data=exifData,
-                                            exif_time=exifTime, object_id=request.POST.get('object_id', None),
-                                            time_mark=timeMark)
+            newImageSet = create_image_set(file=uploadedFile, filename=uploadedFile.name,
+                                           filesize=uploadedFile.size, author=author,
+                                           vehicle=vehicle, camera=camera,
+                                           form_tz=form_tz, form_tz_name=form.getTimezoneName(),
+                                           exif_data=exifData,
+                                           exif_time=exifTime, object_id=request.POST.get('object_id', None),
+                                           time_mark=timeMark)
 
             newImageSet.finish_initialization(request)
             relayIfNeeded(request, newImageSet)
@@ -386,48 +388,51 @@ def saveImage(request):
             return JsonResponse({'error': 'Imported image is not valid', 'details': form.errors}, status=406)
 
 
-def grabFrameAndSave(request):
-    '''Times need to be in UTC'''
+def grab_frame_save_image(request):
+    """
+    Grab a frame from video and save it as an Image Set.
+    Expecting the following in request.POST
+    start time: start time of the video, in UTC
+    grab time: grab time of the image to grab, in UTC
+    vehicle: the name of the vehicle, or it will use default
+    camera: the name of the camera (to associate with the ImageSet)
+    filename_prefix: the prefix to use for the filename, defaults to 'Framegrab'
+    :param request: POST DICTIONARY must contain above values
+    :return: the newly created image set
+    """
+    pydevd.settrace('192.168.0.163', port=9999)
+
+    # TODO handle bad values or no values for start and grab
     start = request.POST.get('start_time')
     grab = request.POST.get('grab_time')
-    starttime = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
-    grabtime = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
-    img_bytes = grab_frame(request.POST.get('path'), starttime, grabtime)
-    mimeType = "image/png"
-    filename = 'Framegrab_' + grab + '.png'
-    # something like this
+    start_time = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
+    grab_time = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
+    img_bytes = grab_frame(request.POST.get('path'), start_time, grab_time)
+
+    filename = '%s_%s.png' % (request.POST.get('filename_prefix', 'Framegrab'), grab)
     file_jpgdata = StringIO(img_bytes)
     dt = Image.open(file_jpgdata)
     filesize = dt.size
+
     author = computeAuthor(request)
 
-    vehicle_name = request.POST.get('vehicle')
-    vehicle = XGDS_CORE_VEHICLE_MODEL.get().objects.get(name=vehicle_name)
+    vehicle_name = request.POST.get('vehicle', None)
+    vehicle = lookup_vehicle(vehicle_name)
+
     cam_name = request.POST.get('camera')
     camera = CAMERA_MODEL.get().objects.get(name=cam_name)
 
-    # everything should be in UTC, right?
-    form_tz = pytz.utc
-    form_tz_name = 'Etc/UTC'
-
-    pastresourceposedepth = getClosestPosition(track=None, timestamp=grabtime,
-                                               max_time_difference_seconds=settings.GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS,
-                                               vehicle=vehicle)
-
-    lat_lon = {'lat': pastresourceposedepth.coords_array[0],
-               'long': pastresourceposedepth.coords_array[1] }
-
-    new_image_set = createNewImageSet(file=img_bytes, filename=filename, filesize=filesize, author=author,
-                                      vehicle=vehicle, camera=camera,
-                                      form_tz=form_tz, form_tz_name=form_tz_name,
-                                      latlon=lat_lon)
+    in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
+                                          size=len(img_bytes), charset='utf-8')
+    new_image_set = create_image_set(file=in_memory_file, filename=filename, filesize=filesize, author=author,
+                                     vehicle=vehicle, camera=camera, exif_time=grab_time)
     new_image_set.finish_initialization(request)
+    return new_image_set
 
 
-def createNewImageSet(file, filename, filesize, author,
-                      vehicle, camera,
-                      form_tz, form_tz_name,
-                      exif_data=None, exif_time=None, object_id=None, time_mark=None, latlon=None):
+def create_image_set(file, filename, filesize, author, vehicle, camera,
+                     form_tz=None, form_tz_name=None,
+                     exif_data=None, exif_time=None, object_id=None, time_mark=None, latlon=None):
     if not exif_time:
         exif_time = datetime.now(pytz.utc)
 
@@ -438,22 +443,27 @@ def createNewImageSet(file, filename, filesize, author,
         new_image_set = IMAGE_SET_MODEL.get()()
 
     new_image_set.acquisition_time = exif_time
-    new_image_set.acquisition_timezone = form_tz_name
     new_image_set.name = filename
 
-    if isinstance(camera, Camera):
+    if isinstance(camera, CAMERA_MODEL.get()):
         new_image_set.camera = camera
 
     new_image_set.flight = getFlight(new_image_set.acquisition_time, vehicle)
     track = None
     if new_image_set.flight:
-        print 'Hi I am a debug statement! ' + str(vehicle)
-        print new_image_set.flight.name
+        if not form_tz_name:
+            form_tz_name = new_image_set.flight.timezone
+        if not form_tz and form_tz_name:
+            form_tz = pytz.timezone(form_tz_name)
         try:
             track = new_image_set.flight.track
         except:
+            # flight has no track in test
             traceback.print_exc()
-    new_image_set.track_position = getClosestPosition(track=track, timestamp=exif_time, vehicle=vehicle)
+    new_image_set.acquisition_timezone = form_tz_name
+
+    if track:
+        new_image_set.track_position = getClosestPosition(track=track, timestamp=exif_time, vehicle=vehicle)
     if exif_data:
         new_image_set.exif_position = buildExifPosition(exif_data, new_image_set.camera, vehicle, exif_time, form_tz)
     elif latlon:

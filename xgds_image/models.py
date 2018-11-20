@@ -253,7 +253,8 @@ class DeepZoomTiles(DeepZoom):
         return(dz_couch_destination, dz_relative_filepath)
     
 
-class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles, IsFlightChild, IsFlightData):
+class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles,
+                       IsFlightChild, IsFlightData):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -275,7 +276,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     uploadAndSaveTime = models.FloatField(null=True, blank=True)
     totalTimeSinceNotify = models.FloatField(null=True, blank=True)
     #Optionally generate deep zoom from uploaded image if set to True.
-    create_deepzoom = models.BooleanField(default= settings.XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM,
+    create_deepzoom = models.BooleanField(default=settings.XGDS_IMAGE_DEFAULT_CREATE_DEEPZOOM,
                                           help_text="Generate deep zoom?")   # True if you need to create a deepzoom
     #Link this image to generated deep zoom.
     associated_deepzoom = models.ForeignKey(DeepZoomTiles,

@@ -22,5 +22,5 @@ urlpatterns = [
     url(r'^getAnnotationColors/$', views.getAnnotationColorsJson, {}, 'xgds_image_get_annotation_colors'),
     url(r'^saveImage/$', views.saveImage, {}, 'xgds_save_image'),
     url(r'^writeEvent/$', views.sdWriteEvent, {}, 'xgds_sd_write_event'),
-    url(r'^saveFrame', views.grabFrameAndSave, {}, 'save_frame_nickname'),  # grab and save frame
+    url(r'^saveFrame', views.grab_frame_save_image, {}, 'grab_frame_save_image'),  # grab and save frame
 ]
