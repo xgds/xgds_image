@@ -394,7 +394,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
             os.mkdir(tileOutputDir)
             baseImage.dzsave("%s/%s" % (tileOutputDir, deepzoomSlug),
                              overlap=settings.VIPS_PARAMS['overlap'],
-                             tile_size = settings.VIPS_PARAMS['tile_size'])
+                             tile_size=settings.VIPS_PARAMS['tile_size'])
             os.remove(tempImageFile.name)
             self.create_deepzoom = False
             self.save()

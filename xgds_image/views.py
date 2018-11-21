@@ -14,7 +14,6 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
-import pydevd
 import pytz
 import json
 import os
@@ -43,7 +42,7 @@ from django.forms.models import model_to_dict
 from xgds_image.models import *
 from forms import UploadFileForm, ImageSetForm
 from xgds_core.views import get_handlebars_templates, addRelay
-from xgds_core.util import deletePostKey
+from xgds_core.util import deletePostKey, get_file_size
 from xgds_core.flightUtils import getFlight, lookup_vehicle
 from xgds_image.utils import getLatLon, getExifData, getGPSDatetime, createThumbnailFile, getHeading, getAltitude, \
     getExifValue, getHeightWidthFromPIL, convert_to_jpg_if_needed, getCameraByExif
@@ -371,7 +370,7 @@ def saveImage(request):
 
             # create a new image set instance
             newImageSet = create_image_set(file=uploadedFile, filename=uploadedFile.name,
-                                           filesize=uploadedFile.size, author=author,
+                                           author=author,
                                            vehicle=vehicle, camera=camera,
                                            form_tz=form_tz, form_tz_name=form.getTimezoneName(),
                                            exif_data=exifData,
@@ -400,7 +399,6 @@ def grab_frame_save_image(request):
     :param request: POST DICTIONARY must contain above values
     :return: the newly created image set
     """
-    pydevd.settrace('192.168.0.163', port=9999)
 
     # TODO handle bad values or no values for start and grab
     start = request.POST.get('start_time')
@@ -411,8 +409,7 @@ def grab_frame_save_image(request):
 
     filename = '%s_%s.png' % (request.POST.get('filename_prefix', 'Framegrab'), grab)
     file_jpgdata = StringIO(img_bytes)
-    dt = Image.open(file_jpgdata)
-    filesize = dt.size
+
 
     author = computeAuthor(request)
 
@@ -424,15 +421,33 @@ def grab_frame_save_image(request):
 
     in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
                                           size=len(img_bytes), charset='utf-8')
-    new_image_set = create_image_set(file=in_memory_file, filename=filename, filesize=filesize, author=author,
+
+    new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
                                      vehicle=vehicle, camera=camera, exif_time=grab_time)
     new_image_set.finish_initialization(request)
     return new_image_set
 
 
-def create_image_set(file, filename, filesize, author, vehicle, camera,
-                     form_tz=None, form_tz_name=None,
+def create_image_set(file, filename, author, vehicle, camera,
+                     width_height=None, form_tz=None, form_tz_name=None,
                      exif_data=None, exif_time=None, object_id=None, time_mark=None, latlon=None):
+    """
+    
+    :param file:
+    :param filename:
+    :param width_height:
+    :param author:
+    :param vehicle:
+    :param camera:
+    :param form_tz:
+    :param form_tz_name:
+    :param exif_data:
+    :param exif_time:
+    :param object_id:
+    :param time_mark:
+    :param latlon:
+    :return:
+    """
     if not exif_time:
         exif_time = datetime.now(pytz.utc)
 
@@ -491,8 +506,12 @@ def create_image_set(file, filename, filesize, author, vehicle, camera,
             single_image_metadata['width'] = int(getExifValue(exif_data, 'ExifImageWidth'))
             single_image_metadata['height'] = int(getExifValue(exif_data, 'ExifImageHeight'))
         else:
-            single_image_metadata['width'] = filesize[0]
-            single_image_metadata['height'] = filesize[1]
+            if not width_height:
+                dt = Image.open(file)
+                width_height = dt.size
+
+            single_image_metadata['width'] = width_height[0]
+            single_image_metadata['height'] = width_height[1]
     except:
         pass
 
@@ -501,7 +520,7 @@ def create_image_set(file, filename, filesize, author, vehicle, camera,
 
     if converted_file:
         # create the single image for the source
-        single_image_metadata['fileSizeBytes'] = filesize
+        single_image_metadata['fileSizeBytes'] = get_file_size(file)
         single_image_metadata['file'] = file
         single_image_metadata['imageType'] = ImageType.source.value
         single_image_metadata['raw'] = False
@@ -511,7 +530,7 @@ def create_image_set(file, filename, filesize, author, vehicle, camera,
 
     # create the single image for the raw / full / renderable
     try:
-        single_image_metadata['fileSizeBytes'] = filesize
+        single_image_metadata['fileSizeBytes'] = get_file_size(file)
         single_image_metadata['file'] = file
         single_image_metadata['imageType'] = ImageType.full.value
         single_image_metadata['raw'] = True
@@ -560,10 +579,7 @@ def computeAuthor(request):
 def createThumbnail(newSingleImage, newImageSet):
     # create a thumbnail
     thumbnail_file = createThumbnailFile(newSingleImage.file)
-    old_file_position = thumbnail_file.tell()
-    thumbnail_file.seek(0, os.SEEK_END)
-    thumbnail_size = thumbnail_file.tell()
-    thumbnail_file.seek(old_file_position, os.SEEK_SET)
+    thumbnail_size = get_file_size(thumbnail_file)
     SINGLE_IMAGE_MODEL.get().objects.create(file=thumbnail_file,
                                             fileSizeBytes=thumbnail_size,
                                             raw=False,
