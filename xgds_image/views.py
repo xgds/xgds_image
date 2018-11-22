@@ -401,6 +401,7 @@ def grab_frame_save_image(request):
     """
 
     # TODO handle bad values or no values for start and grab
+
     start = request.POST.get('start_time')
     grab = request.POST.get('grab_time')
     start_time = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
@@ -409,7 +410,6 @@ def grab_frame_save_image(request):
 
     filename = '%s_%s.png' % (request.POST.get('filename_prefix', 'Framegrab'), grab)
     file_jpgdata = StringIO(img_bytes)
-
 
     author = computeAuthor(request)
 
@@ -422,10 +422,14 @@ def grab_frame_save_image(request):
     in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
                                           size=len(img_bytes), charset='utf-8')
 
+    # TODO handle error cases if the new image set is not created for any reason, return error response.
     new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
                                      vehicle=vehicle, camera=camera, exif_time=grab_time)
     new_image_set.finish_initialization(request)
-    return new_image_set
+
+    # pass the image set to the client as json.
+    return JsonResponse({'success': 'true', 'json': new_image_set.toMapDict()}, encoder=DatetimeJsonEncoder,
+                        safe=False)
 
 
 def create_image_set(file, filename, author, vehicle, camera,

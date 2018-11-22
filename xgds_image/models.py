@@ -413,7 +413,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     
     @classmethod
     def cls_type(cls):
-        return 'Photo'
+        return settings.XGDS_IMAGE_IMAGE_MODEL_NAME
     
     @property
     def raw_image_url(self):
