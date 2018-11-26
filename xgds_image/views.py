@@ -400,10 +400,14 @@ def grab_frame_save_image(request):
     :return: the newly created image set
     """
 
-    # TODO handle bad values or no values for start and grab
+    # TODO DW handle bad values or no values for start and grab
 
     start = request.POST.get('start_time')
     grab = request.POST.get('grab_time')
+
+    # TODO DW if error do the below with useful message
+    # return JsonResponse({'success': 'false', 'json': {'message':'bla'}}, status=400)
+
     start_time = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
     grab_time = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
     img_bytes = grab_frame(request.POST.get('path'), start_time, grab_time)
@@ -422,7 +426,7 @@ def grab_frame_save_image(request):
     in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
                                           size=len(img_bytes), charset='utf-8')
 
-    # TODO handle error cases if the new image set is not created for any reason, return error response.
+    # TODO DW handle error cases if the new image set is not created for any reason, return error response.
     new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
                                      vehicle=vehicle, camera=camera, exif_time=grab_time)
     new_image_set.finish_initialization(request)
@@ -477,8 +481,8 @@ def create_image_set(file, filename, author, vehicle, camera,
         try:
             track = new_image_set.flight.track
         except:
-            # flight has no track in test
-            traceback.print_exc()
+            # the flight may not have a track
+            pass
     new_image_set.acquisition_timezone = form_tz_name
 
     if track:
