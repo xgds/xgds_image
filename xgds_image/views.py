@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
+import httplib
 
 import pytz
 import json
@@ -405,12 +406,29 @@ def grab_frame_save_image(request):
     start = request.POST.get('start_time')
     grab = request.POST.get('grab_time')
 
-    # TODO DW if error do the below with useful message
-    # return JsonResponse({'success': 'false', 'json': {'message':'bla'}}, status=400)
+    if start is None:
+        result_dict = {'status': 'error',
+                       'error': 'You must specify video start time.'
+                       }
+        return JsonResponse(json.dumps(result_dict),
+                            status=httplib.NOT_ACCEPTABLE, safe=False)
+    if grab is None:
+        result_dict = {'status': 'error',
+                       'error': 'You must specify video grab time.'
+                       }
+        return JsonResponse(json.dumps(result_dict),
+                            status=httplib.NOT_ACCEPTABLE, safe=False)
 
     start_time = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
     grab_time = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
-    img_bytes = grab_frame(request.POST.get('path'), start_time, grab_time)
+    try:
+        img_bytes = grab_frame(request.POST.get('path'), start_time, grab_time)
+    except Exception as e:
+        result_dict = {'status': 'error',
+                       'error': str(e)
+                       }
+        return JsonResponse(json.dumps(result_dict),
+                            status=httplib.INTERNAL_SERVER_ERROR, safe=False)
 
     filename = '%s_%s.png' % (request.POST.get('filename_prefix', 'Framegrab'), grab)
     file_jpgdata = StringIO(img_bytes)
@@ -427,8 +445,23 @@ def grab_frame_save_image(request):
                                           size=len(img_bytes), charset='utf-8')
 
     # TODO DW handle error cases if the new image set is not created for any reason, return error response.
-    new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
-                                     vehicle=vehicle, camera=camera, exif_time=grab_time)
+    try:
+        new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
+                                         vehicle=vehicle, camera=camera, exif_time=grab_time)
+    except Exception as e:
+        result_dict = {'status': 'error',
+                       'error': str(e)
+                       }
+        return JsonResponse(json.dumps(result_dict),
+                            status=httplib.INTERNAL_SERVER_ERROR, safe=False)
+
+    if new_image_set is None:
+        result_dict = {'status': 'error',
+                       'error': 'Unable to create new ImageSet.'
+                       }
+        return JsonResponse(json.dumps(result_dict),
+                            status=httplib.INTERNAL_SERVER_ERROR, safe=False)
+
     new_image_set.finish_initialization(request)
 
     # pass the image set to the client as json.
@@ -440,7 +473,7 @@ def create_image_set(file, filename, author, vehicle, camera,
                      width_height=None, form_tz=None, form_tz_name=None,
                      exif_data=None, exif_time=None, object_id=None, time_mark=None, latlon=None):
     """
-    
+    Create image set from one image, and save image set to database
     :param file:
     :param filename:
     :param width_height:
