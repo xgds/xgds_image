@@ -28,17 +28,10 @@ import pytz
 import json
 from xgds_core.importer.validate_timestamps import get_timestamp_from_filename
 from geocamUtil.loader import LazyGetModelByName
-
-
 from xgds_image.utils import getCameraByExif
-HTTP_PREFIX = 'https'
 
-from django.contrib.sites.models import Site
-# mysite = Site.objects.get_current()
-# mysite.domain = 'localhost'
-# mysite.name = 'My Site'
-# mysite.save()
-URL_PREFIX = Site.objects.get_current().domain
+HTTP_PREFIX = 'https'
+URL_PREFIX = settings.XGDS_CORE_IMPORT_URL_PREFIX
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
 
