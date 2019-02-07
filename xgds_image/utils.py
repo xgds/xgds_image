@@ -43,7 +43,10 @@ def createThumbnailFile(src):
     srcName, srcExt = os.path.splitext(os.path.basename(src.name))
     dstFileName = '%s_thumbnail%s' % (srcName, srcExt)
     dstBytes = BytesIO()
-    im.save(dstBytes, "JPEG")
+    try:
+        im.save(dstBytes, "JPEG")
+    except:
+        im.convert('RGB').save(dstBytes, "JPEG")
     thumbFile = File(dstBytes)
     thumbFile.name = dstFileName
     return File(thumbFile)

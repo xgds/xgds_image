@@ -21,7 +21,7 @@ For each of these imagesets,
 """
 
 for imageset in allImageSets:
-    if (imageset.associated_deepzoom) == None:
+    if not imageset.associated_deepzoom:
         try:
             print 'about to create deepzoom for ' + imageset.name
             dzt = imageset.create_deepzoom_image() 
