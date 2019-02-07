@@ -55,7 +55,7 @@ DEEPZOOM_PARAMS = {'tile_size': 256,
                    'resize_filter': "antialias"}
 
 VIPS_PARAMS = {'tile_size': 256,
-               'overlap' : 10}
+               'overlap': 10}
 
 #
 # By default we use the VIPS library deepzoom tiler beacause it's much faster than the python based one
