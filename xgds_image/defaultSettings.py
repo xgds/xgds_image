@@ -63,6 +63,9 @@ VIPS_PARAMS = {'tile_size': 256,
 # get it migrated.
 USE_PYTHON_DEEPZOOM_TILER = False
 
+# True to create each deepzoom in a separate thread, false to block.
+XGDS_IMAGE_DEEPZOOM_THREAD = True
+
 XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
 XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
 XGDS_IMAGE_CAMERA_MODEL = 'xgds_image.Camera'

@@ -635,11 +635,15 @@ def createDeepzoomTiles(newImageSet):
     # create deep zoom tiles for viewing in openseadragon.
     if newImageSet.create_deepzoom:
         if settings.USE_PYTHON_DEEPZOOM_TILER:
-            deepzoomTilingThread = Thread(target=newImageSet.create_deepzoom_image)
-            deepzoomTilingThread.start()
+            target = newImageSet.create_deepzoom_image
         else:
-            deepzoomTilingThread = Thread(target=newImageSet.create_vips_deepzoom_image)
-            deepzoomTilingThread.start()
+            target = newImageSet.create_vips_deepzoom_image
+
+        if settings.XGDS_IMAGE_DEEPZOOM_THREAD:
+            deepzoom_tiling_thread = Thread(target=target)
+            deepzoom_tiling_thread.start()
+        else:
+            target()
 
 
 def getTileState(request, imageSetPK):
