@@ -845,7 +845,6 @@ $.extend(xgds_image_annotation, {
                     } else {
                         delete xgds_image_annotation.annotationsDict[dictKey];
                         fabricCanvas.remove(annotation);
-
                     }
                 },
                 error: function (a) {

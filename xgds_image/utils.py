@@ -43,10 +43,7 @@ def createThumbnailFile(src):
     srcName, srcExt = os.path.splitext(os.path.basename(src.name))
     dstFileName = '%s_thumbnail%s' % (srcName, srcExt)
     dstBytes = BytesIO()
-    try:
-        im.save(dstBytes, "JPEG")
-    except:
-        im.convert('RGB').save(dstBytes, "JPEG")
+    im.save(dstBytes, im.format)
     thumbFile = File(dstBytes)
     thumbFile.name = dstFileName
     return File(thumbFile)
@@ -69,6 +66,7 @@ def convert_to_jpg_if_needed(src):
     src_name, src_ext = os.path.splitext(os.path.basename(src.name))
     dest_file.name = '%s.jpg' % src_name
     return File(dest_file)
+
 
 def getHeightWidthFromPIL(imageModelInstance):
     """ Read size and width with PIL

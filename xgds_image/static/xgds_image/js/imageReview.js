@@ -163,10 +163,19 @@ $.extend(xgds_image,{
 	    }
 	},
 	constructImageView: function(imageJson) {
-		var modelMap = app.options.searchModels['Photo'];
+		var modelMap = app.options.searchModels[app.options.modelName];
 		var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
 		$.when($.get(url, function(handlebarSource, status){
-			app.showDetailView(handlebarSource, imageJson, modelMap, 'Photo');
+			var modelName = app.options.modelName;
+			if (_.isUndefined(modelName)){
+				if ('Photo' in app.options.searchModels) {
+					modelName = 'Photo';
+				} else {
+					modelName = 'Image';
+					//TODO hack.
+				}
+			}
+			app.showDetailView(handlebarSource, imageJson, modelMap, modelName);
 		}));
 	},
 	loadImageInViewer: function(imageJson){
@@ -181,8 +190,8 @@ $.extend(xgds_image,{
 		// save rotation degrees to the database
 		imageJson['rotation_degrees'] = degrees; 
 		var postData = imageJson;
-		var url = app.options.searchModels.Photo.saveRotationUrl;
-		// get rotation degrees from db, compare to degrees. 
+		var url = '/xgds_image/saveRotation/';
+		// get rotation degrees from db, compare to degrees.
 		// this gets called when user switches the view to another image.
 		// call ajax to save the rotation degrees. 
 		$.ajax({
@@ -198,7 +207,7 @@ $.extend(xgds_image,{
 	},
 	setOpenseadragonRotation: function(osd_viewer, imagePK){
 		var getData = {'imagePK': imagePK };
-		var url = app.options.searchModels.Photo.getRotationUrl;
+		var url = '/xgds_image/getRotation/';
 		$.ajax({
 			url: url,
 			type: "POST",

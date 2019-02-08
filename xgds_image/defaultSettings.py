@@ -105,8 +105,6 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_MODEL_NAME] = {'ol': 'xgds_image/js/olIm
                                                         'viewResizeMethod': ['xgds_image.resizeImageViewer'],
                                                         'event_time_field': 'acquisition_time',
                                                         'event_timezone_field': 'acquisition_timezone',
-                                                        'saveRotationUrl': '/xgds_image/saveRotation/',
-                                                        'getRotationUrl': '/xgds_image/getRotation/',
                                                         'search_form_class': 'xgds_image.forms.SearchImageSetForm'
                                                        }
 

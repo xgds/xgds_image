@@ -116,7 +116,7 @@ def editImage(request, imageSetID):
             else:
                 messages.success(request, settings.XGDS_IMAGE_IMAGE_SET_MONIKER + ' successfully updated.')
             return HttpResponseRedirect(reverse('search_map_single_object', kwargs={'modelPK':imageSetID,
-                                                                                    'modelName':'Photo'}))
+                                                                                    'modelName':settings.XGDS_IMAGE_IMAGE_MODEL_NAME}))
         else:
             messages.error(request, 'The form is not valid')
             return render(request,
@@ -899,13 +899,15 @@ def mergeImages(request):
 
         # Save background into Byte Array/Stream
         imgByteArr = BytesIO()
-        background.save(imgByteArr, format='JPEG', exif=str(exifData))
+        background.save(imgByteArr, format=background.format, exif=str(exifData))
+
         imgByteArr = imgByteArr.getvalue()
 
         # Build response
-        response = HttpResponse(content_type='image/jpg')
-        background.save(response, "JPEG")
-        response['Content-Disposition'] = 'attachment; filename="%s.jpg"' % os.path.splitext(imageSet.name)[0]
+
+        response = HttpResponse(content_type='image/%s' % background.format.lower())
+        background.save(response, background.format)
+        response['Content-Disposition'] = 'attachment; filename="%s.%s"' % (os.path.splitext(imageSet.name)[0], background.format.lower())
         return response
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
