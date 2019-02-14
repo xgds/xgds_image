@@ -244,7 +244,7 @@ $.extend(xgds_image,{
 //				return;
 //			}
 			this.removeViewer();
-			//TODO WILLIAM put in some clearAnnotations
+			//TODO put in some clearAnnotations
 		} 
 		// try removing the raw image
 		try {
@@ -276,7 +276,6 @@ $.extend(xgds_image,{
 			return;
 		}
 		
-		
 		// build tile sources for openseadragon image viewer
 		var prefixUrl = '/static/openseadragon/build/openseadragon/images/';
 		try {
@@ -284,11 +283,17 @@ $.extend(xgds_image,{
 			if (displayImage.length == 0){
 				throw ('Cound not find display-image div');
 			} else {
-				displayImage = displayImage[0];
+				var parentwidth = displayImage.parent().parent().width();
+				displayImage.width(Math.round(parentwidth));
+				if (displayImage.height() == 0){
+					displayImage.height(Math.round((2*parentwidth)/3));
+				}
 			}
 			this.viewer = OpenSeadragon({
-				element: displayImage,
+				element: displayImage[0],
 //				id: "display-image",
+				minZoomImageRatio: 0,
+				maxZoomPixelRatio: Infinity,
 				prefixUrl: prefixUrl,
 				tileSources: tiledImage,
 			    showRotationControl: true,
@@ -344,22 +349,28 @@ $.extend(xgds_image,{
 	resizeImageViewer: function(element) {
 		// when viewDiv resize,  
 		// element is the view-div
+		if (_.isUndefined(element)){
+			return;
+		}
+
 		var element = $(element);
-		
-		var newWidth = element.width();
-		var newHeight = element.height();
-		
+		var new_width = element.width();
+
 		var wrapper = element.find('.image-wrapper');
-		wrapper.width(newWidth);
-		wrapper.height(newHeight);
-		
 		var osd_viewer = wrapper.find('#display-image');
-		osd_viewer.width(newWidth);
-		osd_viewer.height(newHeight);
+		var old_height = osd_viewer.height();
+		var old_width = osd_viewer.width();
+		new_height = (new_width/old_width) * old_height;
+
+		wrapper.width(new_width);
+		wrapper.height(new_height);
+
+		osd_viewer.width(new_width);
+		osd_viewer.height(new_height);
 		
 		var osd_canvas = osd_viewer.find('.openseadragon-canvas');
-		osd_canvas.width(newWidth);
-		osd_canvas.height(newHeight);
+		osd_canvas.width(new_width);
+		osd_canvas.height(new_height);
 	},
 	setSaveStatusMessage: function(handler, status, msg){
 		if (status == 'success') {
