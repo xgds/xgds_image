@@ -132,7 +132,6 @@ class SearchImageSetForm(SearchForm):
     
     acquisition_timezone = forms.ChoiceField(required=False, choices=lazy(getTimezoneChoices, list)(empty=True), 
                                              label='Time Zone', help_text='Required for Min/Max Time')
-
     
     field_order = IMAGE_SET_MODEL.get().getSearchFieldOrder()
     
