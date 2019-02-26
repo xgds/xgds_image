@@ -105,7 +105,8 @@ XGDS_MAP_SERVER_JS_MAP[XGDS_IMAGE_IMAGE_MODEL_NAME] = {'ol': 'xgds_image/js/olIm
                                                         'viewResizeMethod': ['xgds_image.resizeImageViewer'],
                                                         'event_time_field': 'acquisition_time',
                                                         'event_timezone_field': 'acquisition_timezone',
-                                                        'search_form_class': 'xgds_image.forms.SearchImageSetForm'
+                                                        'search_form_class': 'xgds_image.forms.SearchImageSetForm',
+                                                        'default_table_length': 5
                                                        }
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
