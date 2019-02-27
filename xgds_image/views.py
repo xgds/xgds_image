@@ -806,6 +806,13 @@ def deleteAnnotation(request):
         image_pk = request.POST.get('image_pk', None)
         if image_pk:
             found_annotations = ANNOTATION_MANAGER.filter(image__pk=int(image_pk))
+            all_authors = request.POST.get('all_authors', False)
+            if all_authors == 'false':
+                all_authors = False
+            elif all_authors == 'true':
+                all_authors = True
+            if not all_authors:
+                found_annotations = found_annotations.filter(author__id=request.user.id)
             count = found_annotations.count()
             if count:
                 found_annotations.delete()

@@ -739,7 +739,7 @@ class AbstractAnnotation(models.Model):
         abstract = True
 
     def getJsonType(self):
-        return 'Annotation'
+        return 'annotation'
 
     def toJson(self):
         result = model_to_dict(self)
@@ -764,7 +764,7 @@ class AbstractTextAnnotation(models.Model):
     height = models.PositiveIntegerField(default=1)
 
     def getJsonType(self):
-        return 'Text'
+        return 'text'
 
     class Meta:
         abstract = True
@@ -779,7 +779,7 @@ class AbstractEllipseAnnotation(models.Model):
     radiusY = models.IntegerField()
 
     def getJsonType(self):
-        return 'Ellipse'
+        return 'ellipse'
 
     class Meta:
         abstract = True
@@ -794,7 +794,7 @@ class AbstractRectangleAnnotation(models.Model):
     height = models.PositiveIntegerField()
 
     def getJsonType(self):
-        return 'Rectangle'
+        return 'rectangle'
 
     class Meta:
         abstract = True
@@ -808,7 +808,7 @@ class AbstractArrowAnnotation(models.Model):
     points = models.TextField(default='[]')
 
     def getJsonType(self):
-        return 'Arrow'
+        return 'arrow'
 
     class Meta:
         abstract = True

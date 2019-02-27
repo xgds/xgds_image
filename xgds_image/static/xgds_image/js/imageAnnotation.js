@@ -25,12 +25,12 @@ $.extend(xgds_image_annotation, {
     annotationsDict: {},
     
     getDictKey: function(source){
-    		var theType = source['annotationType'];
-    		if (theType === undefined) {
-    			theType = source['type'];
-    		}
-    		theType = theType.toLowerCase();
-    		return theType + '_' + source['pk'];
+        var theType = source['annotationType'];
+        if (theType === undefined) {
+            theType = source['type'];
+        }
+        theType = theType.toLowerCase();
+        return theType + '_' + source['pk'];
     },
 
     /*
@@ -112,12 +112,21 @@ $.extend(xgds_image_annotation, {
             $("#imageAnnotationToolbar").show();
             this.showToolbar = "true";
             this.imageAnnotationToolbarStatus="visible";
+            $("#addAnnotation").prop("checked", true);
+            $("#addAnnotation").parent().addClass("active");
+
+            $("#navigateImage").prop("checked", false);
+            $("#navigateImage").parent().removeClass("active");
+
+            $("#editAnnotation").prop("checked", false);
+            $("#editAnnotation").parent().removeClass("active");
+
+            this.setMouseMode("addAnnotation");
         }else{
             $("#imageAnnotationToolbar").hide();
             this.showToolbar = "false";
             this.imageAnnotationToolbarStatus="invisible";
-            this.mouseMode = "OSD";
-            this.setMouseMode(this.mouseMode);
+            this.setMouseMode("OSD");
         }
     },
 
@@ -133,11 +142,11 @@ $.extend(xgds_image_annotation, {
         /* Initialize member variables */
         this.imageJson = imageJson;
         this.viewer = osdViewer;  // TODO: do we need to load this every time?
-        this.overlay = this.viewer.fabricjsOverlay();
+        this.overlay = this.viewer.fabricjsOverlay(); //{scale:100});
 
-        this.selectedFabricObject = "arrow";
+        this.selectedFabricObject = "rectangle";
 
-        this.annotationType = "arrow";
+        this.annotationType = "rectangle";
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
 
@@ -182,8 +191,7 @@ $.extend(xgds_image_annotation, {
             $("#large").click();
         }
 
-        this.mouseMode = "OSD";
-        this.setMouseMode(this.mouseMode);
+        this.setMouseMode("OSD");
 
         /****************************************************************************************************************
 
@@ -350,6 +358,10 @@ $.extend(xgds_image_annotation, {
             xgds_image_annotation.deleteAllAnnotations();
         });
 
+        $('#deleteMine').click(function() {
+            xgds_image_annotation.deleteMyAnnotations();
+        });
+
         $("#colorPicker").on('change.spectrum', function (e, color) {
             xgds_image_annotation.currentAnnotationColor = color.toHexString(); //convert to hex
         });
@@ -435,7 +447,7 @@ $.extend(xgds_image_annotation, {
        this.textboxPreview = new fabric.Rect({
            left: x,
            top: y,
-           fill: "",
+           fill: '',
            fontSize: this.annotationSizes[this.currentAnnotationSize]["font"],
            strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
            stroke: this.currentAnnotationColor,
@@ -591,8 +603,8 @@ $.extend(xgds_image_annotation, {
     /*
     We duplicate objects before serializing them because... TODO: why do we have to duplicate again? It's definitely
      */
-    duplicateObject: function(object) {
-        var objectCopy = {
+    build_annotation_dict: function(object) {
+        var result_dict = {
             left: object["left"],
             top: object["top"],
             stroke: object["stroke"],
@@ -614,7 +626,7 @@ $.extend(xgds_image_annotation, {
             image: object["image"],
             size: object["size"]
         };
-        return objectCopy;
+        return result_dict;
     },
 
     /* Retrieve and draw on canvas all stored annotations from Django */
@@ -666,21 +678,21 @@ $.extend(xgds_image_annotation, {
             fabricObject = this.text;
         } else {
             // this makes it so we can select it later.
-            fabricCanvas.add(this.selectedFabricObject);
+            fabricCanvas.add(fabricObject);
         }
-        var temp = this.duplicateObject(fabricObject);
+        var annotation_dict = this.build_annotation_dict(fabricObject);
 
         // Color edge cases/aesthetic
         if(fabricObject.type == "arrow") { //arrow only needs fill
-            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
-            temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+            annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            annotation_dict["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
 
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
-            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            annotation_dict["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
         }
 
         $.ajax({
@@ -689,11 +701,12 @@ $.extend(xgds_image_annotation, {
             datatype: 'json',
             context: this,
             data: {
-                annotation: JSON.stringify(temp),
+                annotation: JSON.stringify(annotation_dict),
                 image_pk: this.imageJson["pk"]
             },
             success: function (data) {
                 fabricObject.set({pk: data["pk"], image: data["image_pk"]});
+                data['annotation'] = fabricObject;
                 xgds_image_annotation.annotationsDict[this.getDictKey(data)] = data;
             },
             error: function (e) {
@@ -705,7 +718,7 @@ $.extend(xgds_image_annotation, {
 
     /* Update annotation's database entry. */
     updateSerialization: function(fabricObject) {
-        var temp = this.duplicateObject(fabricObject);
+        var temp = this.build_annotation_dict(fabricObject);
 
         if(fabricObject.type == "arrow") { //arrow only needs fill
             temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
@@ -810,12 +823,24 @@ $.extend(xgds_image_annotation, {
     },
 
     deleteAllAnnotations: function() {
-        this.deleteAnnotation(undefined, true);
+        // confirm
+        if (confirm("Click OK to permanently delete EVERYONE's annotations on this image")) {
+            this.deleteAnnotation(undefined, true, true);
+        }
+    },
+
+    deleteMyAnnotations: function() {
+        if (confirm("Click OK to permanently delete YOUR's annotations on this image")) {
+            this.deleteAnnotation(undefined, true, false);
+        }
     },
 
     /* Delete annotation from annotationsDict and the database */
-    deleteAnnotation: function(annotation, all) {
+    deleteAnnotation: function(annotation, all, all_authors) {
         if (all === undefined){
+            all = false;
+        }
+        if (all_authors === undefined){
             all = false;
         }
         var dictKey = undefined;
@@ -832,6 +857,7 @@ $.extend(xgds_image_annotation, {
             proceed = dictKey in this.annotationsDict;
         }
 
+        data['all_authors'] = all_authors;
         if (proceed) {
             $.ajax({
                 type: "POST",
@@ -840,8 +866,25 @@ $.extend(xgds_image_annotation, {
                 data: data,
                 success: function (data) {
                     if (all) {
-                        xgds_image_annotation.annotationsDict = {};
-                        fabricCanvas.clear()
+                        if (all_authors) {
+                            xgds_image_annotation.annotationsDict = {};
+                            fabricCanvas.clear()
+                        } else {
+                            fabricCanvas.clear();
+                            var kill_list = [];
+                            Object.keys(xgds_image_annotation.annotationsDict).forEach(function(key) {
+                                var annotation = xgds_image_annotation.annotationsDict[key];
+                                if (annotation.author == current_user_pk) {
+                                    kill_list.push(key);
+                                } else {
+                                    delete annotation['annotation'];
+                                    xgds_image_annotation.addAnnotationToCanvas(annotation);
+                                }
+                            });
+                            _.forEach(kill_list, function(key) {
+                                delete xgds_image_annotation.annotationsDict[key];
+                            });
+                        }
                     } else {
                         delete xgds_image_annotation.annotationsDict[dictKey];
                         fabricCanvas.remove(annotation);
@@ -864,20 +907,22 @@ $.extend(xgds_image_annotation, {
      Given an annotation model, add it to the canvas if not already drawn
      */
     addAnnotationToCanvas: function(annotationJson) {
-    		var dictKey = this.getDictKey(annotationJson);
+        var dictKey = this.getDictKey(annotationJson);
         if (dictKey in this.annotationsDict) {
-            console.log("Annotation is already drawn on canvas, aborting load for this annotation");
-            return;
+            if (!_.isUndefined(this.annotationsDict[dictKey].annotation)) {
+                console.log("Annotation is already drawn on canvas, aborting load for this annotation");
+                return;
+            }
         } else { //otherwise, add annotation to annotationsDict and draw it by calling one of the addShapeToCanvas() functions below
             this.annotationsDict[dictKey] = annotationJson;
         }
-        if (annotationJson["annotationType"] == "Rectangle") {
+        if (annotationJson["annotationType"] == "rectangle") {
             this.addRectToCanvas(annotationJson);
-        } else if (annotationJson["annotationType"] == "Ellipse") {
+        } else if (annotationJson["annotationType"] == "ellipse") {
             this.addEllipseToCanvas(annotationJson);
-        } else if (annotationJson["annotationType"] == "Arrow") {
+        } else if (annotationJson["annotationType"] == "arrow") {
             this.addArrowToCanvas(annotationJson);
-        } else if (annotationJson["annotationType"] == "Text") {
+        } else if (annotationJson["annotationType"] == "text") {
             this.addTextToCanvas(annotationJson);
         } else {
             throw new Error("Tried to load an undefined shape to canvas (can only load rectangles, ellipses, arrows, lines");
@@ -885,7 +930,7 @@ $.extend(xgds_image_annotation, {
     },
 
     addRectToCanvas: function(annotationJson) {
-        this.rect = new fabric.Rect({
+        var shape = new fabric.Rect({
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
@@ -903,12 +948,13 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"],
             size: annotationJson["size"]
         });
-        this.overlay.fabricCanvas().add(this.rect);
+        annotationJson['annotation'] = shape;
+        this.overlay.fabricCanvas().add(shape);
         this.overlay.fabricCanvas().renderAll();
     },
 
     addEllipseToCanvas: function(annotationJson) {
-        this.ellipse = new fabric.Ellipse({
+        var shape = new fabric.Ellipse({
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
@@ -926,13 +972,14 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"],
             size: annotationJson["size"]
         });
-        this.overlay.fabricCanvas().add(this.ellipse);
+        annotationJson['annotation'] = shape;
+        this.overlay.fabricCanvas().add(shape);
         this.overlay.fabricCanvas().renderAll();
     },
 
     addArrowToCanvas: function(annotationJson) {
         /* Arrows "stroke" is actually their fill. Their stroke/border is always black */
-        this.arrow = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
+        var shape = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: 'black',
@@ -948,13 +995,14 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"],
             size: annotationJson["size"]
         });
-        this.overlay.fabricCanvas().add(this.arrow);
+        annotationJson['annotation'] = shape;
+        this.overlay.fabricCanvas().add(shape);
         this.overlay.fabricCanvas().renderAll();
     },
 
     addTextToCanvas: function(annotationJson) {
         var textbox_id = "text_" + annotationJson["pk"];
-        this.text = new fabric.Textbox(textbox_id, {
+        var shape = new fabric.Textbox(textbox_id, {
             left: annotationJson["left"],
             top: annotationJson["top"],
             stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
@@ -977,7 +1025,8 @@ $.extend(xgds_image_annotation, {
             size: annotationJson["size"]
         });
 
-        this.overlay.fabricCanvas().add(this.text);
+        annotationJson['annotation'] = shape;
+        this.overlay.fabricCanvas().add(shape);
         this.overlay.fabricCanvas().renderAll();
     },
 
