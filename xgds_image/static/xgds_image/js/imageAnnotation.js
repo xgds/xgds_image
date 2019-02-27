@@ -61,9 +61,9 @@ $.extend(xgds_image_annotation, {
     imageAnnotationToolbarStatus: "invisible",
 
     /*
-    Annotation type we draw on canvas on click (arrow on default), changed by #annotationType radio menu
+    Annotation type we draw on canvas on click (rectangle on default), changed by #annotationType radio menu
     */
-    annotationType: "arrow",
+    annotationType: "rectangle",
 
     /*
     Default annotation color to draw annotations in
@@ -80,19 +80,19 @@ $.extend(xgds_image_annotation, {
      */
     annotationSizes: {
         "small": {
-            "stroke": 5,
-            "arrow": 50,
-            "font": 30
+            "stroke": .5,
+            "arrow": 2,
+            "font": 2
         },
         "medium": {
-            "stroke": 15,
-            "arrow": 75,
-            "font": 50
+            "stroke": 1,
+            "arrow": 4,
+            "font": 3
         },
         "large": {
-            "stroke": 25,
-            "arrow": 100,
-            "font": 100
+            "stroke": 2,
+            "arrow": 7,
+            "font": 6
         },
     },
 
@@ -142,7 +142,7 @@ $.extend(xgds_image_annotation, {
         /* Initialize member variables */
         this.imageJson = imageJson;
         this.viewer = osdViewer;  // TODO: do we need to load this every time?
-        this.overlay = this.viewer.fabricjsOverlay(); //{scale:100});
+        this.overlay = this.viewer.fabricjsOverlay({scale:100});
 
         this.selectedFabricObject = "rectangle";
 
@@ -474,11 +474,9 @@ $.extend(xgds_image_annotation, {
      */
     drawArrow: function(x, y) {
         var headlen = this.annotationSizes[this.currentAnnotationSize]["arrow"];  // arrow head size
-        this.arrow = new fabric.Polyline(this.calculateArrowPoints(this.origX, this.origY, x, y, headlen), {
+        this.arrow = new fabric.Polygon(this.calculateArrowPoints(this.origX, this.origY, x, y, headlen), {
             fill: this.currentAnnotationColor,
-            stroke: 'black',
             opacity: 1,
-            strokeWidth: 2,
             originX: 'left',
             originY: 'top',
             scaleX: 1,
@@ -502,11 +500,9 @@ $.extend(xgds_image_annotation, {
         // calculate the points.
         var pointsArray = this.calculateArrowPoints(x, y, headlen);
         var oldArrowSize = this.arrow.size
-        this.arrow = new fabric.Polyline(pointsArray, {
+        this.arrow = new fabric.Polygon(pointsArray, {
             fill: this.currentAnnotationColor,
-            stroke: 'black',
             opacity: 1,
-            strokeWidth: 2,
             originX: 'left',
             originY: 'top',
             type: 'arrow',
@@ -661,6 +657,7 @@ $.extend(xgds_image_annotation, {
                 width: x - this.origX,
                 top: this.origY,
                 left: this.origX,
+                fontFamily: 'Arial',
                 fontSize: this.annotationSizes[this.currentAnnotationSize].font,
                 stroke: this.currentAnnotationColor,
                 fill: this.currentAnnotationColor,
@@ -718,20 +715,20 @@ $.extend(xgds_image_annotation, {
 
     /* Update annotation's database entry. */
     updateSerialization: function(fabricObject) {
-        var temp = this.build_annotation_dict(fabricObject);
+        var annotation_dict = this.build_annotation_dict(fabricObject);
 
         if(fabricObject.type == "arrow") { //arrow only needs fill
-            temp["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
-            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            annotation_dict["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
+            annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
-            temp["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-            temp["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
+            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            annotation_dict["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
         }
 
-        var data = {annotation: JSON.stringify(temp),
+        var data = {annotation: JSON.stringify(annotation_dict),
                     image_pk: this.imageJson["pk"]
                    }
         $.ajax({
@@ -978,12 +975,10 @@ $.extend(xgds_image_annotation, {
     },
 
     addArrowToCanvas: function(annotationJson) {
-        /* Arrows "stroke" is actually their fill. Their stroke/border is always black */
-        var shape = new fabric.Polyline(JSON.parse(annotationJson["points"]), {
+        /* Arrows "stroke" color is actually their fill. Their stroke/border is always black */
+        var shape = new fabric.Polygon(JSON.parse(annotationJson["points"]), {
             left: annotationJson["left"],
             top: annotationJson["top"],
-            stroke: 'black',
-            strokeWidth: annotationJson["strokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
             fill: this.colorsDictionary[annotationJson["fill"]].hex,
@@ -1021,6 +1016,7 @@ $.extend(xgds_image_annotation, {
             pk: annotationJson["pk"],
             image: annotationJson["image"],
             textAlign: 'center',
+            fontFamily: 'Arial',
             fontSize: this.annotationSizes[annotationJson['size']].font,
             size: annotationJson["size"]
         });
