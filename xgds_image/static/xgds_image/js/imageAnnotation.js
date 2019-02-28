@@ -82,17 +82,17 @@ $.extend(xgds_image_annotation, {
         "small": {
             "stroke": .5,
             "arrow": 2,
-            "font": 2
+            "font": 4
         },
         "medium": {
             "stroke": 1,
             "arrow": 4,
-            "font": 3
+            "font": 8
         },
         "large": {
             "stroke": 2,
             "arrow": 7,
-            "font": 6
+            "font": 12
         },
     },
 
@@ -138,10 +138,9 @@ $.extend(xgds_image_annotation, {
         /* Clear variables */
         this.annotationsDict = {};
 
-
         /* Initialize member variables */
         this.imageJson = imageJson;
-        this.viewer = osdViewer;  // TODO: do we need to load this every time?
+        this.viewer = osdViewer;
         this.overlay = this.viewer.fabricjsOverlay({scale:100});
 
         this.selectedFabricObject = "rectangle";
@@ -154,7 +153,7 @@ $.extend(xgds_image_annotation, {
         if (this.showToolbar === "false") {
             $("#imageAnnotationToolbar").hide();
             this.imageAnnotationToolbarStatus = "invisible";
-        }else{
+        } else {
             $("#imageAnnotationToolbar").show();
             this.imageAnnotationToolbarStatus = "visible";
         }
@@ -185,9 +184,9 @@ $.extend(xgds_image_annotation, {
         /* Update the currentAnnotationSize radio menubar to have the correct annotationSize selected */
         if(xgds_image_annotation.currentAnnotationSize == "small") {
             $("#small").click();
-        }else if(xgds_image_annotation.currentAnnotationSize == "medium"){
+        } else if(xgds_image_annotation.currentAnnotationSize == "medium"){
             $("#medium").click();
-        }else{
+        } else {
             $("#large").click();
         }
 
@@ -270,6 +269,7 @@ $.extend(xgds_image_annotation, {
                 t1.fontSize *= t1.fixedWidth / (t1.width + 1);
                 t1.width = t1.fixedWidth;
             }
+            xgds_image_annotation.updateSerialization(xgds_image_annotation.overlay.fabricCanvas().getActiveObject());
         });
 
         /*
@@ -448,7 +448,6 @@ $.extend(xgds_image_annotation, {
            left: x,
            top: y,
            fill: '',
-           fontSize: this.annotationSizes[this.currentAnnotationSize]["font"],
            strokeWidth: this.annotationSizes[this.currentAnnotationSize]["stroke"],
            stroke: this.currentAnnotationColor,
            width: 1,
@@ -659,7 +658,8 @@ $.extend(xgds_image_annotation, {
                 left: this.origX,
                 fontFamily: 'Arial',
                 fontSize: this.annotationSizes[this.currentAnnotationSize].font,
-                stroke: this.currentAnnotationColor,
+                stroke: this.currentAnnotationColor,  // weirdly this has to be here or you cannot go into edit mode
+                strokeWidth: 0.2,
                 fill: this.currentAnnotationColor,
                 borderColor: this.currentAnnotationColor,
                 textAlign: 'center',
@@ -736,10 +736,10 @@ $.extend(xgds_image_annotation, {
             url: '/xgds_image/alterAnnotation/',
             datatype: 'json',
             data: data,
-            success: function (data) {
-                // console.log('altered annotation');
-                // console.log(data);
-            },
+            // success: function (data) {
+            //     console.log('altered annotation');
+            //     console.log(data);
+            // },
             error: function (a) {
                 console.log("Alter annotation ajax error");
                 console.log(a)
@@ -1000,8 +1000,6 @@ $.extend(xgds_image_annotation, {
         var shape = new fabric.Textbox(textbox_id, {
             left: annotationJson["left"],
             top: annotationJson["top"],
-            stroke: this.colorsDictionary[annotationJson["strokeColor"]].hex,
-            strokeWidth: annotationJson["strokeWidth"],
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
             fill: this.colorsDictionary[annotationJson["fill"]].hex,
@@ -1009,7 +1007,7 @@ $.extend(xgds_image_annotation, {
             angle: annotationJson["angle"],
             width: annotationJson["width"],
             height: annotationJson["height"],
-            text: annotationJson["content"], //text should be the right field here //todonow: this may be the wrong thing to call it.
+            text: annotationJson["content"],
             type: 'text',
             scaleX: annotationJson["scaleX"],
             scaleY: annotationJson["scaleY"],
