@@ -813,12 +813,13 @@ $.extend(xgds_image_annotation, {
             alert("Please select the annotation you would like to delete");
             return;
         }
-        var annotation = this.overlay.fabricCanvas().getActiveObject();
-        this.deleteAnnotation(annotation);
+        if (confirm("Click OK to permanently delete the selected annotation")) {
+            var annotation = this.overlay.fabricCanvas().getActiveObject();
+            this.deleteAnnotation(annotation);
+        }
     },
 
     deleteAllAnnotations: function() {
-        // confirm
         if (confirm("Click OK to permanently delete EVERYONE's annotations on this image")) {
             this.deleteAnnotation(undefined, true, true);
         }
