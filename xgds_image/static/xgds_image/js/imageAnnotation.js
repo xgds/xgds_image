@@ -11,7 +11,7 @@ $.extend(xgds_image_annotation, {
     textboxPreview: "",
     origX: "",
     origY: "",
-    selectedFabricObject: "arrow", //stores the type of the current annotation being drawn so we know which variable (arrow/line/rectangle/ellipse/text etc) to serialize on mouse:up
+    selectedFabricObject: undefined,
 
     overlay: "",
 
@@ -143,8 +143,6 @@ $.extend(xgds_image_annotation, {
         this.viewer = osdViewer;
         this.overlay = this.viewer.fabricjsOverlay({scale:100});
 
-        this.selectedFabricObject = "rectangle";
-
         this.annotationType = "rectangle";
         this.currentAnnotationColor = "red";
         this.imageAnnotationToolbarStatus = "invisible";
@@ -203,7 +201,7 @@ $.extend(xgds_image_annotation, {
         On mousedown:
             - mark isDown as true. On mouse:up, we draw annotations if isDown is true.
             - set origX, origY as the initial click location.
-            - initialize the correct function based on what the selectedFabricObject is.
+            - initialize the correct function based on what the annotationType is.
          */
         this.overlay.fabricCanvas().observe('mouse:down', function (o) {
             xgds_image_annotation.setMouseMode(xgds_image_annotation.mouseMode);
@@ -239,27 +237,33 @@ $.extend(xgds_image_annotation, {
         If isDown is true and the mouse if moved, redraw the currentAnnotationShape on canvas with the new current mouse position.
          */
         this.overlay.fabricCanvas().observe('mouse:move', function(o) {
-            if (!xgds_image_annotation.isDown) return;
-            var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
-            switch (xgds_image_annotation.annotationType) {
+            if (!xgds_image_annotation.isDown) {
+                return;
+            }
+            var selected_object = xgds_image_annotation.selectedFabricObject;
+            if (_.isUndefined(selected_object)) {
+                return;
+            }
+            var canvas = xgds_image_annotation.overlay.fabricCanvas();
+            var pointer = canvas.getPointer(o.e);
+            switch (selected_object.type) {
                 case "arrow":
-                    xgds_image_annotation.updateArrow(pointer.x, pointer.y);
+                    xgds_image_annotation.updateArrow(selected_object, pointer.x, pointer.y);
                     break;
                 case "rectangle":
-                    xgds_image_annotation.updateRectangleWidth(pointer.x, pointer.y);
+                case "text":
+                case "textboxPreview":
+                    xgds_image_annotation.updateRectangleSize(selected_object, pointer.x, pointer.y);
                     break;
                 case "ellipse":
-                    xgds_image_annotation.updateEllipse(pointer.x, pointer.y);
-                    break;
-                case "text":
-                    xgds_image_annotation.updateTextboxPreview(pointer.x, pointer.y);
+                    xgds_image_annotation.updateEllipse(selected_object, pointer.x, pointer.y);
                     break;
                 default:
                     console.log("That shouldn't have happened :( Undefined annotationType");
                     console.log("The undefined type entered is: " + this.annotationType);
                     throw new Error("Tried to switch to an undefined annotationType");
             }
-            xgds_image_annotation.overlay.fabricCanvas().requestRenderAll();
+            canvas.requestRenderAll();
         });
 
         /* event listener that handles resizing the textbox based on amount of text */
@@ -395,7 +399,7 @@ $.extend(xgds_image_annotation, {
     },
 
     initializeEllipse: function(x, y) {
-        this.ellipse = new fabric.Ellipse({
+        var ellipse = new fabric.Ellipse({
             left: x,
             top: y,
             radius: 1,
@@ -409,17 +413,17 @@ $.extend(xgds_image_annotation, {
             type: 'ellipse',
             size: this.currentAnnotationSize
         });
-        this.selectedFabricObject = this.ellipse
-        this.overlay.fabricCanvas().add(this.ellipse);
+        this.selectedFabricObject = ellipse;
+        this.overlay.fabricCanvas().add(ellipse);
     },
 
-    updateEllipse: function(x, y) {
-        this.ellipse.set({rx: Math.abs(this.origX - x), ry: Math.abs(this.origY - y)});
-        this.selectedFabricObject = this.ellipse
+    updateEllipse: function(ellipse, x, y) {
+        ellipse.set({rx: Math.abs(this.origX - x), ry: Math.abs(this.origY - y)});
+        // this.selectedFabricObject = ellipse;
     },
 
     initializeRectangle: function(x, y) {
-         this.rectangle = new fabric.Rect({
+         var rectangle = new fabric.Rect({
             left: x,
             top: y,
             fill: '',
@@ -432,19 +436,18 @@ $.extend(xgds_image_annotation, {
             type: 'rectangle',
             size: this.currentAnnotationSize
         });
-        this.selectedFabricObject = this.rectangle;
-        this.overlay.fabricCanvas().add(this.rectangle);
+        this.selectedFabricObject = rectangle;
+        this.overlay.fabricCanvas().add(rectangle);
     },
 
-    updateRectangleWidth: function(x, y) {
+    updateRectangleSize: function(rectangle, x, y) {
         var width = Math.abs(x - this.origX);
         var height = Math.abs(y - this.origY);
-        this.rectangle.set({width: width, height: height});
-        this.selectedFabricObject = this.rectangle;
+        rectangle.set({width: width, height: height});
     },
 
     initializeTextboxPreview: function(x, y) {
-       this.textboxPreview = new fabric.Rect({
+       var textbox_preview = new fabric.Rect({
            left: x,
            top: y,
            fill: '',
@@ -455,15 +458,8 @@ $.extend(xgds_image_annotation, {
            type: 'textboxPreview',
            size: this.currentAnnotationSize
        });
-       this.selectedFabricObject = this.textboxPreview;
-       this.overlay.fabricCanvas().add(this.textboxPreview);
-    },
-
-    updateTextboxPreview: function(x, y) {
-        var width = Math.abs(x - this.origX);
-        var height = Math.abs(y - this.origY);
-        this.textboxPreview.set({width: width, height: height});
-        this.selectedFabricObject = this.textboxPreview;
+       this.selectedFabricObject = textbox_preview;
+       this.overlay.fabricCanvas().add(textbox_preview);
     },
 
     /*
@@ -473,7 +469,7 @@ $.extend(xgds_image_annotation, {
      */
     drawArrow: function(x, y) {
         var headlen = this.annotationSizes[this.currentAnnotationSize]["arrow"];  // arrow head size
-        this.arrow = new fabric.Polygon(this.calculateArrowPoints(this.origX, this.origY, x, y, headlen), {
+        var arrow = new fabric.Polygon(this.calculateArrowPoints(this.origX, this.origY, x, y, headlen), {
             fill: this.currentAnnotationColor,
             opacity: 1,
             originX: 'left',
@@ -483,13 +479,14 @@ $.extend(xgds_image_annotation, {
             type: 'arrow',
             size: this.currentAnnotationSize
         });
-        this.selectedFabricObject = this.arrow;
-        this.overlay.fabricCanvas().add(this.arrow);
+        this.selectedFabricObject = arrow;
+        this.overlay.fabricCanvas().add(arrow);
     },
 
-    updateArrow: function(x, y) {
+    updateArrow: function(arrow, x, y) {
         var headlen = this.annotationSizes[this.currentAnnotationSize]["arrow"]; // current arrow head size
-        this.overlay.fabricCanvas().remove(this.arrow);
+        var canvas = this.overlay.fabricCanvas();
+        canvas.remove(arrow);
         var angle = Math.atan2(y - this.origY, x - this.origX);
 
         // bring the line end back some to account for arrow head.
@@ -498,8 +495,8 @@ $.extend(xgds_image_annotation, {
 
         // calculate the points.
         var pointsArray = this.calculateArrowPoints(x, y, headlen);
-        var oldArrowSize = this.arrow.size
-        this.arrow = new fabric.Polygon(pointsArray, {
+        var oldArrowSize = arrow.size
+        var arrow = new fabric.Polygon(pointsArray, {
             fill: this.currentAnnotationColor,
             opacity: 1,
             originX: 'left',
@@ -507,9 +504,9 @@ $.extend(xgds_image_annotation, {
             type: 'arrow',
             size: oldArrowSize
         });
-        this.selectedFabricObject = this.arrow;
-        this.overlay.fabricCanvas().add(this.arrow);
-        this.overlay.fabricCanvas().requestRenderAll();
+        this.selectedFabricObject = arrow;
+        canvas.add(arrow);
+        canvas.requestRenderAll();
     },
 
     // Compute set of points to create arrow shape
@@ -563,7 +560,7 @@ $.extend(xgds_image_annotation, {
     },
 
     deselectFabricObjects: function(){
-        this.overlay.fabricCanvas().discardActiveObject().requestRenderAll();
+        this.overlay.fabricCanvas().discardActiveObject();
     },
 
     setMouseMode: function(mode) {
@@ -596,7 +593,7 @@ $.extend(xgds_image_annotation, {
     },
 
     /*
-    We duplicate objects before serializing them because... TODO: why do we have to duplicate again? It's definitely
+    We duplicate objects before serializing them because...
      */
     build_annotation_dict: function(object) {
         var result_dict = {
@@ -656,7 +653,7 @@ $.extend(xgds_image_annotation, {
             // and if the user is zoomed in then the font sizes do not shrink.
             // We should instead do something like the below, and store the actual font size.
             // var font_size = Math.round(this.annotationSizes[this.currentAnnotationSize].font / xgds_image_annotation.viewer.viewport.getZoom());
-            this.text = new fabric.Textbox('dblClick', {
+            var text = new fabric.Textbox('dblClick', {
                 width: x - this.origX,
                 top: this.origY,
                 left: this.origX,
@@ -672,25 +669,22 @@ $.extend(xgds_image_annotation, {
                 type: 'text',
                 size: this.currentAnnotationSize
             });
-            this.selectedFabricObject = this.text;
+            this.selectedFabricObject = text;
 
-            fabricCanvas.add(this.text);
-            fabricCanvas.remove(this.textboxPreview);
-            fabricObject = this.text;
+            fabricCanvas.add(text);
+            fabricCanvas.remove(fabricObject);
+            fabricObject = text;
         } else {
-            // this makes it so we can select it later.
+            // this makes it so we can select it later.  Seems stupid, not sure why we have to do this.
+            fabricCanvas.remove(fabricObject);
             fabricCanvas.add(fabricObject);
         }
         var annotation_dict = this.build_annotation_dict(fabricObject);
 
         // Color edge cases/aesthetic
-        if(fabricObject.type == "arrow") { //arrow only needs fill
+        if(fabricObject.type == "arrow" || fabricObject.type == "text") {
             annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
-            annotation_dict["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
-
-        }else if (fabricObject.type == "text") { //text needs both stroke and fill
-            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
-            annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
+            annotation_dict["stroke"] = annotation_dict["fill"];
         } else { //everything else only needs stroke
             annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
             annotation_dict["fill"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign fill to a random color to keep database happy. We ignore this when we repaint any non-arrow on load
@@ -725,7 +719,7 @@ $.extend(xgds_image_annotation, {
             annotation_dict["stroke"] = this.colorsDictionary[Object.keys(this.colorsDictionary)[0]].id;  //assign stroke to a random color to keep database happy. We ignore this when we repaint arrow on load
             annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         }else if (fabricObject.type == "text") { //text needs both stroke and fill
-            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
+            annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["fill"]);
             annotation_dict["fill"] = this.getColorIdFromHex(fabricObject["fill"]);
         } else { //everything else only needs stroke
             annotation_dict["stroke"] = this.getColorIdFromHex(fabricObject["stroke"]);
@@ -887,8 +881,13 @@ $.extend(xgds_image_annotation, {
                             });
                         }
                     } else {
-                        delete xgds_image_annotation.annotationsDict[dictKey];
                         fabricCanvas.remove(annotation);
+                        if (_.isEqual(annotation, xgds_image_annotation.selectedFabricObject)){
+                            fabricCanvas.remove(xgds_image_annotation.selectedFabricObject);
+                            xgds_image_annotation.selectedFabricObject = undefined;
+                        }
+                        fabricCanvas.discardActiveObject();
+                        delete xgds_image_annotation.annotationsDict[dictKey];
                     }
                 },
                 error: function (a) {
@@ -951,7 +950,6 @@ $.extend(xgds_image_annotation, {
         });
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     addEllipseToCanvas: function(annotationJson) {
@@ -975,7 +973,6 @@ $.extend(xgds_image_annotation, {
         });
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     addArrowToCanvas: function(annotationJson) {
@@ -996,7 +993,6 @@ $.extend(xgds_image_annotation, {
         });
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     addTextToCanvas: function(annotationJson) {
@@ -1025,7 +1021,6 @@ $.extend(xgds_image_annotation, {
 
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     turnAnnotationsOnOff: function(onOrOff) {
