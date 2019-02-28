@@ -668,22 +668,23 @@ def saveAnnotations(request):
         mapAnnotations = json.loads(temp)
 
         for annotationJSON in mapAnnotations["objects"]:
-            if annotationJSON["type"]=="rectangle":
+            if annotationJSON["type"] == "rectangle":
                 annotationModel = RECTANGLE_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
-            elif annotationJSON["type"]=="ellipse":
+            elif annotationJSON["type"] == "ellipse":
                 annotationModel = ELLIPSE_ANNOTATION_MODEL.get()()
                 annotationModel.radiusX = annotationJSON["rx"]
                 annotationModel.radiusY = annotationJSON["ry"]
-            elif annotationJSON["type"]=="arrow":
+            elif annotationJSON["type"] == "arrow":
                 annotationModel = ARROW_ANNOTATION_MODEL.get()()
                 annotationModel.points = json.dumps(annotationJSON["points"])
-            elif annotationJSON["type"]=="text":
+            elif annotationJSON["type"] == "text":
                 annotationModel = TEXT_ANNOTATION_MODEL.get()()
                 annotationModel.width = annotationJSON["width"]
                 annotationModel.height = annotationJSON["height"]
-                annotationModel.content = annotationJSON["text"] #not sure if this is where text content is stored
+                annotationModel.content = annotationJSON["text"]
+                annotationModel.fontSize = annotationJSON["fontSize"]
             else:
                 raise Exception("Invalid annotation shape requested %s" % annotationJSON["type"])
 
@@ -737,6 +738,7 @@ def alterAnnotation(request):
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["text"]
+            annotationModel.fontSize = newAnnotation["fontSize"]
 
         # add common variables
         annotationModel.left = newAnnotation["left"]
@@ -857,6 +859,7 @@ def addAnnotation(request):
             annotationModel.width = newAnnotation["width"]
             annotationModel.height = newAnnotation["height"]
             annotationModel.content = newAnnotation["text"]
+            annotationModel.fontSize = newAnnotation["fontSize"]
 
         # add common variables
         annotationModel.left = newAnnotation["left"]

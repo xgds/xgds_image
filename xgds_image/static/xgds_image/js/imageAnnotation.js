@@ -87,12 +87,12 @@ $.extend(xgds_image_annotation, {
         "medium": {
             "stroke": 1,
             "arrow": 4,
-            "font": 8
+            "font": 6
         },
         "large": {
             "stroke": 2,
             "arrow": 7,
-            "font": 12
+            "font": 8
         },
     },
 
@@ -596,6 +596,9 @@ $.extend(xgds_image_annotation, {
     We duplicate objects before serializing them because...
      */
     build_annotation_dict: function(object) {
+        if (_.isNull(object) || _.isEmpty(object) || _.isUndefined(object)){
+            return {};
+        }
         var result_dict = {
             left: object["left"],
             top: object["top"],
@@ -610,6 +613,7 @@ $.extend(xgds_image_annotation, {
             scaleY: object["scaleY"],
             points: object["points"],
             text: object["text"],
+            fontSize: object["fontSize"],
             rx: object["rx"],
             ry: object["ry"],
             height: object["height"],
@@ -649,16 +653,18 @@ $.extend(xgds_image_annotation, {
     createNewSerialization: function(fabricObject, x, y) {
         var fabricCanvas = this.overlay.fabricCanvas();
         if (fabricObject.type == "textboxPreview") {
-            // TODO right now we are serializing small medium or large instead of the actual font size,
-            // and if the user is zoomed in then the font sizes do not shrink.
-            // We should instead do something like the below, and store the actual font size.
-            // var font_size = Math.round(this.annotationSizes[this.currentAnnotationSize].font / xgds_image_annotation.viewer.viewport.getZoom());
+            var zoom = xgds_image_annotation.viewer.viewport.getZoom();
+            var font_size = Math.round(this.annotationSizes[this.currentAnnotationSize].font / zoom);
+            if (font_size < 1) {
+                font_size = 1;
+            }
+
             var text = new fabric.Textbox('dblClick', {
                 width: x - this.origX,
                 top: this.origY,
                 left: this.origX,
                 fontFamily: 'Arial',
-                fontSize: this.annotationSizes[this.currentAnnotationSize].font,
+                fontSize: font_size,
                 stroke: this.currentAnnotationColor,  // weirdly this has to be here or you cannot go into edit mode
                 strokeWidth: 0.2,
                 fill: this.currentAnnotationColor,
@@ -1016,7 +1022,7 @@ $.extend(xgds_image_annotation, {
             image: annotationJson["image"],
             textAlign: 'center',
             fontFamily: 'Arial',
-            fontSize: this.annotationSizes[annotationJson['size']].font,
+            fontSize: annotationJson["fontSize"],
             size: annotationJson["size"]
         });
 

@@ -762,6 +762,7 @@ class AbstractTextAnnotation(models.Model):
     isItalics = models.BooleanField(default=False)
     width = models.PositiveIntegerField(default=1)
     height = models.PositiveIntegerField(default=1)
+    fontSize = models.PositiveIntegerField(default=8)
 
     def getJsonType(self):
         return 'text'
