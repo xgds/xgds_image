@@ -259,7 +259,7 @@ $.extend(xgds_image_annotation, {
                     console.log("The undefined type entered is: " + this.annotationType);
                     throw new Error("Tried to switch to an undefined annotationType");
             }
-            xgds_image_annotation.overlay.fabricCanvas().renderAll();
+            xgds_image_annotation.overlay.fabricCanvas().requestRenderAll();
         });
 
         /* event listener that handles resizing the textbox based on amount of text */
@@ -509,7 +509,7 @@ $.extend(xgds_image_annotation, {
         });
         this.selectedFabricObject = this.arrow;
         this.overlay.fabricCanvas().add(this.arrow);
-        this.overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     // Compute set of points to create arrow shape
@@ -563,7 +563,7 @@ $.extend(xgds_image_annotation, {
     },
 
     deselectFabricObjects: function(){
-        this.overlay.fabricCanvas().discardActiveObject().renderAll();
+        this.overlay.fabricCanvas().discardActiveObject().requestRenderAll();
     },
 
     setMouseMode: function(mode) {
@@ -652,6 +652,10 @@ $.extend(xgds_image_annotation, {
     createNewSerialization: function(fabricObject, x, y) {
         var fabricCanvas = this.overlay.fabricCanvas();
         if (fabricObject.type == "textboxPreview") {
+            // TODO right now we are serializing small medium or large instead of the actual font size,
+            // and if the user is zoomed in then the font sizes do not shrink.
+            // We should instead do something like the below, and store the actual font size.
+            // var font_size = Math.round(this.annotationSizes[this.currentAnnotationSize].font / xgds_image_annotation.viewer.viewport.getZoom());
             this.text = new fabric.Textbox('dblClick', {
                 width: x - this.origX,
                 top: this.origY,
@@ -947,7 +951,7 @@ $.extend(xgds_image_annotation, {
         });
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     addEllipseToCanvas: function(annotationJson) {
@@ -971,7 +975,7 @@ $.extend(xgds_image_annotation, {
         });
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     addArrowToCanvas: function(annotationJson) {
@@ -992,7 +996,7 @@ $.extend(xgds_image_annotation, {
         });
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     addTextToCanvas: function(annotationJson) {
@@ -1021,7 +1025,7 @@ $.extend(xgds_image_annotation, {
 
         annotationJson['annotation'] = shape;
         this.overlay.fabricCanvas().add(shape);
-        this.overlay.fabricCanvas().renderAll();
+        this.overlay.fabricCanvas().requestRenderAll();
     },
 
     turnAnnotationsOnOff: function(onOrOff) {
@@ -1057,7 +1061,7 @@ $.extend(xgds_image_annotation, {
                 objects[i].lockUniScaling = false;
             }
         }
-        xgds_image_annotation.overlay.fabricCanvas().renderAll();
+        xgds_image_annotation.overlay.fabricCanvas().requestRenderAll();
     }
 }); // end of namespace
 
