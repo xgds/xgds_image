@@ -441,6 +441,8 @@ def grab_frame_save_image(request):
     vehicle = lookup_vehicle(vehicle_name)
 
     cam_name = request.POST.get('camera')
+    if not cam_name:
+        cam_name = vehicle_name
     camera = CAMERA_MODEL.get().objects.get(name=cam_name)
 
     in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
