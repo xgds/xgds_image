@@ -100,7 +100,7 @@ def import_image(filename, camera, username, password, camera_serial, time_forma
     :return:
     """
     data ={
-        'timezone': settings.TIME_ZONE,
+        'timezone': settings.IMPORT_TIME_ZONE,
         'vehicle': '',
         'username': username
     }
