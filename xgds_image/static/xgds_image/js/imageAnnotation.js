@@ -665,8 +665,8 @@ $.extend(xgds_image_annotation, {
                 left: this.origX,
                 fontFamily: 'Arial',
                 fontSize: font_size,
-                stroke: this.currentAnnotationColor,  // weirdly this has to be here or you cannot go into edit mode
-                strokeWidth: 0.2,
+                stroke: 'white',  // weirdly this has to be here or you cannot go into edit mode
+                strokeWidth: font_size*0.03,
                 fill: this.currentAnnotationColor,
                 borderColor: this.currentAnnotationColor,
                 textAlign: 'center',
@@ -1010,6 +1010,8 @@ $.extend(xgds_image_annotation, {
             originX: annotationJson["originX"],
             originY: annotationJson["originY"],
             fill: this.colorsDictionary[annotationJson["fill"]].hex,
+            stroke: 'white',
+            strokeWidth: annotationJson["fontSize"]*0.03,
             borderColor: this.colorsDictionary[annotationJson["fill"]].hex,
             angle: annotationJson["angle"],
             width: annotationJson["width"],
