@@ -123,7 +123,9 @@ def import_image(filename, camera, username, password, camera_serial, time_forma
     # check if image exists in database and error if it does
     if check_data_exists(filename, internal_timestamp, exifData):
         print " ABORTING: MATCHING DATA FOUND"
-        raise Exception('Matching data found, image already imported', filename)
+        return 0
+        # in this case it is not really an exception because we have the data already
+        # raise Exception('Matching data found, image already imported', filename)
 
     fp = open(filename)
     files = {'file': fp}
