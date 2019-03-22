@@ -1,16 +1,24 @@
 
-**Import Image** lets you add TODO.
+**Import {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER }}** lets you import {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER}}s into xGDS.
 
-Part A:
+Import {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER }}:
 ---------------------
 
-TODO write help
+The white rectangle on the left hand side of the page allows you to choose what vehicle to use to get the position from.
+It also allows you to choose the timezone.  These are very important, as the position of the {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER }}
+will be calculated from this information.  If no position information is found from the time of the file(s) you
+are uploading, the file(s) themselves will be examined to see if they include GPS position information.
 
-Part B:
------------------
+ * Select the vehicle from the dropdown
+ * Select the timezone that the file time is in
+ * Either drag and drop the file(s) onto the white rectangle, or
+ * Click the white rectangle for a file browser
+ * After you have placed one or more files in the white rectangle, you can click the *Import* button below the white rectangle.
+ * You will see progress bars under each file you are importing.
+ * If you want to import more files, it is best to reload the page.
 
-TODO write more help
-
+To view imported {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER }}s, search for them as usual.  Note that the time will come from
+the time of the {{ settings.XGDS_IMAGE_IMAGE_SET_MONIKER }} file.
 
 
 

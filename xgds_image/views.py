@@ -94,7 +94,7 @@ def getImageImportPage(request):
             'templates': templates,
             'form': UploadFileForm(),
             'imageSetForm': ImageSetForm(),
-            'title': settings.XGDS_IMAGE_IMAGE_SET_MONIKER,
+            'title': 'Import ' + settings.XGDS_IMAGE_IMAGE_SET_MONIKER,
             'help_content_path': 'xgds_image/help/import.rst'
             }
     return render(request,

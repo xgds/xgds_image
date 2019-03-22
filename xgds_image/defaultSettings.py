@@ -70,7 +70,7 @@ XGDS_IMAGE_IMAGE_SET_MODEL = 'xgds_image.ImageSet'
 XGDS_IMAGE_SINGLE_IMAGE_MODEL = 'xgds_image.SingleImage'
 XGDS_IMAGE_CAMERA_MODEL = 'xgds_image.Camera'
 XGDS_IMAGE_IMAGE_SET_MONIKER = 'Photo'
-XGDS_IMAGE_IMAGE_MODEL_NAME = 'Photo' # used for building filters
+XGDS_IMAGE_IMAGE_MODEL_NAME = 'Photo'  # used for building filters
 
 
 XGDS_CORE_TEMPLATE_DIRS = getOrCreateDict('XGDS_CORE_TEMPLATE_DIRS')
