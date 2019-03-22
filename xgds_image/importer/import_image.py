@@ -30,7 +30,7 @@ from xgds_core.importer.validate_timestamps import get_timestamp_from_filename
 from geocamUtil.loader import LazyGetModelByName
 from xgds_image.utils import getCameraByExif
 
-HTTP_PREFIX = 'https'
+HTTP_PREFIX = settings.XGDS_IMAGE_IMPORT_HTTP_PREFIX
 URL_PREFIX = settings.XGDS_CORE_IMPORT_URL_PREFIX
 IMAGE_SET_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_IMAGE_SET_MODEL)
 CAMERA_MODEL = LazyGetModelByName(settings.XGDS_IMAGE_CAMERA_MODEL)
