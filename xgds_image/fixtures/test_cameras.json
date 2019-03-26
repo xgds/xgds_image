@@ -9,6 +9,7 @@
         "primary": false,
         "serial": "HERC",
         "name": "Hercules",
+        "shortName": "herc",
         "heading_offset_degrees": 0.0
     }
 }
