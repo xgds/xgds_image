@@ -44,7 +44,7 @@ from geocamTrack import models as geocamTrackModels
 from xgds_notes2.models import NoteMixin, NoteLinksMixin, DEFAULT_NOTES_GENERIC_RELATION
 from xgds_core.couchDbStorage import CouchDbStorage
 from xgds_core.models import SearchableModel, AbstractVehicle, HasFlight, HasDownloadableFiles, IsFlightChild, \
-    IsFlightData
+    IsFlightData, BroadcastMixin
 from xgds_core.views import get_file_from_couch
 
 from deepzoom.models import DeepZoom
@@ -254,7 +254,7 @@ class DeepZoomTiles(DeepZoom):
     
 
 class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin, HasFlight, HasDownloadableFiles,
-                       IsFlightChild, IsFlightData):
+                       IsFlightChild, IsFlightData, BroadcastMixin):
     """
     ImageSet is for supporting various resolution images from the same source image.
     Set includes the raw image and any resized images.
@@ -288,6 +288,14 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     local_deepzoom_slug = models.CharField(null=True, blank=True, max_length=255)
     rotation_degrees = models.PositiveSmallIntegerField(null=True, default=0)
     flight = "TODO set to DEFAULT_FLIGHT_FIELD or similar"
+
+    def getSseType(self):
+        return settings.XGDS_IMAGE_SSE_TYPE
+
+    def getBroadcastChannel(self):
+        if self.flight:
+            return self.flight.vehicle.shortName
+        return 'sse'
 
     @classmethod
     def get_tree_json(cls, parent_class, parent_pk):
