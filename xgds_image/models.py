@@ -711,13 +711,6 @@ class AbstractSingleImage(models.Model):
 
     def __unicode__(self):
         return self.file.name
-
-    @receiver(post_save)
-    def publishAfterSave(sender, **kwargs):
-        if settings.XGDS_CORE_REDIS:
-            for channel in settings.XGDS_SSE_CHANNELS:
-                # TODO this should really be just one channel
-                publishRedisSSE(channel, settings.XGDS_IMAGE_SSE_TYPE.lower(), json.dumps({}))
     
     def getSseType(self):
         return settings.XGDS_IMAGE_SSE_TYPE
@@ -735,6 +728,11 @@ class SingleImage(AbstractSingleImage):
     imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='images',
                                  verbose_name=settings.XGDS_IMAGE_IMAGE_SET_MONIKER, blank=True, null=True)
     
+@receiver(post_save, sender=SingleImage)
+def publishAfterSave(sender, instance, **kwargs):
+    if settings.XGDS_CORE_REDIS:
+        for channel in settings.XGDS_SSE_CHANNELS:
+            publishRedisSSE(channel, settings.XGDS_IMAGE_SSE_TYPE.lower(), json.dumps({}))
 
 DEFAULT_SINGLE_IMAGE_FIELD = lambda: models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name="image")
 
