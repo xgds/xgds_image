@@ -390,6 +390,28 @@ def saveImage(request):
             return JsonResponse({'error': 'Imported image is not valid', 'details': form.errors}, status=406)
 
 
+def do_grab_frame(start_time, grab_time, file_path, filename_prefix, camera, author, vehicle):
+    """
+    Do the actual frame grab without a request
+    :param start_time: datetime start of segment
+    :param grab_time: datetime
+    :param file_path: path to segment file
+    :param filename_prefix: prefix for new image set
+    :param camera: camera model
+    :param author: author model
+    :param vehicle: vehicle model
+    :return: newly created image set or none
+    """
+    img_bytes = grab_frame(file_path, start_time, grab_time)
+    filename = '%s_%s.png' % (filename_prefix, grab_time.strftime(settings.XGDS_IMAGE_FRAME_GRAB_DATE_FORMAT))
+    file_jpgdata = StringIO(img_bytes)
+    in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
+                                          size=len(img_bytes), charset='utf-8')
+    new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
+                                     vehicle=vehicle, camera=camera, exif_time=grab_time)
+    return new_image_set
+
+
 def grab_frame_save_image(request):
     """
     Grab a frame from video and save it as an Image Set.
@@ -400,43 +422,30 @@ def grab_frame_save_image(request):
     camera: the name of the camera (to associate with the ImageSet)
     filename_prefix: the prefix to use for the filename, defaults to 'Framegrab'
     :param request: POST DICTIONARY must contain above values
-    :return: the newly created image set
+    :return: json response of the newly created image set
     """
 
-    # TODO DW handle bad values or no values for start and grab
-
-    start = request.POST.get('start_time')
-    grab = request.POST.get('grab_time')
-
-    if start is None:
-        result_dict = {'status': 'error',
-                       'error': 'You must specify video start time.'
-                       }
-        return JsonResponse(json.dumps(result_dict),
-                            status=httplib.NOT_ACCEPTABLE, safe=False)
-    if grab is None:
-        result_dict = {'status': 'error',
-                       'error': 'You must specify video grab time.'
-                       }
-        return JsonResponse(json.dumps(result_dict),
-                            status=httplib.NOT_ACCEPTABLE, safe=False)
-
-    start_time = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
-    grab_time = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
     try:
-        img_bytes = grab_frame(request.POST.get('path'), start_time, grab_time)
-    except Exception as e:
+        start = request.POST.get('start_time')
+        start_time = TimeUtil.convert_time_with_zone(dateparser(start), 'UTC')
+    except:
         result_dict = {'status': 'error',
-                       'error': str(e)
+                       'error': 'Invalid video start time.'
                        }
         return JsonResponse(json.dumps(result_dict),
-                            status=httplib.INTERNAL_SERVER_ERROR, safe=False)
+                            status=httplib.NOT_ACCEPTABLE, safe=False)
 
-    filename = '%s_%s.png' % (request.POST.get('filename_prefix', 'Framegrab'), grab)
-    file_jpgdata = StringIO(img_bytes)
+    try:
+        grab = request.POST.get('grab_time')
+        grab_time = TimeUtil.convert_time_with_zone(dateparser(grab), 'UTC')
+    except:
+        result_dict = {'status': 'error',
+                       'error': 'Invalid video grab time.'
+                       }
+        return JsonResponse(json.dumps(result_dict),
+                            status=httplib.NOT_ACCEPTABLE, safe=False)
 
     author = computeAuthor(request)
-
     vehicle_name = request.POST.get('vehicle', None)
     vehicle = lookup_vehicle(vehicle_name)
 
@@ -445,32 +454,28 @@ def grab_frame_save_image(request):
         cam_name = vehicle_name
     camera = CAMERA_MODEL.get().objects.get(name=cam_name)
 
-    in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
-                                          size=len(img_bytes), charset='utf-8')
-
-    # TODO DW handle error cases if the new image set is not created for any reason, return error response.
     try:
-        new_image_set = create_image_set(file=in_memory_file, filename=filename, author=author,
-                                         vehicle=vehicle, camera=camera, exif_time=grab_time)
+        new_image_set = do_grab_frame(start_time, grab_time, request.POST.get('path'),
+                                      request.POST.get('filename_prefix', settings.XGDS_IMAGE_FRAME_GRAB_FILENAME_PREFIX), camera, author, vehicle)
+        if new_image_set is None:
+            result_dict = {'status': 'error',
+                           'error': 'Unable to create new ImageSet.'
+                           }
+            return JsonResponse(json.dumps(result_dict),
+                                status=httplib.INTERNAL_SERVER_ERROR, safe=False)
+
+        # This should really happen in do_grab_frame but it does nothing by default and needs a request so ...
+        new_image_set.finish_initialization(request)
+
+        # pass the image set to the client as json.
+        return JsonResponse({'success': 'true', 'json': new_image_set.toMapDict()}, encoder=DatetimeJsonEncoder,
+                            safe=False)
     except Exception as e:
         result_dict = {'status': 'error',
                        'error': str(e)
                        }
         return JsonResponse(json.dumps(result_dict),
                             status=httplib.INTERNAL_SERVER_ERROR, safe=False)
-
-    if new_image_set is None:
-        result_dict = {'status': 'error',
-                       'error': 'Unable to create new ImageSet.'
-                       }
-        return JsonResponse(json.dumps(result_dict),
-                            status=httplib.INTERNAL_SERVER_ERROR, safe=False)
-
-    new_image_set.finish_initialization(request)
-
-    # pass the image set to the client as json.
-    return JsonResponse({'success': 'true', 'json': new_image_set.toMapDict()}, encoder=DatetimeJsonEncoder,
-                        safe=False)
 
 
 def create_image_set(file, filename, author, vehicle, camera,
