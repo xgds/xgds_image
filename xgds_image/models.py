@@ -60,6 +60,12 @@ from xgds_core.couchDbStorage import CouchDbStorage
 from email.mime import image
 import couchdb
 
+import json
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+if settings.XGDS_CORE_REDIS:
+    from xgds_core.redisUtil import publishRedisSSE
+
 logger = logging.getLogger("deepzoom.models")
 # This global declaration does not work when the database name has to be changed
 # at run time (e.g. when running unit tests), so the global declaration has been
@@ -705,6 +711,14 @@ class AbstractSingleImage(models.Model):
 
     def __unicode__(self):
         return self.file.name
+    
+    def getSseType(self):
+        return settings.XGDS_IMAGE_SSE_TYPE
+
+    def getBroadcastChannel(self):
+        if self.flight:
+            return self.flight.vehicle.shortName
+        return 'sse'
         
 
 class SingleImage(AbstractSingleImage):
@@ -714,6 +728,11 @@ class SingleImage(AbstractSingleImage):
     imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='images',
                                  verbose_name=settings.XGDS_IMAGE_IMAGE_SET_MONIKER, blank=True, null=True)
     
+@receiver(post_save, sender=SingleImage)
+def publishAfterSave(sender, instance, **kwargs):
+    if settings.XGDS_CORE_REDIS:
+        for channel in settings.XGDS_SSE_CHANNELS:
+            publishRedisSSE(channel, settings.XGDS_IMAGE_SSE_TYPE.lower(), json.dumps({}))
 
 DEFAULT_SINGLE_IMAGE_FIELD = lambda: models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name="image")
 
