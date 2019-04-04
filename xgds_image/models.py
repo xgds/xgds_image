@@ -298,11 +298,6 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     def getSseType(self):
         return settings.XGDS_IMAGE_SSE_TYPE
 
-    def getBroadcastChannel(self):
-        if self.flight:
-            return self.flight.vehicle.shortName
-        return 'sse'
-
     @classmethod
     def get_tree_json(cls, parent_class, parent_pk):
         try:
@@ -714,11 +709,6 @@ class AbstractSingleImage(models.Model):
     
     def getSseType(self):
         return settings.XGDS_IMAGE_SSE_TYPE
-
-    def getBroadcastChannel(self):
-        if self.flight:
-            return self.flight.vehicle.shortName
-        return 'sse'
         
 
 class SingleImage(AbstractSingleImage):
@@ -728,11 +718,11 @@ class SingleImage(AbstractSingleImage):
     imageSet = models.ForeignKey(settings.XGDS_IMAGE_IMAGE_SET_MODEL, related_name='images',
                                  verbose_name=settings.XGDS_IMAGE_IMAGE_SET_MONIKER, blank=True, null=True)
     
-@receiver(post_save, sender=SingleImage)
-def publishAfterSave(sender, instance, **kwargs):
-    if settings.XGDS_CORE_REDIS:
-        for channel in settings.XGDS_SSE_CHANNELS:
-            publishRedisSSE(channel, settings.XGDS_IMAGE_SSE_TYPE.lower(), json.dumps({}))
+# @receiver(post_save, sender=SingleImage)
+# def publishAfterSave(sender, instance, **kwargs):
+#     if settings.XGDS_CORE_REDIS:
+#         for channel in settings.XGDS_SSE_CHANNELS:
+#             publishRedisSSE(channel, settings.XGDS_IMAGE_SSE_TYPE.lower(), json.dumps({}))
 
 DEFAULT_SINGLE_IMAGE_FIELD = lambda: models.ForeignKey(settings.XGDS_IMAGE_SINGLE_IMAGE_MODEL, related_name="image")
 
