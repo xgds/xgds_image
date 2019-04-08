@@ -296,7 +296,7 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     flight = "TODO set to DEFAULT_FLIGHT_FIELD or similar"
 
     def getSseType(self):
-        return settings.XGDS_IMAGE_SSE_TYPE
+        return settings.XGDS_IMAGE_SSE_TYPE.lower()
 
     @classmethod
     def get_tree_json(cls, parent_class, parent_pk):
