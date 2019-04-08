@@ -708,7 +708,7 @@ class AbstractSingleImage(models.Model):
         return self.file.name
     
     def getSseType(self):
-        return settings.XGDS_IMAGE_SSE_TYPE
+        return settings.XGDS_IMAGE_SSE_TYPE.lower()
         
 
 class SingleImage(AbstractSingleImage):
