@@ -295,7 +295,8 @@ class AbstractImageSet(models.Model, NoteMixin, SearchableModel, NoteLinksMixin,
     rotation_degrees = models.PositiveSmallIntegerField(null=True, default=0)
     flight = "TODO set to DEFAULT_FLIGHT_FIELD or similar"
 
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.XGDS_IMAGE_SSE_TYPE.lower()
 
     @classmethod
@@ -707,7 +708,8 @@ class AbstractSingleImage(models.Model):
     def __unicode__(self):
         return self.file.name
     
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.XGDS_IMAGE_SSE_TYPE.lower()
         
 
