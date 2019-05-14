@@ -208,6 +208,8 @@ $.extend(xgds_image_annotation, {
             if (xgds_image_annotation.getMouseMode() == "addAnnotation") {
                 xgds_image_annotation.isDown = true;
 
+                analytics.trackAction('annotation', 'add', xgds_image_annotation.imageJson["pk"]);
+
                 var pointer = xgds_image_annotation.overlay.fabricCanvas().getPointer(o.e);
                 xgds_image_annotation.origX = pointer.x;
                 xgds_image_annotation.origY = pointer.y;
@@ -244,6 +246,8 @@ $.extend(xgds_image_annotation, {
             if (_.isUndefined(selected_object)) {
                 return;
             }
+            analytics.trackAction('annotation', 'edit', xgds_image_annotation.imageJson["pk"]);
+
             var canvas = xgds_image_annotation.overlay.fabricCanvas();
             var pointer = canvas.getPointer(o.e);
             switch (selected_object.type) {
@@ -342,6 +346,8 @@ $.extend(xgds_image_annotation, {
                     image2: annotations,
                     imagePK: imagePK
                 };
+            analytics.trackAction('image', 'screenshot', xgds_image_annotation.imageJson["pk"]);
+
         	 $.fileDownload('/xgds_image/mergeImages/', {
         		 	data: postData,
         		 	httpMethod: "POST",
@@ -356,14 +362,17 @@ $.extend(xgds_image_annotation, {
 
         $('#deleteSelected').click(function() {
             xgds_image_annotation.deleteActiveAnnotation();
+            analytics.trackAction('annotation', 'delete_active', xgds_image_annotation.imageJson["pk"]);
         });
 
         $('#deleteAll').click(function() {
             xgds_image_annotation.deleteAllAnnotations();
+            analytics.trackAction('annotation', 'delete_all', xgds_image_annotation.imageJson["pk"]);
         });
 
         $('#deleteMine').click(function() {
             xgds_image_annotation.deleteMyAnnotations();
+            analytics.trackAction('annotation', 'delete_mine', xgds_image_annotation.imageJson["pk"]);
         });
 
         $("#colorPicker").on('change.spectrum', function (e, color) {
