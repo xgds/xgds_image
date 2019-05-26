@@ -402,6 +402,7 @@ def do_grab_frame(start_time, grab_time, file_path, filename_prefix, camera, aut
     :param vehicle: vehicle model
     :return: newly created image set or none
     """
+    print('DO GRAB FRAME FROM %s' % file_path)
     img_bytes = grab_frame(file_path, start_time, grab_time)
     filename = '%s_%s.png' % (filename_prefix, grab_time.strftime(settings.XGDS_IMAGE_FRAME_GRAB_DATE_FORMAT))
     file_jpgdata = StringIO(img_bytes)
