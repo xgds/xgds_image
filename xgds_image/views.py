@@ -390,7 +390,7 @@ def saveImage(request):
             return JsonResponse({'error': 'Imported image is not valid', 'details': form.errors}, status=406)
 
 
-def do_grab_frame(start_time, grab_time, file_path, filename_prefix, camera, author, vehicle):
+def do_grab_frame(start_time, grab_time, file_path, filename_prefix, camera, author, vehicle, index_file_path):
     """
     Do the actual frame grab without a request
     :param start_time: datetime start of segment
@@ -400,10 +400,11 @@ def do_grab_frame(start_time, grab_time, file_path, filename_prefix, camera, aut
     :param camera: camera model
     :param author: author model
     :param vehicle: vehicle model
+    :param index_file_path: index file path
     :return: newly created image set or none
     """
     print('DO GRAB FRAME FROM %s' % file_path)
-    img_bytes = grab_frame(file_path, start_time, grab_time)
+    img_bytes = grab_frame(file_path, start_time, grab_time, index_file_name=index_file_path)
     filename = '%s_%s.png' % (filename_prefix, grab_time.strftime(settings.XGDS_IMAGE_FRAME_GRAB_DATE_FORMAT))
     file_jpgdata = StringIO(img_bytes)
     in_memory_file = InMemoryUploadedFile(file_jpgdata, field_name='file', name=filename, content_type="img/png",
@@ -456,8 +457,10 @@ def grab_frame_save_image(request):
     camera = CAMERA_MODEL.get().objects.get(name=cam_name)
 
     try:
+        # request.POST.get('index_file_path') has the m3u8
         new_image_set = do_grab_frame(start_time, grab_time, request.POST.get('path'),
-                                      request.POST.get('filename_prefix', settings.XGDS_IMAGE_FRAME_GRAB_FILENAME_PREFIX), camera, author, vehicle)
+                                      request.POST.get('filename_prefix', settings.XGDS_IMAGE_FRAME_GRAB_FILENAME_PREFIX), camera, author, vehicle,
+                                      request.POST.get('index_file_path'))
         if new_image_set is None:
             result_dict = {'status': 'error',
                            'error': 'Unable to create new ImageSet.'
