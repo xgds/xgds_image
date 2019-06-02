@@ -338,8 +338,8 @@ $.extend(xgds_image_annotation, {
          */
         $('#downloadScreenshot').click(function (event) {
         		event.preventDefault();
-            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL("image/png"); // current OSD view
-            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png'}); // image with annotations, transparent background
+            var OSD_layer = xgds_image_annotation.viewer.drawer.canvas.toDataURL({format: 'image/png', enableRetinaScaling:true}); // current OSD view
+            var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png', enableRetinaScaling:true}); // image with annotations, transparent background
             var imagePK = xgds_image_annotation.imageJson["pk"];
             var postData = {
                     image1: OSD_layer,
