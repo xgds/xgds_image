@@ -917,6 +917,11 @@ def mergeImages(request):
         background = Image.open(BytesIO(base64.b64decode(temp1)))
         foreground = Image.open(BytesIO(base64.b64decode(temp2)))
 
+        # Make sure images are scaled to same size so they overlay correctly - the annotation overlay appears to
+        # sometimes be smaller than the base image
+        baseImageSize = background.size
+        foreground.resize(baseImageSize, resample=Image.LANCZOS)
+        
         # PIL paste foreground on background
         background.paste(foreground, (0, 0), foreground)
 
