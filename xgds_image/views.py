@@ -922,7 +922,7 @@ def mergeImages(request):
         # Make sure images are scaled to same size so they overlay correctly - the annotation overlay appears to
         # sometimes be smaller than the base image
         baseImageSize = baseImage.size
-        annotationLayerSize = annotationLayer.size()
+        annotationLayerSize = annotationLayer.size
         if baseImageSize != annotationLayerSize:
             print "*** Annotation layer and base image did not match for original image:", originalImagePK
             scaledAnnotationLayer = annotationLayer.resize(baseImageSize, resample=Image.LANCZOS)
