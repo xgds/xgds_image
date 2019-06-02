@@ -342,9 +342,9 @@ $.extend(xgds_image_annotation, {
             var annotations = xgds_image_annotation.overlay.fabricCanvas().toDataURL({format: 'image/png', enableRetinaScaling:true}); // image with annotations, transparent background
             var imagePK = xgds_image_annotation.imageJson["pk"];
             var postData = {
-                    image1: OSD_layer,
-                    image2: annotations,
-                    imagePK: imagePK
+                    baseImageLayer: OSD_layer,
+                    annotationLayer: annotations,
+                    originalImagePK: imagePK   // PK of original image that we annotated.  This is used to get EXIF info
                 };
             analytics.trackAction('image', 'screenshot', xgds_image_annotation.imageJson["pk"]);
 
