@@ -351,6 +351,7 @@ $.extend(xgds_image_annotation, {
         	 $.fileDownload('/xgds_image/mergeImages/', {
         		 	data: postData,
         		 	httpMethod: "POST",
+                    contentType: "image/png",
                  successCallback: function (url) {
                 	 console.log('downloaded');
                  },
