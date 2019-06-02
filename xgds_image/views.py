@@ -920,10 +920,10 @@ def mergeImages(request):
         # Make sure images are scaled to same size so they overlay correctly - the annotation overlay appears to
         # sometimes be smaller than the base image
         baseImageSize = background.size
-        foreground.resize(baseImageSize, resample=Image.LANCZOS)
+        scaledForeground = foreground.resize(baseImageSize, resample=Image.LANCZOS)
         
         # PIL paste foreground on background
-        background.paste(foreground, (0, 0), foreground)
+        background.paste(scaledForeground, (0, 0), scaledForeground)
 
         # Save background into Byte Array/Stream
         imgByteArr = BytesIO()
