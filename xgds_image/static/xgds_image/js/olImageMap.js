@@ -100,6 +100,7 @@ var Photo = {
                 geometry: new ol.geom.Point(coords)
             });
             feature.setStyle(this.buildStyle(imageJson.head));
+            feature.setId(imageJson.type + imageJson.pk);
             this.setupPopup(feature, imageJson);
             return feature;
         },
