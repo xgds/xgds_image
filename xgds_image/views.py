@@ -899,38 +899,51 @@ def addAnnotation(request):
 # Pastes the annotation canvas image onto the OSD canvas image to get a new "downloadable" image of annotations + OSD
 # canvas combined.
 def mergeImages(request):
+    base64ImageHeader = "data:image/png;base64,"
+
     if request.method == 'POST':
         # Get exif data from original image (which we want to preserve in the returned image)
-        imagePK = request.POST.get('imagePK', None)
-        imageSet = IMAGE_SET_MODEL.get().objects.get(pk=imagePK)
-        image = imageSet.getRawImage()
-        exifData = getExifData(image.file)
+        originalImagePK = request.POST.get('originalImagePK', None)
+        originalImageSet = IMAGE_SET_MODEL.get().objects.get(pk=originalImagePK)
+        originalImage = originalImageSet.getRawImage()
+        exifData = getExifData(originalImage.file)
 
         # load images
-        temp1 = request.POST.get('image1', None)
-        temp2 = request.POST.get('image2', None)
+        baseImageB64 = request.POST.get('baseImageLayer', None)
+        annotationLayerB64 = request.POST.get('annotationLayer', None)
 
-        temp1 = temp1[22:]  # remove data:image/png;base64, (22 characters long)
-        temp2 = temp2[22:]  # this is pure base64 bitstream
+        baseImageB64 = baseImageB64.replace(base64ImageHeader, "")  # remove data:image/png;base64, (22 characters long)
+        annotationLayerB64 = annotationLayerB64.replace(base64ImageHeader, "")  # this is pure base64 bitstream
 
         # decode base 64 bitstream for PIL
-        background = Image.open(BytesIO(base64.b64decode(temp1)))
-        foreground = Image.open(BytesIO(base64.b64decode(temp2)))
+        baseImage = Image.open(BytesIO(base64.b64decode(baseImageB64)))
+        annotationLayer = Image.open(BytesIO(base64.b64decode(annotationLayerB64)))
 
+        # Make sure images are scaled to same size so they overlay correctly - the annotation overlay appears to
+        # sometimes be smaller than the base image
+        baseImageSize = baseImage.size
+        annotationLayerSize = annotationLayer.size
+        if baseImageSize != annotationLayerSize:
+            print "*** Annotation layer and base image did not match for original image:", originalImagePK
+            scaledAnnotationLayer = annotationLayer.resize(baseImageSize, resample=Image.LANCZOS)
+        else:
+            scaledAnnotationLayer = annotationLayer
+        
         # PIL paste foreground on background
-        background.paste(foreground, (0, 0), foreground)
+        baseImage.paste(scaledAnnotationLayer, (0, 0), scaledAnnotationLayer)
+        mergedImage = baseImage  # Annotations were pasted into baseImage bitmap
 
-        # Save background into Byte Array/Stream
+        # Save merged image + annotations into Byte Array/Stream
         imgByteArr = BytesIO()
-        background.save(imgByteArr, format=background.format, exif=str(exifData))
+        mergedImage.save(imgByteArr, format=mergedImage.format, exif=str(exifData))
 
         imgByteArr = imgByteArr.getvalue()
 
         # Build response
 
-        response = HttpResponse(content_type='image/%s' % background.format.lower())
-        background.save(response, background.format)
-        response['Content-Disposition'] = 'attachment; filename="%s.%s"' % (os.path.splitext(imageSet.name)[0], background.format.lower())
+        response = HttpResponse(content_type='image/%s' % mergedImage.format.lower())
+        mergedImage.save(response, mergedImage.format)
+        response['Content-Disposition'] = 'attachment; filename="%s.%s"' % (os.path.splitext(originalImageSet.name)[0], mergedImage.format.lower())
         return response
     else:
         return HttpResponse(json.dumps({'error': 'request type should be POST'}), content_type='application/json',
