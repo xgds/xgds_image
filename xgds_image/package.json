@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "dropzone": "5.2.0",
-    "fabric": "2.6.0",
+    "fabric": "5.2.4",
     "openseadragon": "2.4.0",
     "openseadragon-fabricjs-overlay": "git://github.com/altert/OpenseadragonFabricjsOverlay.git#0.2.0",
     "spectrum-colorpicker": "^1.8.0"
